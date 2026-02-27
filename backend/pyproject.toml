@@ -1,0 +1,45 @@
+[project]
+name = "research-assistant"
+version = "0.1.0"
+description = "Medical Research Multi-Agent Assistant"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.34.0",
+    "langgraph>=0.4.0",
+    "langgraph-checkpoint-postgres>=2.0.0",
+    "langchain-openai>=0.3.0",
+    "langchain-google-genai>=2.1.0",
+    "tavily-python>=0.5.0",
+    "asyncpg>=0.30.0",
+    "psycopg[binary]>=3.2.0",
+    "python-multipart>=0.0.18",
+    "pypdf2>=3.0.0",
+    "python-docx>=1.1.0",
+    "pillow>=11.0.0",
+    "pydantic-settings>=2.7.0",
+    "sse-starlette>=2.2.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.24.0",
+    "httpx>=0.28.0",
+    "ruff>=0.9.0",
+]
+
+[build-system]
+requires = ["setuptools>=69.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]

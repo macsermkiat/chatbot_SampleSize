@@ -1,0 +1,221 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: #f5f1e8;
+    color: #2c2417;
+    font-family: var(--font-source-serif), Georgia, serif;
+  }
+
+  ::selection {
+    background-color: #f3d994;
+    color: #2c2417;
+  }
+
+  /* Scrollbar styling */
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #c9b890;
+    border-radius: 3px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #b9a273;
+  }
+}
+
+@layer components {
+  /* Horizontal rule divider matching the reference image */
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    color: #9e9280;
+    font-family: var(--font-cormorant), Georgia, serif;
+    font-size: 0.8rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .divider::before,
+  .divider::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(
+      to var(--direction, right),
+      transparent,
+      #c9b890
+    );
+  }
+
+  .divider::before {
+    --direction: right;
+  }
+
+  .divider::after {
+    --direction: left;
+  }
+
+  /* Warm gold glow effect (like the sun in the reference) */
+  .glow-warm {
+    position: relative;
+  }
+
+  .glow-warm::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 120px;
+    height: 120px;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(
+      circle,
+      oklch(0.85 0.15 85 / 0.3) 0%,
+      transparent 70%
+    );
+    pointer-events: none;
+    z-index: -1;
+  }
+
+  /* Prose styling for markdown content */
+  .prose-research h1,
+  .prose-research h2,
+  .prose-research h3 {
+    font-family: var(--font-cormorant), Georgia, serif;
+    font-weight: 600;
+    color: #2c2417;
+    margin-top: 1.2em;
+    margin-bottom: 0.4em;
+  }
+
+  .prose-research h1 { font-size: 1.5rem; }
+  .prose-research h2 { font-size: 1.25rem; }
+  .prose-research h3 { font-size: 1.1rem; }
+
+  .prose-research p {
+    margin-bottom: 0.75em;
+    line-height: 1.7;
+  }
+
+  .prose-research ul,
+  .prose-research ol {
+    padding-left: 1.25em;
+    margin-bottom: 0.75em;
+  }
+
+  .prose-research li {
+    margin-bottom: 0.3em;
+    line-height: 1.6;
+  }
+
+  .prose-research strong {
+    font-weight: 650;
+    color: #514940;
+  }
+
+  .prose-research em {
+    font-style: italic;
+    color: #5e554a;
+  }
+
+  .prose-research code {
+    font-family: var(--font-jetbrains), Menlo, monospace;
+    font-size: 0.875em;
+    background: #ede7d6;
+    padding: 0.15em 0.35em;
+    border-radius: 3px;
+    color: #745f44;
+  }
+
+  .prose-research pre {
+    background: #2c2417;
+    color: #ede7d6;
+    padding: 1rem 1.25rem;
+    border-radius: 6px;
+    overflow-x: auto;
+    margin: 0.75em 0;
+    font-size: 0.85rem;
+    line-height: 1.5;
+  }
+
+  .prose-research pre code {
+    background: none;
+    padding: 0;
+    color: inherit;
+    font-size: inherit;
+  }
+
+  .prose-research blockquote {
+    border-left: 3px solid #c6952b;
+    padding-left: 1em;
+    margin: 0.75em 0;
+    color: #5e554a;
+    font-style: italic;
+  }
+
+  .prose-research a {
+    color: #a87320;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    text-decoration-color: #c9b890;
+    transition: text-decoration-color 0.2s;
+  }
+
+  .prose-research a:hover {
+    text-decoration-color: #a87320;
+  }
+
+  .prose-research table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0.75em 0;
+    font-size: 0.9rem;
+  }
+
+  .prose-research th,
+  .prose-research td {
+    border-bottom: 1px solid #ddd3b8;
+    padding: 0.5em 0.75em;
+    text-align: left;
+  }
+
+  .prose-research th {
+    font-weight: 600;
+    color: #514940;
+    border-bottom-width: 2px;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .animate-stagger-1 { animation-delay: 0.1s; }
+  .animate-stagger-2 { animation-delay: 0.2s; }
+  .animate-stagger-3 { animation-delay: 0.3s; }
+}

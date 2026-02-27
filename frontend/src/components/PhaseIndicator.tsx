@@ -1,0 +1,77 @@
+"use client";
+
+type Phase = "orchestrator" | "research_gap" | "methodology" | "biostatistics";
+
+interface PhaseIndicatorProps {
+  currentPhase: Phase;
+}
+
+const PHASES: { key: Phase; label: string; numeral: string }[] = [
+  { key: "orchestrator", label: "Triage", numeral: "I" },
+  { key: "research_gap", label: "Gap Analysis", numeral: "II" },
+  { key: "methodology", label: "Methodology", numeral: "III" },
+  { key: "biostatistics", label: "Biostatistics", numeral: "IV" },
+];
+
+export default function PhaseIndicator({ currentPhase }: PhaseIndicatorProps) {
+  const activeIndex = PHASES.findIndex((p) => p.key === currentPhase);
+
+  return (
+    <nav
+      aria-label="Research phase"
+      className="flex items-center justify-center gap-0 select-none"
+    >
+      {PHASES.map((phase, i) => {
+        const isActive = i === activeIndex;
+        const isPast = i < activeIndex;
+
+        return (
+          <div key={phase.key} className="flex items-center">
+            {/* Connecting line */}
+            {i > 0 && (
+              <div
+                className={`
+                  w-8 sm:w-12 h-px transition-colors duration-500
+                  ${isPast ? "bg-gold-500" : "bg-parchment-300"}
+                `}
+              />
+            )}
+
+            {/* Phase node */}
+            <div className="flex flex-col items-center gap-1.5">
+              <div
+                className={`
+                  relative flex items-center justify-center
+                  w-8 h-8 rounded-full
+                  font-display text-caption font-semibold
+                  transition-all duration-500
+                  ${
+                    isActive
+                      ? "bg-gold-500 text-parchment-50 shadow-[0_0_16px_oklch(0.75_0.12_85/0.35)]"
+                      : isPast
+                        ? "bg-gold-200 text-gold-800"
+                        : "bg-parchment-200 text-ink-400"
+                  }
+                `}
+              >
+                {phase.numeral}
+                {isActive && (
+                  <span className="absolute inset-0 rounded-full bg-gold-400 animate-pulse-warm" />
+                )}
+              </div>
+              <span
+                className={`
+                  text-caption font-display whitespace-nowrap
+                  transition-colors duration-500
+                  ${isActive ? "text-ink-900 font-semibold" : isPast ? "text-ink-600" : "text-ink-400"}
+                `}
+              >
+                {phase.label}
+              </span>
+            </div>
+          </div>
+        );
+      })}
+    </nav>
+  );
+}

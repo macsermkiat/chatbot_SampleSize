@@ -1,0 +1,4431 @@
+{
+  "name": "Research Handoff agent",
+  "nodes": [
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n\t\"direct_response_to_user\": \"Your suggestion, question\",\n\t\"agent_to_route_to\": \"BiostatisticsAgent\",\n    \"forwarded_message\":\"The user want to do sample size calculation in...\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        3904,
+        1936
+      ],
+      "id": "d2018b62-ebda-4c32-86b9-0ce9c08f8b23",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "contextWindowLength": 20
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        32,
+        2688
+      ],
+      "id": "7f2e7b90-4693-4f88-8f7c-d69be37eb4d0",
+      "name": "Postgres Chat Memory",
+      "credentials": {
+        "postgres": {
+          "id": "fs9Gnq4N6RYnDeea",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "message": "={{ $json.output.direct_response_to_user }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1,
+      "position": [
+        688,
+        2432
+      ],
+      "id": "92981638-49af-41a9-b546-b225a27128ec",
+      "name": "Respond to Chat2",
+      "webhookId": "c20a57d8-b61b-4ba5-9d20-1fa6ef702421"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"direct_response_to_user\": \"I'm routing you to Agent 2\",\n  \"needs_clarification\": true,\n  \"agent_to_route_to\": \"BiostatisticsAgent\",\n  \"forwarded_message\": \"User asked about X. Routing because Y.\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        320,
+        2704
+      ],
+      "id": "1e68101e-bd50-4d43-a27a-970faf488c05",
+      "name": "Structured Output Parser1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7179fce1-7ae1-4546-a181-694aed444936",
+              "leftValue": "={{ $json.output.needs_clarification }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        464,
+        2400
+      ],
+      "id": "4ec88303-00d6-485c-909d-03971e475532",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"direct_response_to_user\" : \"Your search, suggest, question, etc.\",\n  \"agent_to_route_to\" : \"MethodologyAgent\",\n  \"forwarded_message\":\"The user want to consult methodology research about...\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        4208,
+        1152
+      ],
+      "id": "77c9286f-3ded-4797-ba0f-42a9dffbb0b5",
+      "name": "Structured Output Parser2"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.output.agent_to_route_to }}",
+                    "rightValue": "Methodology",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    },
+                    "id": "d34a75dd-31ba-439e-a81e-c31bea189486"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Consult"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "ec935340-6dd6-4905-9066-282cb24bed5b",
+                    "leftValue": "={{ $json.output.agent_to_route_to }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "empty",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Continue"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        5280,
+        1296
+      ],
+      "id": "99d2f58f-8b10-487d-a1c1-af7ce7b66f8d",
+      "name": "Switch1"
+    },
+    {
+      "parameters": {
+        "message": "={{ $json.output.direct_response_to_user }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1,
+      "position": [
+        4352,
+        1008
+      ],
+      "id": "a0c8e06b-14eb-4c94-84d1-a4e954be87bd",
+      "name": "Respond to Chat4",
+      "webhookId": "c097a1f5-27f6-49b3-9400-4c24df78d5af"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.output.agent_to_route_to }}",
+                    "rightValue": "Methodology",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    },
+                    "id": "d34a75dd-31ba-439e-a81e-c31bea189486"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Consult"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "ec935340-6dd6-4905-9066-282cb24bed5b",
+                    "leftValue": "={{ $json.output.agent_to_route_to }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "empty",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Continue"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        4512,
+        1680
+      ],
+      "id": "ce84e262-a142-48e4-bb88-ec69fdb3b829",
+      "name": "Switch2"
+    },
+    {
+      "parameters": {
+        "message": "={{ $json.output.direct_response_to_user }}",
+        "waitUserReply": false,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1,
+      "position": [
+        1184,
+        2064
+      ],
+      "id": "5728c8b4-8c23-4b65-a97a-4cdcaec4cbc5",
+      "name": "Respond to Chat8",
+      "webhookId": "7d97f5f6-abc8-4999-8601-010011a4b650"
+    },
+    {
+      "parameters": {
+        "message": "=\nQuery: {{ $json.query }}\nurl : {{ $json.url }}\nTitle: {{ $json.title }}\nContent: {{ $json.content }}\nScore: {{ $json.score }}",
+        "waitUserReply": false,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1,
+      "position": [
+        6832,
+        736
+      ],
+      "id": "4e8cb656-b7d4-4f4a-be1d-0d1910ec6e07",
+      "name": "Respond to Chat",
+      "alwaysOutputData": false,
+      "webhookId": "3b4bd899-af05-4a35-abea-8362dca9f591"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Your raw JSON string (exactly as given)\nconst raw = $input.first().json.intermediateSteps;\n\n// 1. Parse the JSON string into a JS value\nconst arr = JSON.parse(raw);\n\n// 2. In your example, it's an array with a single object\nconst obj = arr[0];\n\n// 3. Extract top-level fields\nconst query = obj.query;\nconst followUpQuestions = obj.follow_up_questions;\nconst answer = obj.answer;\nconst responseTime = obj.response_time;\nconst requestId = obj.request_id;\n\n// 4. Extract the results in a convenient format (e.g., list of papers)\nconst hasResults = Array.isArray(obj.results);\nconst results = hasResults ? obj.results.map(r => ({\n  url: r.url,\n  title: r.title,\n  content: r.content,\n  score: r.score,\n})) : [];\n\nconst outputItems = hasResults ? obj.results.map(r => ({\n  json: {\n    query: obj.query,\n    follow_up_questions: obj.follow_up_questions,\n    answer: obj.answer,\n    response_time: obj.response_time,\n    request_id: obj.request_id,\n    url: r.url,\n    title: r.title,\n    content: r.content,\n    score: r.score,\n  },\n})) : [{\n  json: {\n    query: obj.query,\n    follow_up_questions: obj.follow_up_questions,\n    answer: obj.answer,\n    response_time: obj.response_time,\n    request_id: obj.request_id,\n    results: [],\n    warning: \"No results found.\"\n  }\n}];\n\nreturn outputItems;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        6640,
+        736
+      ],
+      "id": "a984f95b-63c1-4a07-a37c-a117a6e22542",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        5616,
+        656
+      ],
+      "id": "94fc106f-d113-4379-84e0-5b56a3c17133",
+      "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        6448,
+        656
+      ],
+      "id": "d8fb79d6-99e8-4146-aba0-3bb3580f535f",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        6832,
+        544
+      ],
+      "id": "7b0c8e00-d9b3-4279-96b5-911000221bdb",
+      "name": "No Operation, do nothing1"
+    },
+    {
+      "parameters": {
+        "message": "=Doing reSEARCH 🧐\n\nAction: {{ $('No Operation, do nothing').item.json.intermediateSteps[0].action.log }}\n",
+        "waitUserReply": false,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1,
+      "position": [
+        6176,
+        496
+      ],
+      "id": "cbab2cd4-cb1e-459f-ba96-5542e81b3753",
+      "name": "Respond to Chat9",
+      "alwaysOutputData": false,
+      "webhookId": "268e4a6f-25df-46b1-9b63-d7abdd2f8f1b"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "fe449c3a-0d1a-4e05-9238-6a5dd04dc3bb",
+              "leftValue": "={{ $json.keys() }}",
+              "rightValue": "intermediateSteps",
+              "operator": {
+                "type": "array",
+                "operation": "contains",
+                "rightType": "any"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        5824,
+        640
+      ],
+      "id": "aa6b5f29-e14d-4b90-bbb9-a2b28bd13e77",
+      "name": "If1"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        6176,
+        880
+      ],
+      "id": "657bd8af-6766-4f35-b21b-b0052b14071d",
+      "name": "No Operation, do nothing2"
+    },
+    {
+      "parameters": {
+        "jsCode": "const files = $input.all().at(0)?.binary\nconst isFilesSent = typeof files === 'object' && Object.keys(files)?.length\n\nif (isFilesSent) {\n  return {files}\n}\n\nreturn $input.all()\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1872,
+        2624
+      ],
+      "id": "54bca629-9581-41bd-b6d4-0f632cb07940",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "files",
+        "include": "=allOtherFields",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -1696,
+        2624
+      ],
+      "id": "526295db-99e9-489c-804a-3fa95511b742",
+      "name": "Split Out",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -1488,
+        2624
+      ],
+      "id": "6309bf9e-295e-43dd-a638-03cf3e1b1618",
+      "name": "Loop Over Items1"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.files.mimeType }}",
+                    "rightValue": "application/pdf",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "ff455dc7-626d-40a2-90ad-e603eb8248c8"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "PDF"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "a1a5556d-999f-4811-ad52-f838514ff160",
+                    "leftValue": "={{ $json.files.mimeType }}",
+                    "rightValue": "Plain Text",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Plain Text"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "39a100ff-591e-4cd7-8337-1d140e17e1c0",
+                    "leftValue": "={{ $json.files.mimeType }}",
+                    "rightValue": "image",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Image"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "691134bc-7fc2-4c3a-a1fa-04e4079883e2",
+                    "leftValue": "={{ $json.files.mimeType }}",
+                    "rightValue": "application/zip",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "docx"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        -1216,
+        2624
+      ],
+      "id": "bad7ee1f-2979-4546-8505-5e322cfa0e40",
+      "name": "Switch4"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        -1072,
+        2304
+      ],
+      "id": "4eeaff45-eb06-4b41-b914-3db572c1dc64",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "files.data",
+        "binaryPropertyName": "base64DataBinary",
+        "options": {
+          "fileName": "={{ $json.files.fileName }}",
+          "mimeType": "={{ $json.files.mimeType }}"
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        -976,
+        2432
+      ],
+      "id": "de37524a-20e4-4d2e-a46e-43c32195daed",
+      "name": "Convert to File1"
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "binaryPropertyName": "base64DataBinary",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        -768,
+        2432
+      ],
+      "id": "97cbbf72-9888-4243-afec-f3c73f8ef2b0",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "files.data",
+        "binaryPropertyName": "base64DataBinary",
+        "options": {
+          "fileName": "={{ $json.files.fileName }}",
+          "mimeType": "={{ $json.files.mimeType }}"
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        -976,
+        2624
+      ],
+      "id": "a9c61b94-823f-4561-8d54-58b91b99e6cd",
+      "name": "Convert to File2"
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "files.data",
+        "binaryPropertyName": "base64DataBinary",
+        "options": {
+          "fileName": "={{ $json.files.fileName }}",
+          "mimeType": "={{ $json.files.mimeType }}"
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        -976,
+        2816
+      ],
+      "id": "946b5605-a597-4c98-ba65-63cf15ab8a53",
+      "name": "Convert to File3"
+    },
+    {
+      "parameters": {
+        "operation": "text",
+        "binaryPropertyName": "base64DataBinary",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        -768,
+        2624
+      ],
+      "id": "55d593c2-4732-4dd2-8a41-fbee8c7c822f",
+      "name": "Extract from File2"
+    },
+    {
+      "parameters": {
+        "operation": "binaryToPropery",
+        "binaryPropertyName": "base64DataBinary",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        -768,
+        2816
+      ],
+      "id": "7f184f26-1f2a-4d03-a98f-35251740d7c5",
+      "name": "Extract from File3"
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "fileContent",
+        "binaryPropertyName": "base64DataBinary",
+        "options": {
+          "fileName": "={{ $json.files.fileName }}",
+          "mimeType": "={{ $json.files.mimeType }}"
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        -448,
+        3360
+      ],
+      "id": "175684b3-ea79-4aa8-b998-2a42e883cd7f",
+      "name": "Convert to File4"
+    },
+    {
+      "parameters": {
+        "operation": "xml",
+        "binaryPropertyName": "base64DataBinary",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        -224,
+        3344
+      ],
+      "id": "87f54637-3d56-417f-bd87-f1e7ac5c8ea3",
+      "name": "Extract from File4"
+    },
+    {
+      "parameters": {
+        "binaryPropertyName": "=data0"
+      },
+      "type": "n8n-nodes-base.compression",
+      "typeVersion": 1.1,
+      "position": [
+        -1120,
+        3328
+      ],
+      "id": "6e1ced8e-117d-41cc-8ffa-03e6d3a4c5e7",
+      "name": "Compression",
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over all input items\nfor (const item of $input.all()) {\n  \n  // Check if binary data exists\n  if (item.binary) {\n    \n    // Loop through all binary keys (e.g., 'data', 'file')\n    for (const key of Object.keys(item.binary)) {\n      const binaryFile = item.binary[key];\n      \n      // Check if it looks like a docx (by name or extension)\n      const isDocx = (binaryFile.fileName && binaryFile.fileName.toLowerCase().endsWith('.docx')) || \n                     (binaryFile.fileExtension && binaryFile.fileExtension.toLowerCase() === 'docx');\n\n      if (isDocx) {\n        \n        // 1. Save original name to JSON for reference\n        item.json.original_filename = binaryFile.fileName;\n\n        // 2. RE-CREATE the binary object to ensure n8n sees the change\n        // We copy all existing data (...binaryFile) but overwrite the identifiers\n        item.binary[key] = {\n          ...binaryFile,\n          fileName: 'temp_converted.zip',\n          fileExtension: 'zip',\n          mimeType: 'application/zip',\n          fileType: 'zip'\n        };\n      }\n    }\n  }\n}\n\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1344,
+        3328
+      ],
+      "id": "0ca56c55-01f8-4aef-b1e3-c685ee2a547c",
+      "name": "Code in JavaScript3"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items\n// We use a standard for-loop to allow 'await' inside if supported by your n8n version\nconst results = [];\nconst items = $input.all();\n\nfor (let i = 0; i < items.length; i++) {\n  const item = items[i];\n  \n  let xmlContent = null;\n  let filenameFound = \"None\";\n  let extractionMethod = \"None\";\n  let errorLog = [];\n  let binaryData = null;\n\n  // 1. FIND THE CORRECT BINARY FILE\n  if (item.binary) {\n    for (const key of Object.keys(item.binary)) {\n      const binaryFile = item.binary[key];\n      const fname = binaryFile.fileName || \"\";\n      \n      // Check for document.xml\n      if (fname.endsWith('word/document.xml') || fname === 'document.xml') {\n        \n        // Get the data as a Buffer\n        binaryData = Buffer.from(binaryFile.data, 'base64');\n        filenameFound = fname;\n        \n        // FORENSICS\n        const hexHeader = binaryData.subarray(0, 4).toString('hex');\n        errorLog.push(`Hex Header: ${hexHeader}`);\n\n        // CHECK: Is it still a ZIP file?\n        if (hexHeader.startsWith('504b0304')) {\n            errorLog.push(\"CRITICAL: File is still a ZIP. Compression node failed.\");\n            item.json.critical_error = \"Output is still a ZIP.\";\n        } else {\n            // 2. ATTEMPT DECODING\n            \n            // Try A: Standard UTF-8\n            const asString = binaryData.toString('utf8').trim();\n            if (asString.includes('<w:document') || asString.startsWith('<')) {\n               xmlContent = asString;\n               extractionMethod = \"standard_utf8\";\n            } \n            else {\n               // Try B: Native DecompressionStream (No require needed)\n               // This works in Node 18+ and modern environments\n               if (typeof DecompressionStream !== 'undefined') {\n                   errorLog.push(\"Attempting native DecompressionStream...\");\n                   try {\n                       // We wrap the buffer in a Blob/Response to get a readable stream\n                       // We use 'deflate-raw' because zip contents are usually raw deflate\n                       const stream = new Response(binaryData).body.pipeThrough(new DecompressionStream('deflate-raw'));\n                       const blob = await new Response(stream).blob();\n                       xmlContent = await blob.text();\n                       extractionMethod = \"native_decompression_stream\";\n                   } catch (err) {\n                       errorLog.push(`DecompressionStream Error: ${err.message}`);\n                       \n                       // Fallback: Try 'deflate' (zlib wrapped) just in case\n                       try {\n                           const stream2 = new Response(binaryData).body.pipeThrough(new DecompressionStream('deflate'));\n                           const blob2 = await new Response(stream2).blob();\n                           xmlContent = await blob2.text();\n                           extractionMethod = \"native_decompression_stream_zlib\";\n                       } catch (err2) {\n                           errorLog.push(`DecompressionStream (Zlib) Error: ${err2.message}`);\n                       }\n                   }\n               } else {\n                   errorLog.push(\"DecompressionStream API not available in this environment.\");\n               }\n            }\n        }\n        break; \n      }\n    }\n  }\n\n  // 3. PARSE THE XML\n  if (xmlContent && (xmlContent.includes('<w:document') || xmlContent.includes('<w:t'))) {\n    \n    // Cleanup BOM\n    if (xmlContent.charCodeAt(0) === 0xFEFF) xmlContent = xmlContent.slice(1);\n\n    item.json.debug_xml_preview = xmlContent.substring(0, 100);\n\n    // Paragraph Parsing\n    const paragraphs = xmlContent.split(/<\\/w:p>/);\n    const extractedLines = paragraphs.map(para => {\n      const textMatches = para.match(/<w:t[\\s\\S]*?>([\\s\\S]*?)<\\/w:t>/g);\n      if (!textMatches) return null;\n      return textMatches.map(tag => tag.replace(/<[^>]+>/g, '')).join(''); \n    });\n\n    const cleanText = extractedLines\n      .filter(line => line !== null && line.trim() !== '')\n      .join('\\n');\n\n    item.json.extracted_text = cleanText || \"EMPTY (Structure found but no text)\";\n    extractionMethod += \"_structured\";\n  } else {\n    item.json.extracted_text = \"ERROR: Failed to decode.\";\n    item.json.debug_log = errorLog;\n  }\n  \n  item.json.found_file_name = filenameFound;\n  item.json.extraction_method = extractionMethod;\n  results.push(item);\n}\n\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -880,
+        3344
+      ],
+      "id": "bb8fb380-c425-4865-97cd-5bbb88dec5a6",
+      "name": "Code in JavaScript4"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "extracted_text",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -688,
+        3344
+      ],
+      "id": "5b0dbdf7-2916-4371-82ee-28000af3513f",
+      "name": "Split Out1"
+    },
+    {
+      "parameters": {
+        "inputDataFieldName": "=data0",
+        "name": "=",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "root",
+          "cachedResultName": "/ (Root folder)"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -2096,
+        2256
+      ],
+      "id": "5385572b-1dd9-4415-8f31-65e380c06062",
+      "name": "Upload file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "WN8O5QEPQvmD0I9b",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://www.googleapis.com/drive/v2/files/{{ $json.id }}/copy?convert=true&supportsAllDrives=true",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -1936,
+        2256
+      ],
+      "id": "b85dad9f-12bd-4e52-bfbd-73cb112860ae",
+      "name": "HTTP Request",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "WN8O5QEPQvmD0I9b",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "documentURL": "={{ $json.id }}"
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        -1776,
+        2256
+      ],
+      "id": "75eda353-2833-4f27-a437-eb9f904ef640",
+      "name": "Get a document",
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "lzVzRvl38OulCVw6",
+          "name": "Google Docs account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "deleteFile",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.documentId }}",
+          "mode": "id"
+        },
+        "options": {
+          "deletePermanently": true
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -1616,
+        2160
+      ],
+      "id": "3dc2e2c2-7428-4880-ab6a-6f8af7d5dc08",
+      "name": "Delete a file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "WN8O5QEPQvmD0I9b",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Manual docx convert\n**Double click** to edit me. [Guide](https://docs.n8n.io/workflows/sticky-notes/)",
+        "height": 400,
+        "width": 1744
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1792,
+        3168
+      ],
+      "typeVersion": 1,
+      "id": "095fec7e-7231-47a1-8ade-9fcb55a6dbe0",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "tableId": "documents",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "documentId",
+              "fieldValue": "={{ $json.data[0].documentId }}"
+            },
+            {
+              "fieldId": "content",
+              "fieldValue": "={{ $json.data[0].content }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -784,
+        2224
+      ],
+      "id": "b8fa937e-1899-4381-9cc8-2a73587ea16c",
+      "name": "Create a row",
+      "credentials": {
+        "supabaseApi": {
+          "id": "nX28xyxbXADAjc81",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "documents",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "documentId",
+              "keyValue": "="
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -1664,
+        3312
+      ],
+      "id": "43446fb5-d46b-477d-9a11-3c4d1e6deb09",
+      "name": "Get a row",
+      "credentials": {
+        "supabaseApi": {
+          "id": "nX28xyxbXADAjc81",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "36bdb060-4b75-452c-976d-f1b6eb625af9",
+                    "leftValue": "={{ $json.files[0].fileExtension }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "empty",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "No upload"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "df383188-db74-4bab-9976-8d80b516bd5e",
+                    "leftValue": "={{ $json.files[0].fileExtension }}",
+                    "rightValue": "=docx",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEquals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "PDF / Image"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.files[0].fileExtension }}",
+                    "rightValue": "docx",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "9f802d6b-9765-4c64-a597-8e607e0915b4"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "DOCX"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        -2272,
+        2544
+      ],
+      "id": "8b2b7647-ce39-45e7-b5d7-21121dcd6f95",
+      "name": "Switch5"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{   \"session_id\":\"session_id\",\n\t\"direct_response_to_user\": \"Your suggestion, question\",\n    \"need_info\": true,\n    \"forwarded_message\":\"The user want to do sample size calculation in...\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        3392,
+        2672
+      ],
+      "id": "430e027d-acb7-45ea-918f-b03937ec3e8c",
+      "name": "Structured Output Parser3"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5.2",
+          "mode": "list",
+          "cachedResultName": "gpt-5.2"
+        },
+        "builtInTools": {
+          "codeInterpreter": true
+        },
+        "options": {
+          "timeout": 200000,
+          "maxRetries": 2
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        2976,
+        2704
+      ],
+      "id": "515dfbba-c855-4658-8268-4695fa900800",
+      "name": "OpenAI Chat Model3",
+      "credentials": {
+        "openAiApi": {
+          "id": "59OThYICoUTbaRGq",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-5-mini"
+        },
+        "builtInTools": {
+          "codeInterpreter": true
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        3008,
+        2928
+      ],
+      "id": "6368ae96-f95b-4caa-9692-0949909c8a68",
+      "name": "OpenAI Chat Model4",
+      "credentials": {
+        "openAiApi": {
+          "id": "59OThYICoUTbaRGq",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "message": "={{ $json.output.direct_response_to_user }}",
+        "waitUserReply": false,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1,
+      "position": [
+        3744,
+        2240
+      ],
+      "id": "94020f27-9ed2-43b2-b528-54fed9b77468",
+      "name": "Respond to Chat11",
+      "alwaysOutputData": false,
+      "webhookId": "24285d86-0e57-46df-bcba-7d3d37bcf04c"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e1d4fdcb-2942-4c9d-b74d-6397df0df569",
+              "name": "=session_id",
+              "value": "={{  $json.output.session_id }}",
+              "type": "string"
+            },
+            {
+              "id": "51f43e38-8542-48c9-96db-7cf18a1665d6",
+              "name": "script",
+              "value": "={{ $json.output.script }}",
+              "type": "string"
+            },
+            {
+              "id": "f9f00e34-5f93-4875-ab21-5f63975b51e7",
+              "name": "language",
+              "value": "={{ $json.output.language }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4432,
+        2304
+      ],
+      "id": "c20187fc-8f32-4edf-9c6e-8978c1925138",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -96,
+        2704
+      ],
+      "id": "6d1c039c-1f77-4a7e-a4e2-ddf5fd0c1e39",
+      "name": "OpenAI Chat Model5",
+      "credentials": {
+        "openAiApi": {
+          "id": "59OThYICoUTbaRGq",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c54fbc9d-a5c9-4148-9753-ab029a716c6f",
+              "leftValue": "={{ $json.script }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        4576,
+        2304
+      ],
+      "id": "05e849a8-3c06-4493-afcf-8d897d3f0103",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "message": "=Working on it...",
+        "waitUserReply": false,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1,
+      "position": [
+        -2032,
+        2784
+      ],
+      "id": "6cdbb099-722c-4f8a-8deb-aed55c5d18fa",
+      "name": "Respond to Chat15",
+      "webhookId": "d64e06b6-0938-4a99-b4a3-069c79d9f922"
+    },
+    {
+      "parameters": {
+        "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', ``, 'string') }}",
+        "waitUserReply": false
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTool",
+      "typeVersion": 1,
+      "position": [
+        160,
+        2736
+      ],
+      "id": "6aec6635-f6df-40f1-8b1e-60450f305fb5",
+      "name": "Respond to Chat17",
+      "webhookId": "a13f4c9a-bc7f-477c-8393-f3eeb6557e19"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-5-mini"
+        },
+        "responsesApiEnabled": false,
+        "options": {
+          "timeout": 200000,
+          "maxRetries": 2
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        3232,
+        3104
+      ],
+      "id": "fb0413a8-e844-4278-bbb7-bb41caff48e1",
+      "name": "OpenAI Chat Model6",
+      "retryOnFail": true,
+      "credentials": {
+        "openAiApi": {
+          "id": "59OThYICoUTbaRGq",
+          "name": "OpenAi account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-5-mini"
+        },
+        "builtInTools": {
+          "codeInterpreter": true
+        },
+        "options": {
+          "timeout": 200000,
+          "maxRetries": 2
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        3600,
+        1968
+      ],
+      "id": "31afdb3f-e181-4c36-b002-c52871528454",
+      "name": "OpenAI Chat Model7",
+      "credentials": {
+        "openAiApi": {
+          "id": "59OThYICoUTbaRGq",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5-nano",
+          "mode": "list",
+          "cachedResultName": "gpt-5-nano"
+        },
+        "responsesApiEnabled": false,
+        "options": {
+          "timeout": 200000,
+          "maxRetries": 2
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        4688,
+        1264
+      ],
+      "id": "2392846a-0cc7-4fdf-baf4-84fd07110976",
+      "name": "OpenAI Chat Model8",
+      "credentials": {
+        "openAiApi": {
+          "id": "59OThYICoUTbaRGq",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        2096,
+        1024
+      ],
+      "id": "f1c60ec3-1155-42be-8061-44e88bd6b2b5",
+      "name": "Execute Workflow",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "message": "={{ $json.output }}",
+        "waitUserReply": false,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1,
+      "position": [
+        5920,
+        912
+      ],
+      "id": "fb02c523-4a22-4cdf-8129-aeb51c39d94f",
+      "name": "Respond to Chat16",
+      "webhookId": "91f321d9-5721-4ffa-bd89-21541d10c00c"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ef873072-9dc5-443c-8846-d21e7c6a51f3",
+              "name": "intermediateSteps",
+              "value": "={{ $json.intermediateSteps }}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        6048,
+        656
+      ],
+      "id": "82196b23-9892-4cd9-8577-529040a38255",
+      "name": "Edit Fields4"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "intermediateSteps",
+        "options": {
+          "destinationFieldName": "intermediateSteps"
+        }
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        6208,
+        656
+      ],
+      "id": "4b62fa2e-66dd-446e-a695-f2b75ee614cc",
+      "name": "Split Out2"
+    },
+    {
+      "parameters": {
+        "content": "## IntermediateSteps\n**Double click** to edit me. [Guide](https://docs.n8n.io/workflows/components/sticky-notes/)",
+        "height": 672,
+        "width": 1616
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        5504,
+        432
+      ],
+      "typeVersion": 1,
+      "id": "a7128c24-c62d-4b60-945a-32636c656394",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-5-mini"
+        },
+        "responsesApiEnabled": false,
+        "options": {
+          "timeout": 200000,
+          "maxRetries": 2
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        2640,
+        1296
+      ],
+      "id": "453d3f2f-4316-4557-a2ef-84799e8b7030",
+      "name": "OpenAI Chat Model10",
+      "credentials": {
+        "openAiApi": {
+          "id": "59OThYICoUTbaRGq",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "Ng2DzXCsgvBoFZx7",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/Ng2DzXCsgvBoFZx7",
+          "cachedResultName": "Research assistant — Tavily"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        3248,
+        1056
+      ],
+      "id": "1ba4dfe5-bf3f-49ac-a3dc-63d772a488c4",
+      "name": "Search",
+      "retryOnFail": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "4xqEZud7EReE5zf1",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/4xqEZud7EReE5zf1",
+          "cachedResultName": "Research assistant — My Sub-Workflow 1"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        5696,
+        912
+      ],
+      "id": "fb1e4d35-a612-4ab3-8868-86d489ea168c",
+      "name": "Fun response"
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "results"
+            }
+          ]
+        },
+        "options": {
+          "mergeLists": true
+        }
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        3488,
+        1152
+      ],
+      "id": "e09fcec4-f0ff-49e2-86f6-b9d8b2be4550",
+      "name": "Aggregate1"
+    },
+    {
+      "parameters": {
+        "message": "=Doing REsearch...",
+        "waitUserReply": false,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1,
+      "position": [
+        3168,
+        928
+      ],
+      "id": "c705898b-ec60-4489-ad21-9ce84fa0d3e0",
+      "name": "Respond to Chat18",
+      "webhookId": "13a34ea1-46cd-4b54-b5a5-d89a0c5a1ccb"
+    },
+    {
+      "parameters": {
+        "message": "=Done Searched!!",
+        "waitUserReply": false,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1,
+      "position": [
+        3456,
+        928
+      ],
+      "id": "b2b47b42-e13f-4078-b31b-a01779556c87",
+      "name": "Respond to Chat19",
+      "webhookId": "080105aa-7706-40df-940c-b799eb5b1f6e"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"1\" : \"SearchTerm1\",\n  \"2\" : \"SearchTerm2\",\n  \"3\":\"SearchTerm3\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        2896,
+        1312
+      ],
+      "id": "8ae204db-bde7-48de-9f62-fba1c7cd3f37",
+      "name": "Structured Output Parser4"
+    },
+    {
+      "parameters": {
+        "jsCode": "const obj = $input.first().json.output;\n\nreturn Object.entries(obj).map(([id, query]) => ({\n  json: { id, query }\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2992,
+        1056
+      ],
+      "id": "f39cb470-7fb2-43b7-ae5a-477637fe6c47",
+      "name": "Code in JavaScript5"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        3712,
+        1072
+      ],
+      "id": "6abe62d9-5288-4d8a-a20c-0be10579ae82",
+      "name": "Merge2"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "=   {{ $json.output.agent_to_route_to }}",
+                    "rightValue": "={{ \"esearch\" }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    },
+                    "id": "be6f1cfa-d636-43bb-83ce-f05701cc0b56"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Research GAp"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "515d13c2-d9a8-4a40-9415-4726b8470aec",
+                    "leftValue": "={{ $json.output.agent_to_route_to }}",
+                    "rightValue": "={{\"ethodo\"}}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Methodology"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "54384846-6dc6-4c14-b116-1559353d7e29",
+                    "leftValue": "={{ $json.output.agent_to_route_to }}",
+                    "rightValue": "={{ \"iostat\" }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Biostatistics"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "e5f505d3-1763-448f-b08d-2ece044c248e",
+                    "leftValue": "={{ $json.output.agent_to_route_to }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "empty",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Orchestrator"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        1696,
+        2000
+      ],
+      "id": "faef61eb-84e7-4b8a-a8f9-90cf69c87370",
+      "name": "Switch6"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        928,
+        2064
+      ],
+      "id": "a50a3b87-eb8d-497b-af67-907ffb53ee50",
+      "name": "No Operation, do nothing5"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        688,
+        2720
+      ],
+      "id": "86e1d581-2673-46ff-8f3f-1a33833eed61",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "YbG78gfQaFXHu5qG",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-flash-latest",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        3952,
+        1184
+      ],
+      "id": "ecaf1dbd-6822-4056-860c-c31abed1e260",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "YbG78gfQaFXHu5qG",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        2768,
+        1312
+      ],
+      "id": "75625d1b-fcc6-47e7-910d-cdc8efd5f87f",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        4304,
+        1328
+      ],
+      "id": "dcbc3e38-22ec-46af-abec-db2cca8465b4",
+      "name": "Simple Memory1"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"direct_response_to_user\" : \"Your search, suggest, question, etc.\",\n  \"agent_to_route_to\" : \"MethodologyAgent\",\n  \"forwarded_message\":\"The user want to consult methodology research about...\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        4896,
+        1248
+      ],
+      "id": "f23ae6ea-0138-43fc-9fae-88643c400930",
+      "name": "Structured Output Parser5"
+    },
+    {
+      "parameters": {
+        "message": "=I'm doing summary from the search, rest assure...",
+        "waitUserReply": false,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1,
+      "position": [
+        3840,
+        816
+      ],
+      "id": "a4f5e7b4-bbec-4f13-85ce-acca3040c385",
+      "name": "Respond to Chat20",
+      "webhookId": "e619e933-2633-45e1-8813-6c3f628b73cb"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "587c9a0b-ee1c-4c70-9881-3468658c4614",
+              "name": "output.agent_to_route_to",
+              "value": "=",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2176,
+        2048
+      ],
+      "id": "6d7d4e68-b6c9-48de-b55a-ed45ab36f9d0",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "47a6c064-ac0a-4bb3-8841-188acbda9b03",
+              "name": "output.agent_to_route_to",
+              "value": "=",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2272,
+        2320
+      ],
+      "id": "1f351c6f-2c61-403d-a2f8-eb9880ec0e13",
+      "name": "Edit Fields3",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "message": "={{ $json.output.direct_response_to_user }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1,
+      "position": [
+        4016,
+        1648
+      ],
+      "id": "00d505c8-1a82-47c6-bf0c-f808056cbe8e",
+      "name": "Respond to Chat5",
+      "webhookId": "0d4297dc-bd61-4079-bd60-03f6fa663d31"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5-nano",
+          "mode": "list",
+          "cachedResultName": "gpt-5-nano"
+        },
+        "responsesApiEnabled": false,
+        "options": {
+          "timeout": 200000,
+          "maxRetries": 2
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        4176,
+        1936
+      ],
+      "id": "a145dca2-1caf-49d8-941c-4a1240ec05d1",
+      "name": "OpenAI Chat Model9",
+      "credentials": {
+        "openAiApi": {
+          "id": "59OThYICoUTbaRGq",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"direct_response_to_user\" : \"Your search, suggest, question, etc.\",\n  \"agent_to_route_to\" : \"MethodologyAgent\",\n  \"forwarded_message\":\"The user want to consult methodology research about...\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        4320,
+        1936
+      ],
+      "id": "b1d05c6b-b640-49b2-8441-2899a59e5f8f",
+      "name": "Structured Output Parser6"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "86e5a7d1-152d-4597-8f3e-a2533538d07d",
+              "name": "output.agent_to_route_to",
+              "value": "=",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2176,
+        1744
+      ],
+      "id": "b44411e1-fff3-49a3-925b-6b42b6315ac8",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5.2",
+          "mode": "list",
+          "cachedResultName": "gpt-5.2"
+        },
+        "builtInTools": {
+          "webSearch": {
+            "searchContextSize": "medium"
+          },
+          "codeInterpreter": true
+        },
+        "options": {
+          "timeout": 200000
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        3856,
+        2608
+      ],
+      "id": "631628e8-a9a5-4121-8a6c-e115de33aed1",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "59OThYICoUTbaRGq",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "8f4adbc1-ce6e-4ea9-913f-7b86b3fad56c",
+              "leftValue": "={{ $json.output.need_info }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        3520,
+        2480
+      ],
+      "id": "fec3c57b-41dc-4c72-b92f-e7e66ce696c4",
+      "name": "If3"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "90c87c08-452d-4b97-b376-dd5b95502a25",
+              "leftValue": "={{ $json.output.need_code }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "6954bd35-9e80-497f-a2ac-abd766cbdcd5",
+              "leftValue": "",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        4240,
+        2352
+      ],
+      "id": "157c668c-598a-42b0-8aff-15df90943de0",
+      "name": "If4"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.output.agent_to_route_to }}",
+                    "rightValue": "Methodology",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    },
+                    "id": "d34a75dd-31ba-439e-a81e-c31bea189486"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Consult"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "ec935340-6dd6-4905-9066-282cb24bed5b",
+                    "leftValue": "={{ $json.output.agent_to_route_to }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "empty",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Continue"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        6080,
+        2912
+      ],
+      "id": "20dd1ce4-816e-423b-84dc-ef432cec2e23",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5-nano",
+          "mode": "list",
+          "cachedResultName": "gpt-5-nano"
+        },
+        "responsesApiEnabled": false,
+        "options": {
+          "timeout": 200000,
+          "maxRetries": 2
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        4448,
+        2912
+      ],
+      "id": "fb08ebea-3e02-45e0-92da-144abe84e33f",
+      "name": "OpenAI Chat Model11",
+      "credentials": {
+        "openAiApi": {
+          "id": "59OThYICoUTbaRGq",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"direct_response_to_user\" : \"Your suggestion, question, etc.\",\n  \"agent_to_route_to\" : \"MethodologyAgent\",\n  \"forwarded_message\":\"The user want to consult methodology research about...\"\n}",
+        "autoFix": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        4832,
+        2752
+      ],
+      "id": "5ecc9a3f-0058-4085-ba1e-1758988ab772",
+      "name": "Structured Output Parser7",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "message": "={{ $json.output.direct_response_to_user }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1,
+      "position": [
+        3648,
+        2640
+      ],
+      "id": "0705fbec-d796-4bdf-b349-4d10381b4447",
+      "name": "Respond to Chat13",
+      "alwaysOutputData": false,
+      "webhookId": "eec922a2-80a7-4730-a35d-19922b88e572"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Diagnostic Agent see the type of the study for further suggest the proper statistics",
+        "text": "=",
+        "options": {
+          "systemMessage": "You are a helpful biostatistics. You are responsible for Diagnostic Phase: Test Selection Logic\nBefore suggesting a test, you must diagnose the data structure using a mental decision tree (based on,,):\n\nAction: If the user asks \"What test do I use?\", do not answer immediately. Ask clarifying questions about the variables and distribution.\n\nSelection Map:\n\n2 Independent Means (Normal): Independent t-test\n\n2 Independent Means (Non-Normal/Ordinal): Mann-Whitney U\n\n3+ Independent Means (Normal): One-way ANOVA (followed by Tukey’s post-hoc)\n\n3+ Independent Means (Non-Normal): Kruskal-Wallis\n\nCategorical vs. Categorical: Chi-Square (or Fisher’s Exact if expected count <5).\n\n\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "typeVersion": 3,
+      "position": [
+        3232,
+        2928
+      ],
+      "id": "e3bd1218-35e1-43b7-b094-a666d518e2cd",
+      "name": "DioagnosticAgent"
+    },
+    {
+      "parameters": {
+        "message": "=Rest assure. This might take some times for thinking... It might take 3-4 minutes.",
+        "waitUserReply": false,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1,
+      "position": [
+        2832,
+        2256
+      ],
+      "id": "c40a8764-275b-4b0c-8f4a-5dcc727c5870",
+      "name": "Respond to Chat21",
+      "webhookId": "f9dc8bc2-b61f-4a78-8cac-93fd5f200638"
+    },
+    {
+      "parameters": {
+        "message": "={{ $json.output.direct_response_to_user }}",
+        "waitUserReply": false,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1,
+      "position": [
+        4208,
+        2176
+      ],
+      "id": "958c48d0-b0c1-4195-9123-ae5bd41cca4b",
+      "name": "Respond to Chat22",
+      "webhookId": "eb8c839e-1104-4c49-b8c3-1ac672b5b999"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\"session_id\":\"session_id\",\n   \"direct_response_to_user\":\"Your calculation\",\n \"need_code\":true,\n \"language\":\"python\",\n \"script\":\"Your code\",\n\"forwarded_message\": \"Summarize this ...  \"\n}",
+        "autoFix": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        4096,
+        2560
+      ],
+      "id": "7be5d895-d822-45fb-b579-1322af0404a6",
+      "name": "Structured Output Parser8"
+    },
+    {
+      "parameters": {
+        "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', ``, 'string') }}",
+        "options": {
+          "limitWaitTime": {
+            "values": {
+              "resumeUnit": "minutes"
+            }
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTool",
+      "typeVersion": 1,
+      "position": [
+        4032,
+        2704
+      ],
+      "id": "51de46c4-8fb5-43d2-866e-5495eabf89fb",
+      "name": "Respond to Chat1",
+      "webhookId": "8c5cc936-501c-4880-9e24-2b73964153c7"
+    },
+    {
+      "parameters": {
+        "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTool",
+      "typeVersion": 1,
+      "position": [
+        4688,
+        2768
+      ],
+      "id": "c9675275-8b56-47a0-a092-bb3dcccb5738",
+      "name": "Respond to Chat6",
+      "webhookId": "420416f2-58b3-4d73-805d-274f89976b63"
+    },
+    {
+      "parameters": {
+        "message": "=Here is your script download link : [Download]({{ $json.webContentLink }})",
+        "waitUserReply": false,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1,
+      "position": [
+        5216,
+        2288
+      ],
+      "id": "29dc85b7-a0c6-412b-8f34-178e17fe79b3",
+      "name": "Respond to Chat7",
+      "webhookId": "090b3a6c-1c21-4b30-83a5-2ca741186874"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        4832,
+        2912
+      ],
+      "id": "daac6887-bf3c-42e5-88fd-b0e9f2ef1a93",
+      "name": "Google Gemini Chat Model2",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "YbG78gfQaFXHu5qG",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        4176,
+        2720
+      ],
+      "id": "acd56e23-d3e3-4619-89e1-87fbbed1d224",
+      "name": "Google Gemini Chat Model3",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "YbG78gfQaFXHu5qG",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "n8n_ai_histories",
+        "dataToSend": "autoMapInputData"
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        4768,
+        2288
+      ],
+      "id": "7531e34a-a1b9-4a4a-8ad7-8d7b531ed48a",
+      "name": "Create a row2",
+      "credentials": {
+        "supabaseApi": {
+          "id": "wNXaVKvF24X45LA6",
+          "name": "Supabase account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "toText",
+        "sourceProperty": "=script",
+        "binaryPropertyName": "=data",
+        "options": {
+          "fileName": "script.txt"
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        4928,
+        2288
+      ],
+      "id": "49182bc1-1a68-4cd3-985a-d6f36d0338af",
+      "name": "Convert to File5"
+    },
+    {
+      "parameters": {
+        "inputDataFieldName": "=data",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "18G9v-GsoLQC_NJ5TdwPbBM73426ticdd",
+          "mode": "list",
+          "cachedResultName": "Script",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/18G9v-GsoLQC_NJ5TdwPbBM73426ticdd"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        5072,
+        2288
+      ],
+      "id": "7f00c739-c32c-41cb-a1fc-6a8cb59e8e8d",
+      "name": "Upload file1",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "WN8O5QEPQvmD0I9b",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Query from other agent:{{ $json.output.forwarded_message || \"\" }}\n\nUser response: {{ $json.chatInput  || \"\" }}\n\nProposal : {{ $if($('Aggregate').isExecuted, $('Aggregate').item.json.data[0].content, \"\" ) || \"\" }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "Role: You are the Senior Methodologist and Knowledge Gap Analyst. Your specific mandate is to prevent \"research waste\" by ensuring users pursue questions that are novel, necessary, and answerable. You do not merely accept topics; you interrogate them against the current evidence landscape to identify genuine Gaps of Knowledge.\n\nPhase 1: Evidence Landscape Assessment (The \"Search\" Mandate)\nYou must perform a rigorous preliminary search to determine the state of current knowledge.\n\nSearch Strategy: Prioritize Systematic Reviews, Meta-Analyses, and Health Technology Assessments (the \"top of the pyramid\") over individual studies.\n\n## Search Method\n- Use both **keyword** and **controlled vocabulary** (MeSH/Emtree) terms, including synonyms and acronyms.\n- Prioritize: 1) recent high-quality evidence (last 24 months), 2) definitive older “seminal” works, 3) latest guidelines.\n- Apply inclusion/exclusion criteria: population, design (RCT > quasi-experimental > cohort > case-control > cross-sectional), language (default English), human studies, appropriate age group, setting, and date range.\n- Keep a **transparent search log** (databases, dates run, exact queries, filters).\n\nYour job is just come up with 3-5 search terms. Keep each search term less than 400 characters.\n\nPlease return JSON like:\n{\n\"1\":\"term1\",\n\"2\":\"term2\",\n\"3\":\"term3\"\n}\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        2640,
+        1056
+      ],
+      "id": "79fc70f3-af41-4ba8-9521-1882b311b8e0",
+      "name": "ResearchGapAgentSearch",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Query from other agent: {{ $json.output.forwarded_message ||\"\"}}\n\nUser response: {{ $json.chatInput || \"\"}}\n\nProposal : {{ $if($('Aggregate').isExecuted, $('Aggregate').item.json.data[0].content, \"\" ) || \"\" }}\n",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "System Prompt: Biostatistics & Data Analysis Agent\nRole: You are a Senior Biostatistician and Clinical Data Scientist. Your mandate is to guide users through the statistical lifecycle of medical research—from power analysis and study design to code execution and interpretation. You possess deep expertise in frequentist and Bayesian frameworks, survival analysis, and causal inference.\n\nCore Philosophy: \"Statistics is the grammar of science.\" Your goal is not just to output a p-value, but to ensure the user understands the story the data is telling. You prioritize Effect Sizes and Confidence Intervals over binary \"significance,\" and you aggressively guard against common methodological errors like p-hacking and disregarding assumptions.\n<TOOL>\nTool available: *USE tool when need**\n1. Diagnostic Tool: Call Diagnostic agent tool\nProvide some information to the tool, such as\n- Variable Type: Are the variables Nominal, Ordinal, or Interval/Ratio?\n- Distribution: Is the data Normally Distributed (Parametric) or Skewed (Non-Parametric)?\n- Dependency: Are samples Paired (related) or Independent?\n- Groups: How many groups are being compared? (2 vs. >2).\n********\n</TOOL>\n\nFor Power & Sample Size\n\nYou must emphasize that sample size calculation is an ethical requirement, not just a math problem. Underpowered studies waste resources; overpower studies expose subjects to unnecessary risk.\n\nRequired Inputs: Alpha (usually 0.05), Power (usually 0.80 or 0.90), and Effect Size (Cohen’s d, Odds Ratio, etc.).\nYou should summarize from user's need and use correct theory, then provide a comprehensive information to coding agent\n\n\nConstraint: If the user does not know the effect size, suggest estimating it from pilot data or literature, or calculating a range of sample sizes for small, medium, and large effects.\n\nYou must translate statistical outputs into clinical English, Use \"EL12\" (Explain Like I'm 12) Protocol.\n\nThe P-Value: Never define it simply as \"probability of error.\" Define it as: \"The probability of seeing data this extreme if there were actually no effect.\"\n\nConfidence Intervals (CIs): Prioritize CIs. Explain them as: \"The range of values within which we can be 95% sure the true effect lies.\"\n\n\n\n\nAssumption Check: You must state whether assumptions (normality, linearity) were met.\n\nSteps:\n- Always ask clarification question and all the information needed in equation so you can refer it the coding agent. \n-If you're not satisfy, keep \"need_info\" to true and ask question in \"direct_response_to_user\". Keep \"forwarded_message\" empty \"\".\n- Ask question line by line. Keep it readable, with clarification and a bit explanation what do you mean. Most user doesn't familiar with statistics.\n-When you get all the information you need, set \"need_info\" to false, then put your order to coding agent as plain text with all information in \"forwarded_message\", and tell the user what you're going to do in \"direct_response_to_user \"\n- I't's not your job to ask about code or write the code, or provide equation. Pass it to the next agent.\n\nDo think hard and use code interpreter for caluculation. Always recheck the accuracy.\nPlease return JSON like:\n{\"session_id\":\"session_id\",\n  \"direct_response_to_user\" : \"Your plan suggestion, question, etc.\",\n  \"need_info\":true,\n \"forwarded_message\":\"The user want do calculate sample size with..\"\n}\n\nExplanation:\ndirect_response_to_user: A short message to the user asking for clarification what the user need to calculate or what information the user need to provide for statistical analysis.\n\nneed_info : Boolean , set to true if need more clarification.\n\n\nCRITICAL: Never put the message or sentence in this field. Only the exact string name.\n\nforwarded_message: The detailed technical instruction for the coding agent\n\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        3200,
+        2480
+      ],
+      "id": "f99744a3-9bad-4287-a445-7a45e535e26e",
+      "name": "BiostatisticsAgent",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Instruction: {{ $json.output.forwarded_message ||\"\"}}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "Role: You are a professional coding engineer in biostatistics. \n\nYou can write Python and R's scripts, or STATA's do file, based on the query from the biostatistics agent.\nUse code interpreter tool quick test and calculation for user.\n\n**\nAlways use Chat Tool to ask the user if they want a code generation, and in which language (Python/R/STATA). \n- If they want code, do set \"need_code\" to true and fill in \"language\", and \"script\". \n- Else, set \"need_code\" to false, and you can keep \"language\" and \"script\" empty \"\".\n\nA code should be readable and easy to understand, write line by line . Do think hard, don't use the old or outdated command. Always recheck.\n**\n\nWrite brief explanation of your calculation to the user put in \"direct_response_to_user\".\nWrite forward message to the secretary agent as ingredient for her to explain to the user.\n\nPlease return JSON like:\n{\"session_id\":\"session_id\",\n \"direct_response_to_user\":\"Your calculation\",\n \"need_code\":true,\n \"language\":\"python\",\n \"script\":\"Your code\",\n \"forwarded_message\": \"Summarize this ...  \"\n}\n\nAlways make sure the code it readable and with proper explanation. Write it line by line\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        3920,
+        2352
+      ],
+      "id": "88f2f994-6374-48fa-b0f3-8ca1fe20c5e0",
+      "name": "CodingAgent",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Query from other agent:{{ $json.output.forwarded_message || \"-\" }}\n\nUser response: {{ $json.chatInput  || \"-\" }}\n\nProposal : {{ $if($('Aggregate').isExecuted, $('Aggregate').item.json.data[0].content, \"\" ) || \"-\" }}\n\nSearch Result: {{ $json.results.map((r,i) => `${i+1}. ${r.title ?? ''}\\n${r.url}\\n${r.content ?? ''}`).join('\\n\\n') }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "Role: You are the Senior Methodologist and Knowledge Gap Analyst. Your specific mandate is to prevent \"research waste\" by ensuring users pursue questions that are novel, necessary, and answerable. You do not merely accept topics; you interrogate them against the current evidence landscape to identify genuine Gaps of Knowledge.\n\nOperational Philosophy: \"A gap is not simply 'something that hasn't been done.' A valid research gap exists only when the current body of evidence is insufficient, biased, inconsistent, or inapplicable to a specific population.\"\n\nCORE PROTOCOLS\n\nVerification Logic:\n\nIf a recent (<3 years) high-quality Systematic Review exists: Challenge the user. Is there a need for an update? Has the context changed? If not, the gap is likely closed.\n\nIf evidence is conflicting: This is a Conflict Gap.\n\nIf evidence exists but is low quality: This is a Methodological Gap.\n\nIf evidence exists only in adults/Western populations: This is a Population/Context Gap.\n\nPhase 2: Gap Taxonomy & Classification\nYou must classify the user's potential gap using the Robinson et al. (2011) and Müller-Bloch & Kranz frameworks. Explicitly label the gap in your response:\n\nEvidence Gap: No studies or insufficient data to draw conclusions.\n\nKnowledge Gap: The concept itself is unexplored or lacks theoretical grounding.\n\nPractical-Knowledge Gap: Professional practice deviates from research findings (Implementation Science).\n\nMethodological Gap: Previous studies used flawed designs (e.g., lack of control, immortal time bias, small sample size).\n\nEmpirical Gap: Findings need verification in a new setting or population (Validation).\n\nConflict Gap: Existing studies provide contradictory results.\n\nPhase 3: Question Crystallization (The \"Sharpening\" Tools)\nOnce a valid gap is isolated, you must force the user's vague inquiry into a structured syntax.\n\nPICO / PICOTS:\n\nPopulation (Be specific: \"Diabetics\" → \"T2DM patients >65 with BMI >30\")\n\nIntervention / Exposure (Define dose, duration, frequency)\n\nComparator (CRITICAL: Is it placebo or standard of care? If no comparator, flag as descriptive only.)\n\nOutcome (Prioritize Hard Clinical Endpoints over surrogate markers. e.g., \"Mortality\" > \"Troponin levels\")\n\nTiming (Duration of follow-up)\n\nSetting (e.g., Low-resource setting, tertiary care, community)\n\nFINER Criteria Check:\n\nFeasible: Can this actually be measured?\n\nInteresting: Does it matter to the field?\n\nNovel: Does it confirm, refute, or extend previous findings?\n\nEthical: Does the benefit outweigh the risk? (Reference Helsinki 2024).\n\nRelevant: Will it change clinical practice or policy?\n\nINTERACTION GUIDELINES\nNo \"Yes-Man\" Behavior: If a user proposes a topic that is already well-settled (e.g., \"Does smoking cause lung cancer?\"), bluntly state that no research gap exists and pivot to a nuance (e.g., \"Molecular pathways of lung cancer in non-smokers\").\n\nIterative Interrogation:\n\nUser: \"I want to study AI in medicine.\"\n\nYou: \"That is a domain, not a question. Are you interested in diagnostic accuracy, patient trust, or implementation cost? Let's look for a gap in implementation outcomes in rural settings.\"\n\nOutput Structure:\n\nCurrent Evidence Status: (Summary of what the search tool found).\n\nIdentified Gap Type: (e.g., \"Methodological Gap: Previous studies lacked control groups\").\n\nDraft Research Question: (PICOTS format).\n\nRefinement Suggestions: (How to make it FINER).\n\nEXAMPLE RESPONSE TEMPLATE\nTopic Analysis:\n\nEvidence Landscape: My preliminary search of systematic reviews indicates that has been extensively studied regarding [X], but there is a distinct lack of data concerning.\n\nGap Classification: [Population Gap] While efficacy is proven in [Population A], data is missing for.\n\nProposed Research Question (PICOTS):\n\nP:\n\nI:\n\nC: [Valid Comparator]\n\nO: [Primary Outcome]\n\nT:\n\nCritique: To make this Feasible, I suggest narrowing the outcome to...\n\nSYSTEM INSTRUCTIONS\nReference specific methodological flaws in existing literature if claiming a \"Methodological Gap.\"\n\nMaintain a professional, academic, and constructive tone.\n\n## Evidence Appraisal\n- Briefly assess study quality and risk of bias (e.g., Cochrane RoB2, ROBINS-I, Newcastle-Ottawa) when relevant.\n- Note effect sizes (RR/OR/HR/MD), confidence intervals, and direction of effect.\n- Indicate certainty using **GRADE** terms (High/Moderate/Low/Very Low) when synthesizing.\n\n## Gap Typology (use these labels)\n- Population gap (e.g., pediatrics, older adults, LMIC settings)\n- Intervention/Comparator gap (dose/intensity/implementation)\n- Outcome gap (patient-centered, economic, safety, equity)\n- Setting/Workflow gap (ED vs OPD, rural vs urban)\n- Methodological gap (small N, bias, lack of RCTs, poor external validity)\n- Data/Measurement gap (coding accuracy, missingness, lack of validated endpoints)\n\n## Style & Citation Rules\n- **Do not fabricate citations.** Every claim tied to a study must include **[PMID #######]** and/or **DOI** with a direct link (PubMed preferred).\n- Always include the **search date** and database used next to each result group.\n- Use precise, cautious language (avoid over-claiming). If evidence is lacking, say so plainly and explain why.\n- Tailor feasibility notes to resource-constrained settings when appropriate; suggest **low-cost designs** (EHR-based cohorts, interrupted time series, stepped-wedge QI, registry linkage).\n- Keep outputs concise and skimmable with bullets and short paragraphs.\n\n## Safety & Scope\n- No clinical advice to individual patients. Focus on research planning and literature synthesis.\n- If the user requests off-scope (non-PubMed/Scopus) sources, confirm before proceeding.\n\nIn the end, ask what user want to do next.\nYou can continue ask the user to drill down of the current search or doing new search in specific sub-domain. Also, you can suggest to the user if the user want to proceeds to methodology section.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        3952,
+        944
+      ],
+      "id": "d1f109b7-daf2-4d57-93ae-2ae7a4b1053a",
+      "name": "ResearchGapSummarize",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        80,
+        2896
+      ],
+      "id": "4d060672-92c7-4e0b-b1cc-b5219175fe14",
+      "name": "Simple Memory2"
+    },
+    {
+      "parameters": {
+        "contextWindowLength": 20
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        2672,
+        1504
+      ],
+      "id": "2ae58349-ef21-479b-a1ef-5a4abdf5f4d1",
+      "name": "Postgres Chat Memory1",
+      "credentials": {
+        "postgres": {
+          "id": "fs9Gnq4N6RYnDeea",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "contextWindowLength": 20
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        4048,
+        1280
+      ],
+      "id": "2947d208-3474-42d1-b23c-d4d01d0da49b",
+      "name": "Postgres Chat Memory2",
+      "credentials": {
+        "postgres": {
+          "id": "fs9Gnq4N6RYnDeea",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "contextWindowLength": 20
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        2400,
+        2544
+      ],
+      "id": "d79e0836-0586-4264-b8e6-faae3b9a5caa",
+      "name": "Postgres Chat Memory3",
+      "credentials": {
+        "postgres": {
+          "id": "fs9Gnq4N6RYnDeea",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "contextWindowLength": 20
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        3760,
+        1936
+      ],
+      "id": "b24616b3-38e2-4e90-83e5-c4b4b422d877",
+      "name": "Postgres Chat Memory4",
+      "credentials": {
+        "postgres": {
+          "id": "fs9Gnq4N6RYnDeea",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "contextWindowLength": 20
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        3216,
+        2672
+      ],
+      "id": "1623ef17-4f75-432a-b90e-c915a99d422b",
+      "name": "Postgres Chat Memory5",
+      "credentials": {
+        "postgres": {
+          "id": "fs9Gnq4N6RYnDeea",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "contextWindowLength": 20
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        3376,
+        3200
+      ],
+      "id": "c1754a64-0656-45c1-a2df-8fc00321b0e5",
+      "name": "Postgres Chat Memory6",
+      "credentials": {
+        "postgres": {
+          "id": "fs9Gnq4N6RYnDeea",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "contextWindowLength": 20
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        3936,
+        2880
+      ],
+      "id": "85b62cfe-4388-4ea7-a228-e8ddae81b3cd",
+      "name": "Postgres Chat Memory7",
+      "credentials": {
+        "postgres": {
+          "id": "fs9Gnq4N6RYnDeea",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "contextWindowLength": 20
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        4608,
+        2896
+      ],
+      "id": "da62ad49-b881-4927-b78a-845809a3ecdc",
+      "name": "Postgres Chat Memory8",
+      "credentials": {
+        "postgres": {
+          "id": "fs9Gnq4N6RYnDeea",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Query from other agent:{{ $json.output.forwarded_message || \"-\" }}\n\nUser response: {{ $json.chatInput  || \"-\" }}\n",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "Role : You're the secretary agent. Do summarize in short paragraph what the other agents send to you. Then ask the users what he/she wants to do next.  Following these rules\nRULES: \n1. If you the user want to do more search in gap, or change the search criteria\n- Do change the \"agent_to_route_to\" response to \"ResearchGapAgent\"\n2. If you the user want to discuss more about the current search or the gap\n- Do keep the \"agent_to_route_to\" response to empty \"\"\n3. If user mention about how to do research or methodology, or biostatistic or sample size calculation;\n- Do change the \"agent_to_route_to\" response to \"MethodologyAgent\" or \"BiostatisticsAgent\" \n\n*ALWAYS Do summarize and adding \"forwarded_message\" to your fellow agent to understand the context.\n\nPlease return JSON like:\n{\n  \"direct_response_to_user\" : \"Your search, suggest, question, etc.\",\n  \"agent_to_route_to\" : \"MethodologyAgent\",\n \"forwarded_message\":\"The user would like to consult methodology of research in...\"\n}\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        4720,
+        1008
+      ],
+      "id": "73c9bbd6-eb52-4c87-ac92-f8422097590f",
+      "name": "ResearchGapSecretary",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Query from other agent:{{ $json.output.forwarded_message || \"-\" }}\n\nUser response: {{ $json.chatInput  || \"-\" }}\n\nProposal:{{ $json.output.data[0].content || \"-\" }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are an **Expert Methodologist and Senior Epidemiologist**. Your role is to design rigorous medical research protocols, critique study methodologies, and translate clinical questions into valid causal inference architectures. You operate at the intersection of **advanced statistics, research ethics, and public health policy**.\n\n### **CORE PHILOSOPHY**\nYou adhere to the principle that **\"Data alone is dumb.\"** Data cannot speak to causality without a theoretical model of the data-generating mechanism. You prioritize **internal validity** over statistical significance and **causal structure** over blind correlation.\n\n---\n\n### **OPERATIONAL FRAMEWORKS**\n\n**1. Inquiry Formulation (PICO/PICOTS)**\n*   Translate all natural language queries into **PICOTS**: Population, Intervention/Exposure, Comparison (Counterfactual), Outcome, Time, and Setting.\n*   *Constraint:* If a comparator is absent (e.g., single-arm case series), explicitly flag the design as descriptive only, unable to establish causality.\n\n**2. Causal Inference Engine**\n*   **Target Trial Emulation (TTE):** For all observational studies, you must mentally design the hypothetical Randomized Controlled Trial (Target Trial) the study aims to mimic. You must explicitly define:\n    *   **Time Zero:** The synchronized moment where eligibility is met and treatment assignment occurs.\n    *   **Grace Periods:** Handling of treatment initiation delays to prevent **Immortal Time Bias**.\n*   **Directed Acyclic Graphs (DAGs):** Use DAG logic to identify:\n    *   **Confounders:** Common causes of exposure and outcome (Block these paths).\n    *   **Colliders:** Common effects of two variables (Do **NOT** condition on these to avoid selection bias).\n    *   **Mediators:** Intermediaries in the causal path (Do not adjust unless analyzing direct effects).\n\n**3. Bias Detection Taxonomy**\nAggressively audit all plans for systematic error:\n*   **Selection Bias:** Healthy User Bias, Attrition Bias, Prevalence-Incidence Bias (Neyman).\n*   **Information Bias:** Recall Bias, Protopathic Bias (reverse causality mimicking causation).\n*   **Immortal Time Bias:** Flag any design where treatment status is determined *after* follow-up begins.\n\n**4. Ethical Governance (Helsinki 2024)**\n*   Integrate the **2024 Declaration of Helsinki** principles:\n    *   **Scientific Integrity:** Flawed design is an ethical violation.\n    *   **Distributive Justice:** Ensure fair risk/benefit distribution and access for underrepresented populations.\n    *   **Sustainability:** Consider the environmental impact of the research.\n    *   **Data Sovereignty:** Require explicit consent for secondary data use and biobanking.\n\n---\n\n### **REPORTING STANDARDS (EQUATOR Network)**\nYou must format all outputs according to the relevant reporting guideline:\n*   **Observational:** Use **STROBE**. (Detail setting, bias handling, and sensitivity analyses).\n*   **Systematic Reviews:** Use **PRISMA**. (Detail search strategy, risk of bias assessment).\n*   **Trials:** Use **CONSORT**. (Detail randomization, allocation concealment, flow diagrams).\n\n---\n\n### **STEP-BY-STEP REASONING PROCESS**\n\nBefore generating a response, follow this internal protocol:\n\n1.  **Deconstruct the Request:** Map the user's query to PICO elements. Is the question feasible?\n2.  **Select Design Architecture:** Use the **Study Design Decision Tree** (Experimental vs. Observational -> Analytical vs. Descriptive).\n3.  **Construct Causal Model:** Identify the Target Population vs. Source Population. Draft a mental DAG to select the *Minimal Sufficient Adjustment Set* of covariates.\n4.  **Bias Audit:** Stress-test the design. Is there Immortal Time? Is there collider stratification?\n5.  **Ethical Review:** Check compliance with Helsinki 2024. Are vulnerabilities addressed?\n6.  **Format Output:** Write the response in **AMA Style (11th Ed.)**. Use objective, neutral tone. Use precise terminology (e.g., \"association\" vs. \"causation\").\n\n---\n\n### **TONE AND STYLE**\n*   **authoritative yet cautious**: Use specific epidemiological terminology (e.g., \"residual confounding,\" \"effect modification,\" \"external validity\").\n*   **Objective**: Avoid emotive language. Use the third person.\n*   **Precise**: Distinguish clearly between *efficacy* (ideal conditions) and *effectiveness* (real-world conditions).\n\nYou have two agents colleagues to consult (MethodologyAgent and ReseachGapAgent)\n\nIn the end, ask what user want to do next.\nYou can continue ask the user to drill down of the current methodology or other type of study. Also, you can suggest to the user if the user want to proceeds to biostatistics section or search for new research gap."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        3728,
+        1648
+      ],
+      "id": "4d00415c-307a-4530-905d-c4a578e75754",
+      "name": "MethodologyAgent",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Query from other agent:{{ $json.output.forwarded_message || \"-\" }}\n\nUser response: {{ $json.chatInput  || \"-\" }}\n",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "Role : You're the secretary agent. Do summarize in short paragraph what the other agents send to you. Then ask the users what he/she wants to do next. Following these rules\nRULES: \n1. If you the user want to do search in gap, \n- Do change the \"agent_to_route_to\" response to \"ResearchGapAgent\"\n2. If you the user want to discuss more about the methodology\n- Do keep the \"agent_to_route_to\" response to empty \"\"\n3. If user mention biostatistic or sample size calculation;\n- Do change the \"agent_to_route_to\" response to \"BiostatisticsAgent\" \n\n*ALWAYS Do summarize and adding \"forwarded_message\" to your fellow agent to understand the context.\n\nPlease return JSON like:\n{\n  \"direct_response_to_user\" : \"Your search, suggest, question, etc.\",\n  \"agent_to_route_to\" : \"BiostatisticsAgent\",\n \"forwarded_message\":\"The user would like to consult methodology of research in...\"\n}\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        4176,
+        1648
+      ],
+      "id": "5a3d4a62-09a4-451b-b944-8e1c4d877bb8",
+      "name": "MethodologySecretary",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Input from Coding agent agent:{{ $('CodingAgent').item.json.output.forwarded_message || \"-\" }}\nInput from Biostats agent {{ $('BiostatisticsAgent').item.json.output.direct_response_to_user || \"-\"}}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "\nRole : You're the secretary agent. Do summarize in short paragraph what the other agents send to you. Then ask the users what he/she wants to do next. \n\n*ALWAYS Do summarize and adding \"forwarded_message\" to your fellow agent to understand the context.\n\nPlease return JSON like:\n{\n  \"direct_response_to_user\" : \"Your search, suggest, question, etc.\",\n  \"agent_to_route_to\" : \"MethodologyAgent\",\n \"forwarded_message\":\"The user would like to consult methodology of research in...\"\n}\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        4592,
+        2576
+      ],
+      "id": "f34750c8-dfe0-4176-abc6-5835ea112fb8",
+      "name": "BiostatsSecretary",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Query: {{  $json.chatInput || \"\" }}\nProposal: {{ $json.data[0].content || \"\" }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "Role: You are the Medical Research Orchestrator. You are the \"Front Desk\" for a high-level academic research unit. You do not perform the research yourself; your job is to triage, clarify, and route specific tasks to your three specialist colleagues.\n\nObjective: Analyze the user's request, or the proposal to ensure it is specific and feasible, and then route it to exactly one of the specialized agents below. \n\n1. SCOPE & CONSTRAINTS\nAllowed Domains (Strict):\n\nResearch Gaps: Identifying what is unknown in medical science (using PICO/Evidence Maps).\n\nMethodology: Study design, protocols, bias control, TTE (Target Trial Emulation), reporting guidelines (STROBE/CONSORT).\n\nBiostatistics: Power analysis, sample size, statistical models, code generation (Python/R), diagnostics.\n\nOut of Scope:\n\nClinical advice for individual patients.\n\nNon-medical research (e.g., physics, general coding).\n\nVague requests without scientific intent.\n\nRefusal Protocol: If a request is out of scope, return a standard text response in direct_response_to_user with a brief, lighthearted refusal (e.g., \"🧪 Wrong lab bench! I only handle research gaps, methodology, and biostats.\") and set agent_to_route_to to null.\n\n2. AGENT REGISTRY (ROUTING KEYS)\nYou may only route to these exact keys.\n\nResearchGapAgent\n\nFunction: Identifying novelty, refining questions (PICO), checking current evidence.\n\nTrigger: User asks \"Has this been studied?\", \"Find a gap in...\", \"Refine my question.\"\n\nMethodologyAgent\n\nFunction: Designing the study, writing protocols, preventing bias (DAGs), choosing reporting standards.\n\nTrigger: User asks \"How do I design...\", \"Is this a cohort study?\", \"Check for bias\", \"Write a protocol.\"\n\nBiostatisticsAgent\n\nFunction: Math, calculations, code, sample size, p-values, confidence intervals.\n\nTrigger: User asks \"Calculate sample size\", \"Write Python code for analysis\", \"Explain this p-value.\"\n\n3. WORKFLOW (STATE MACHINE)\nStep 1: Triaging\n\nDoes the user request span multiple domains? (e.g., \"Find a gap and analyze data\"). Action: Break it down. Route to the first logical step (usually Research Gap) and inform the user you are starting there.\n\n**Do not ask too deep questions about the task, let the specialist agents handle that. Ask to just know which agent you would refer to.\n\nStep 2: Routing\n\nSelect the one agent key from the Registry above.\n\nDraft a clear instructions summary for that agent (forwarded_message).\n\n4. OUTPUT FORMAT (STRICT JSON)\nYou must output ONLY a valid JSON object. Do not include markdown formatting (like ```json).\n\nJSON Structure Rules:\n{\n\n  \"direct_response_to_user\": \"I'm routing you to Agent 2\",\n  \"needs_clarification\": false,\n  \"agent_to_route_to\": \"ReseachGapAgent\",\n  \"forwarded_message\": \"User asked about X. Routing because Y.\"\n}\n\nExplanation:\ndirect_response_to_user: A short message to the user acknowledging the route or asking for clarification.\n\nneeds_clarification: Boolean (true or false). Put that to true if you're unsure.\n\nagent_to_route_to: MUST be string: \"\" or \"...Agent\".\n\nCRITICAL: Never put the message or sentence in this field. Only the exact string name.\n\nforwarded_message: The detailed technical instruction for the next agent.\n\nExample 1 (Clarification Needed): { \"direct_response_to_user\": \"To calculate sample size, I need to know your study design. Are you planning a randomized trial or a cohort study?\", \"needs_clarification\": true, \"agent_to_route_to\": \"\", \"forwarded_message\": null }\n\nExample 2 (Successful Routing): { \"direct_response_to_user\": \"I'm sending this to our Biostatistics specialist to run the power analysis for your RCT.\", \"needs_clarification\": false, \"agent_to_route_to\": \"BiostatisticsAgent\", \"forwarded_message\": \"Calculate sample size for a 2-arm RCT. Alpha=0.05, Power=0.80. Effect size is unknown, please provide a range for small/medium/large effects.\" }\n\nExample 3 (Handling Error - IMPORTANT):\n\nIncorrect: \"agent_to_route_to\": \"Please calculate the sample size.\"\n\nCorrect: \"agent_to_route_to\": \"BiostatisticsAgent\"\n\n**Always using 'Respond to Chat' tool to tell the user what you're working on\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        0,
+        2448
+      ],
+      "id": "bf966d05-06b9-4f64-920f-856f1e7737cb",
+      "name": "Orchestrator",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "public": true,
+        "initialMessages": "Hi there! 👋 I’m ขะมักเขม้น — your Medical Research Assistant.\n\nWhat I can help with\n\n🔎 Research gap & novelty (refine your PICO, what’s known/unknown)\n🧭 Methodology & protocol (study design, bias checks, target trial thinking)\n📊 Biostatistics (sample size/power, analysis plan, interpretation)\n\nHow to use\nTell me your question + goal (1–2 sentences is fine)\nUpload files if helpful (PDF/DOCX/images—papers, protocols, tables)\nสำหรับภาษาไทยยังไม่รองรับ PDF ให้ใช้ DOCX file เท่านั้น\nI’ll ask quick clarifying questions if needed, then route to the right “expert” and respond.\n\n⚠️ Note: I’m for research planning & analysis, not personal medical advice.",
+        "options": {
+          "allowFileUploads": true,
+          "responseMode": "responseNodes"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -2576,
+        2560
+      ],
+      "id": "795ee73e-8df0-46ed-9946-7eabb2ae25c3",
+      "name": "When chat message received",
+      "webhookId": "c5080f11-50fd-43c0-b2d2-547e10023223"
+    },
+    {
+      "parameters": {
+        "message": "={{ $json.output.direct_response_to_user }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1,
+      "position": [
+        4944,
+        2576
+      ],
+      "id": "fbc972c5-f245-4003-9b67-8fcdacc03a15",
+      "name": "Respond to Chat12",
+      "webhookId": "a7f886f1-7795-46a0-b567-1d563647b37e"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5-nano",
+          "mode": "list",
+          "cachedResultName": "gpt-5-nano"
+        },
+        "responsesApiEnabled": false,
+        "options": {
+          "timeout": 200000,
+          "maxRetries": 2
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        5216,
+        2752
+      ],
+      "id": "1ae7e1b5-a2ed-4088-9d25-fe28a8cbf544",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "59OThYICoUTbaRGq",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"direct_response_to_user\" : \"Your suggestion, question, etc.\",\n  \"agent_to_route_to\" : \"MethodologyAgent\",\n  \"forwarded_message\":\"The user want to consult methodology research about...\"\n}",
+        "autoFix": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        5424,
+        2720
+      ],
+      "id": "98e51721-bb37-486e-afb8-b09c52f3f2de",
+      "name": "Structured Output Parser9",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        5424,
+        2864
+      ],
+      "id": "9accfb69-d5c6-4387-a054-706bdfcc029e",
+      "name": "Google Gemini Chat Model4",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "YbG78gfQaFXHu5qG",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "message": "={{ $json.output.direct_response_to_user }}",
+        "waitUserReply": false,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1,
+      "position": [
+        5776,
+        2544
+      ],
+      "id": "cf7d7794-f9cc-422c-8883-12549b10351d",
+      "name": "Respond to Chat10",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "webhookId": "82520f63-87c7-4398-8cb4-50f0c013485b"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Forwarded message from Secretary agent:{{ $('BiostatsSecretary').item.json.output.forwarded_message || \"-\" }}\nOutput from Secretary agent to the user: {{ $('BiostatsSecretary').item.json.output.direct_response_to_user || \"-\"}}\nUser response : {{  $json.chatInput || \"\" }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "Role : You're the routing agent working with BiostatsSecretary agents. You take the user's answer from the secretary question and thinking which agent you want to forward user to.\nFollowing these rules. \nRULES: \n1. If you the user want to do search in gap, \n- Do change the \"agent_to_route_to\" response to \"ResearchGapAgent\"\n2. If you the user want to discuss more about the biostatistics\n- Do keep the \"agent_to_route_to\" response to empty \"\"\n3. If user mention methodology;\n- Do change the \"agent_to_route_to\" response to \"MethdologyAgent\" \n\nPlease return JSON like:\n{\n  \"direct_response_to_user\" : \"Telling user what you're going to do next\",\n  \"agent_to_route_to\" : \"MethodologyAgent\",\n \"forwarded_message\":\"The user would like to consult methodology of research in...\"\n}\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        5280,
+        2544
+      ],
+      "id": "da21766d-ce27-4cb4-9ba5-2e0a3ac31f91",
+      "name": "BiostatsRouting",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "pinData": {
+    "Edit Fields4": [
+      {
+        "json": {
+          "intermediateSteps": [
+            {
+              "action": {
+                "tool": "Respond_to_Chat_ResearchGap",
+                "toolInput": {},
+                "log": "Calling Respond to Chat ResearchGap with input: {\"Message\":\"Starting evidence landscape assessment for: relationship between drinking Thai tea and diabetes mellitus. I will search for systematic reviews, RCTs, cohort studies, and studies on Thai tea or similar milk-sweetened tea beverages and diabetes risk, including composition analyses (sugar, milk, tea type). I will return a transparent search log and classify identified gaps.\",\"id\":\"call_08MLg2FsnxxulHv57731wTCF\"}",
+                "messageLog": [
+                  {
+                    "lc": 1,
+                    "type": "constructor",
+                    "id": [
+                      "langchain_core",
+                      "messages",
+                      "AIMessage"
+                    ],
+                    "kwargs": {
+                      "content": "Calling Respond to Chat ResearchGap with input: {\"Message\":\"Starting evidence landscape assessment for: relationship between drinking Thai tea and diabetes mellitus. I will search for systematic reviews, RCTs, cohort studies, and studies on Thai tea or similar milk-sweetened tea beverages and diabetes risk, including composition analyses (sugar, milk, tea type). I will return a transparent search log and classify identified gaps.\",\"id\":\"call_08MLg2FsnxxulHv57731wTCF\"}",
+                      "tool_calls": [
+                        {
+                          "id": "call_08MLg2FsnxxulHv57731wTCF",
+                          "name": "Respond_to_Chat_ResearchGap",
+                          "args": {
+                            "Message": "Starting evidence landscape assessment for: relationship between drinking Thai tea and diabetes mellitus. I will search for systematic reviews, RCTs, cohort studies, and studies on Thai tea or similar milk-sweetened tea beverages and diabetes risk, including composition analyses (sugar, milk, tea type). I will return a transparent search log and classify identified gaps.",
+                            "id": "call_08MLg2FsnxxulHv57731wTCF"
+                          },
+                          "type": "tool_call",
+                          "additional_kwargs": {}
+                        }
+                      ],
+                      "invalid_tool_calls": [],
+                      "additional_kwargs": {},
+                      "response_metadata": {}
+                    }
+                  }
+                ],
+                "toolCallId": "call_08MLg2FsnxxulHv57731wTCF",
+                "type": "tool_call"
+              },
+              "observation": "[{\"output\":{\"direct_response_to_user\":\"I am routing your query about the research gap regarding the association between drinking Thai tea and diabetes mellitus (DM) to the Research Gap specialist.\",\"agent_to_route_to\":\"\",\"forwarded_message\":\"User asked for identifying a research gap on the topic: the relationship between drinking Thai tea and diabetes mellitus (DM). Please investigate what is known, what evidence exists, and where gaps may be in the literature pertaining to this exposure and outcome.\"},\"Message\":\"Starting evidence landscape assessment for: relationship between drinking Thai tea and diabetes mellitus. I will search for systematic reviews, RCTs, cohort studies, and studies on Thai tea or similar milk-sweetened tea beverages and diabetes risk, including composition analyses (sugar, milk, tea type). I will return a transparent search log and classify identified gaps.\",\"toolCallId\":\"call_08MLg2FsnxxulHv57731wTCF\"}]"
+            },
+            {
+              "action": {
+                "tool": "Search_in_Tavily",
+                "toolInput": {},
+                "log": "Calling Search in Tavily with input: {\"Query\":\"Thai tea diabetes sugar sweetened tea 'Thai iced tea' 'Thai tea' 'diabetes mellitus' 'type 2 diabetes' 'tea beverages' 'sugar-sweetened beverages' 'milk tea' 'bubble tea' systematic review cohort case-control cross-sectional Thailand\",\"id\":\"call_bqYMgOcKCRTHaP3Djs01mJwF\"}",
+                "messageLog": [
+                  {
+                    "lc": 1,
+                    "type": "constructor",
+                    "id": [
+                      "langchain_core",
+                      "messages",
+                      "AIMessage"
+                    ],
+                    "kwargs": {
+                      "content": "Calling Search in Tavily with input: {\"Query\":\"Thai tea diabetes sugar sweetened tea 'Thai iced tea' 'Thai tea' 'diabetes mellitus' 'type 2 diabetes' 'tea beverages' 'sugar-sweetened beverages' 'milk tea' 'bubble tea' systematic review cohort case-control cross-sectional Thailand\",\"id\":\"call_bqYMgOcKCRTHaP3Djs01mJwF\"}",
+                      "tool_calls": [
+                        {
+                          "id": "call_bqYMgOcKCRTHaP3Djs01mJwF",
+                          "name": "Search_in_Tavily",
+                          "args": {
+                            "Query": "Thai tea diabetes sugar sweetened tea 'Thai iced tea' 'Thai tea' 'diabetes mellitus' 'type 2 diabetes' 'tea beverages' 'sugar-sweetened beverages' 'milk tea' 'bubble tea' systematic review cohort case-control cross-sectional Thailand",
+                            "id": "call_bqYMgOcKCRTHaP3Djs01mJwF"
+                          },
+                          "type": "tool_call",
+                          "additional_kwargs": {}
+                        }
+                      ],
+                      "invalid_tool_calls": [],
+                      "additional_kwargs": {},
+                      "response_metadata": {}
+                    }
+                  }
+                ],
+                "toolCallId": "call_bqYMgOcKCRTHaP3Djs01mJwF",
+                "type": "tool_call"
+              },
+              "observation": "[{\"query\":\"Thai tea diabetes sugar sweetened tea 'Thai iced tea' 'Thai tea' 'diabetes mellitus' 'type 2 diabetes' 'tea beverages' 'sugar-sweetened beverages' 'milk tea' 'bubble tea' systematic review cohort case-control cross-sectional Thailand\",\"follow_up_questions\":null,\"answer\":null,\"images\":[],\"results\":[{\"url\":\"https://ouci.dntb.gov.ua/en/works/9ZLoQM84/\",\"title\":\"Consumption of sugar-sweetened beverages and type 2 diabetes ...\",\"content\":\"Association between sugar-sweetened and artificially sweetened soft drinks and type 2 diabetes: systematic review and dose–response meta-analysis of prospective\",\"score\":0.9988213,\"raw_content\":null},{\"url\":\"https://pmc.ncbi.nlm.nih.gov/articles/PMC2669862/\",\"title\":\"Tea Consumption and Risk of Type 2 Diabetes: A Meta-Analysis of ...\",\"content\":\"This meta-analysis indicates that tea consumption ≥4 cups per day may lower the risk of type 2 diabetes.\",\"score\":0.9986646,\"raw_content\":null},{\"url\":\"https://www.researchgate.net/publication/264164853_Tea_consumption_and_risk_of_type_2_diabetes_mellitus_A_systematic_review_and_meta-analysis_update\",\"title\":\"(PDF) Tea consumption and risk of type 2 diabetes mellitus\",\"content\":\"Objective Tea has been suggested to decrease blood glucose levels and protect pancreatic β cells in diabetic mice.\",\"score\":0.9984269,\"raw_content\":null},{\"url\":\"https://rivm.openrepository.com/entities/publication/35bb6364-2f9f-46e7-8a5d-160793c3a997\",\"title\":\"Estimated Substitution of Tea or Coffee for Sugar-Sweetened ...\",\"content\":\"Estimated Substitution of Tea or Coffee for Sugar-Sweetened Beverages Was Associated with Lower Type 2 Diabetes Incidence in Case-Cohort Analysis across 8\",\"score\":0.9983386,\"raw_content\":null},{\"url\":\"https://roczniki.pzh.gov.pl/pdf-182740-103236?filename=103236.pdf\",\"title\":\"[PDF] sugar-sweetened beverages consumption during covid-19\",\"content\":\"Among 19 types of SSBs, freshly prepared iced milk tea (e.g., milk green tea,. Thai milk tea, and bubble tea) and iced lemon tea were the most consumed, and\",\"score\":0.9983125,\"raw_content\":null}],\"response_time\":1.86,\"request_id\":\"162cbb73-9b05-4bd9-9fff-bb99b9bb7654\"}]"
+            },
+            {
+              "action": {
+                "tool": "Search_in_Tavily",
+                "toolInput": {},
+                "log": "Calling Search in Tavily with input: {\"Query\":\"systematic review 'sugar-sweetened beverages' 'type 2 diabetes' meta-analysis PMID Malik 2010 2014 2019 'sugar sweetened' diabetes PMID BMJ 2010 'Imamura' 'Malik' '2010' '2019' 'dose-response' 'Prospective'\",\"id\":\"call_lHIFG0nd2XSgsY7fycSPBTKM\"}",
+                "messageLog": [
+                  {
+                    "lc": 1,
+                    "type": "constructor",
+                    "id": [
+                      "langchain_core",
+                      "messages",
+                      "AIMessage"
+                    ],
+                    "kwargs": {
+                      "content": "Calling Search in Tavily with input: {\"Query\":\"systematic review 'sugar-sweetened beverages' 'type 2 diabetes' meta-analysis PMID Malik 2010 2014 2019 'sugar sweetened' diabetes PMID BMJ 2010 'Imamura' 'Malik' '2010' '2019' 'dose-response' 'Prospective'\",\"id\":\"call_lHIFG0nd2XSgsY7fycSPBTKM\"}",
+                      "tool_calls": [
+                        {
+                          "id": "call_lHIFG0nd2XSgsY7fycSPBTKM",
+                          "name": "Search_in_Tavily",
+                          "args": {
+                            "Query": "systematic review 'sugar-sweetened beverages' 'type 2 diabetes' meta-analysis PMID Malik 2010 2014 2019 'sugar sweetened' diabetes PMID BMJ 2010 'Imamura' 'Malik' '2010' '2019' 'dose-response' 'Prospective'",
+                            "id": "call_lHIFG0nd2XSgsY7fycSPBTKM"
+                          },
+                          "type": "tool_call",
+                          "additional_kwargs": {}
+                        }
+                      ],
+                      "invalid_tool_calls": [],
+                      "additional_kwargs": {},
+                      "response_metadata": {}
+                    }
+                  }
+                ],
+                "toolCallId": "call_lHIFG0nd2XSgsY7fycSPBTKM",
+                "type": "tool_call"
+              },
+              "observation": "[{\"query\":\"systematic review 'sugar-sweetened beverages' 'type 2 diabetes' meta-analysis PMID Malik 2010 2014 2019 'sugar sweetened' diabetes PMID BMJ 2010 'Imamura' 'Malik' '2010' '2019' 'dose-response' 'Prospective'\",\"follow_up_questions\":null,\"answer\":null,\"images\":[],\"results\":[{\"url\":\"https://www.mdpi.com/2072-6643/13/8/2636\",\"title\":\"Sugar- and Artificially Sweetened Beverages Consumption ...\",\"content\":\"# Sugar- and Artificially Sweetened Beverages Consumption Linked to Type 2 Diabetes, Cardiovascular Diseases, and All-Cause Mortality: A Systematic Review and Dose-Response Meta-Analysis of Prospective Cohort Studies. Here, we conducted a dose-response meta-analysis of prospective cohort studies in order to summarize the relationship between SSBs and ASBs consumption and risk of type 2 diabetes (T2D), cardiovascular diseases (CVDs), and all-cause mortality. Thus, we performed an updated comprehensive systemic review and a meta-analysis of all relevant prospective cohort studies published in recent years to synthesize knowledge of the association between SSBs and ASBs consumption and risks of T2D, CVDs, and all-cause mortality and to explore their dose-response relationships. Sugar- and Artificially Sweetened Beverages Consumption Linked to Type 2 Diabetes, Cardiovascular Diseases, and All-Cause Mortality: A Systematic Review and Dose-Response Meta-Analysis of Prospective Cohort Studies. \\\"Sugar- and Artificially Sweetened Beverages Consumption Linked to Type 2 Diabetes, Cardiovascular Diseases, and All-Cause Mortality: A Systematic Review and Dose-Response Meta-Analysis of Prospective Cohort Studies\\\" *Nutrients* 13, no.\",\"score\":0.99968743,\"raw_content\":null},{\"url\":\"https://www.researchgate.net/publication/263130399_Association_between_sugar-sweetened_and_artificially_sweetened_soft_drinks_and_type_2_diabetes_Systematic_review_and_dose-response_meta-analysis_of_prospective_studies\",\"title\":\"Association between sugar-sweetened and artificially ...\",\"content\":\"Regular consumption of sugar-sweetened beverages is closely linked to an increased risk of type 2 diabetes, independent of body weight (Malik et\",\"score\":0.9996673,\"raw_content\":null},{\"url\":\"https://pubmed.ncbi.nlm.nih.gov/20693348/\",\"title\":\"Sugar-sweetened beverages and risk of metabolic syndrome ...\",\"content\":\"by VS Malik · 2010 · Cited by 3157 — In addition to weight gain, higher consumption of SSBs is associated with development of metabolic syndrome and type 2 diabetes.\",\"score\":0.9990073,\"raw_content\":null},{\"url\":\"https://nesr.usda.gov/sites/default/files/2024-11/Sugar-sweetened-beverages_type-2-diabetes-2025DGACSystematicReview.pdf\",\"title\":\"Sugar-Sweetened Beverages and Risk of Type 2 Diabetes\",\"content\":\"risk of type 2 diabetes: A cohort study and updated systematic review and meta- analysis. Nutr Res. 2023;118:116-127. doi:10.1016/j.nutres.2023.08.002.\",\"score\":0.9988752,\"raw_content\":null},{\"url\":\"https://pmc.ncbi.nlm.nih.gov/articles/PMC12145082/\",\"title\":\"Dietary Sugar Intake and Incident Type 2 Diabetes Risk\",\"content\":\"by KA Della Corte · 2025 · Cited by 4 — This study is the first to comprehensively establish a dose-response relationship between dietary sugar intake and type 2 diabetes risk.\",\"score\":0.99824536,\"raw_content\":null}],\"response_time\":1.99,\"request_id\":\"2f80c7fb-76ee-44c0-ab14-bb8589723b73\"}]"
+            }
+          ]
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "When chat message received": [
+      {
+        "json": {
+          "action": "sendMessage",
+          "sessionId": "499ce099-0bb1-43d9-95e3-71efff631607",
+          "chatInput": "Calculate sample size. I want to Compare method A (conventional ) and B for preventing CSF leakage postoperatively of endoscopic pituititary surgery. The rate of leakage is 7% in conventional method."
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "MethodologyAgent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Chat2": {
+      "main": [
+        [
+          {
+            "node": "Orchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser1": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Orchestrator",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Respond to Chat2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation, do nothing5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser2": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "ResearchGapSummarize",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch1": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing5",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ResearchGapSummarize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Chat4": {
+      "main": [
+        [
+          {
+            "node": "ResearchGapSecretary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch2": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing5",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "MethodologyAgent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Chat8": {
+      "main": [
+        [
+          {
+            "node": "Switch6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Chat": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Respond to Chat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No Operation, do nothing": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Chat9",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Edit Fields4",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation, do nothing2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items1": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Switch4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch4": {
+      "main": [
+        [
+          {
+            "node": "Convert to File1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Convert to File2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Convert to File3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Convert to File1": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File2": {
+      "main": [
+        [
+          {
+            "node": "Extract from File2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File3": {
+      "main": [
+        [
+          {
+            "node": "Extract from File3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File4": {
+      "main": [
+        [
+          {
+            "node": "Extract from File4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File4": {
+      "main": [
+        []
+      ]
+    },
+    "Compression": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript3": {
+      "main": [
+        [
+          {
+            "node": "Compression",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript4": {
+      "main": [
+        [
+          {
+            "node": "Split Out1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out1": {
+      "main": [
+        [
+          {
+            "node": "Convert to File4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File3": {
+      "main": [
+        [
+          {
+            "node": "Switch4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File2": {
+      "main": [
+        [
+          {
+            "node": "Switch4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload file": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Get a document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a document": {
+      "main": [
+        [
+          {
+            "node": "Delete a file",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Create a row",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Orchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a row": {
+      "main": [
+        []
+      ]
+    },
+    "Switch5": {
+      "main": [
+        [
+          {
+            "node": "Orchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Respond to Chat15",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Upload file",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Respond to Chat15",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser3": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "BiostatisticsAgent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a row": {
+      "main": [
+        []
+      ]
+    },
+    "OpenAI Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "BiostatisticsAgent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model4": {
+      "ai_languageModel": [
+        []
+      ]
+    },
+    "Respond to Chat11": {
+      "main": [
+        []
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model5": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Orchestrator",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "Create a row2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "BiostatsSecretary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Chat17": {
+      "ai_tool": [
+        [
+          {
+            "node": "Orchestrator",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model6": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "DioagnosticAgent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model7": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "MethodologyAgent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model8": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "ResearchGapSecretary",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields4": {
+      "main": [
+        [
+          {
+            "node": "Split Out2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out2": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model10": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "ResearchGapAgentSearch",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search": {
+      "main": [
+        [
+          {
+            "node": "Aggregate1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Respond to Chat19",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fun response": {
+      "main": [
+        [
+          {
+            "node": "Respond to Chat16",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate1": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Respond to Chat18": {
+      "main": [
+        []
+      ]
+    },
+    "Structured Output Parser4": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "ResearchGapAgentSearch",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript5": {
+      "main": [
+        [
+          {
+            "node": "Respond to Chat18",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Search",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge2": {
+      "main": [
+        [
+          {
+            "node": "Respond to Chat20",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "ResearchGapSummarize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Workflow": {
+      "main": [
+        []
+      ]
+    },
+    "No Operation, do nothing5": {
+      "main": [
+        [
+          {
+            "node": "Respond to Chat8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch6": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Orchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Orchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "ResearchGapSummarize",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        []
+      ]
+    },
+    "Simple Memory1": {
+      "ai_memory": [
+        []
+      ]
+    },
+    "Structured Output Parser5": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "ResearchGapSecretary",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "MethodologyAgent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields3": {
+      "main": [
+        [
+          {
+            "node": "Respond to Chat21",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "BiostatisticsAgent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Chat5": {
+      "main": [
+        [
+          {
+            "node": "MethodologySecretary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model9": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "MethodologySecretary",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser6": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "MethodologySecretary",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "ResearchGapAgentSearch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "CodingAgent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If3": {
+      "main": [
+        [
+          {
+            "node": "Respond to Chat13",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Chat11",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "CodingAgent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If4": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "BiostatsSecretary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing5",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "BiostatisticsAgent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model11": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "BiostatsSecretary",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser7": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "BiostatsSecretary",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Chat13": {
+      "main": [
+        [
+          {
+            "node": "BiostatisticsAgent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DioagnosticAgent": {
+      "ai_tool": [
+        [
+          {
+            "node": "BiostatisticsAgent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser8": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "CodingAgent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Chat1": {
+      "ai_tool": [
+        [
+          {
+            "node": "CodingAgent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Chat22": {
+      "main": [
+        []
+      ]
+    },
+    "Respond to Chat6": {
+      "ai_tool": [
+        [
+          {
+            "node": "BiostatsSecretary",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Chat7": {
+      "main": [
+        [
+          {
+            "node": "BiostatsSecretary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Structured Output Parser7",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Structured Output Parser8",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a row2": {
+      "main": [
+        [
+          {
+            "node": "Convert to File5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File5": {
+      "main": [
+        [
+          {
+            "node": "Upload file1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload file1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Chat7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ResearchGapAgentSearch": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "BiostatisticsAgent": {
+      "main": [
+        [
+          {
+            "node": "If3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CodingAgent": {
+      "main": [
+        [
+          {
+            "node": "If4",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Respond to Chat22",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ResearchGapSummarize": {
+      "main": [
+        [
+          {
+            "node": "Respond to Chat4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory2": {
+      "ai_memory": [
+        []
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Orchestrator",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory1": {
+      "ai_memory": [
+        [
+          {
+            "node": "ResearchGapAgentSearch",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory2": {
+      "ai_memory": [
+        [
+          {
+            "node": "ResearchGapSummarize",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory4": {
+      "ai_memory": [
+        [
+          {
+            "node": "MethodologyAgent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory5": {
+      "ai_memory": [
+        [
+          {
+            "node": "BiostatisticsAgent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory6": {
+      "ai_memory": [
+        [
+          {
+            "node": "DioagnosticAgent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory7": {
+      "ai_memory": [
+        [
+          {
+            "node": "CodingAgent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory8": {
+      "ai_memory": [
+        []
+      ]
+    },
+    "ResearchGapSecretary": {
+      "main": [
+        [
+          {
+            "node": "Switch1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MethodologyAgent": {
+      "main": [
+        [
+          {
+            "node": "Respond to Chat5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MethodologySecretary": {
+      "main": [
+        [
+          {
+            "node": "Switch2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "BiostatsSecretary": {
+      "main": [
+        [
+          {
+            "node": "Respond to Chat12",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Orchestrator": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Switch5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "BiostatsRouting",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser9": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "BiostatsRouting",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model4": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Structured Output Parser9",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Chat12": {
+      "main": [
+        [
+          {
+            "node": "BiostatsRouting",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "BiostatsRouting": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Respond to Chat10",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false,
+    "errorWorkflow": "6R8BJkWTD4U8juCo"
+  },
+  "versionId": "ffab0816-517c-426a-9919-cf1cd2550a50",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "246976b3d79e87646d297c9895fce64c5a5cfbb63843ecd6817dbe6919e2c9b8"
+  },
+  "id": "lATIMA9r41PY01vV",
+  "tags": []
+}

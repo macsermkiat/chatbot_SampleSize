@@ -1,0 +1,38 @@
+"""Orchestrator (supervisor) node -- triages and routes to specialist phases."""
+
+from __future__ import annotations
+
+from langchain_core.messages import AIMessage, SystemMessage
+
+from app.agents.prompts import ORCHESTRATOR_PROMPT
+from app.agents.state import OrchestratorOutput, ResearchState
+from app.services.llm import get_chat_model
+from app.services.memory import trim_messages
+
+
+async def orchestrator_node(state: ResearchState) -> dict:
+    """Triage the user's message and decide which specialist to route to."""
+
+    llm = get_chat_model("orchestrator").with_structured_output(OrchestratorOutput)
+
+    messages = trim_messages(state["messages"])
+    prompt_messages = [SystemMessage(content=ORCHESTRATOR_PROMPT), *messages]
+
+    result: OrchestratorOutput = await llm.ainvoke(prompt_messages)
+
+    # Map n8n routing keys to internal phase names
+    route_map = {
+        "ResearchGapAgent": "research_gap",
+        "MethodologyAgent": "methodology",
+        "BiostatisticsAgent": "biostatistics",
+    }
+
+    next_phase = route_map.get(result.agent_to_route_to, "")
+
+    return {
+        "messages": [AIMessage(content=result.direct_response_to_user)],
+        "current_phase": next_phase or state["current_phase"],
+        "agent_to_route_to": result.agent_to_route_to,
+        "forwarded_message": result.forwarded_message,
+        "needs_clarification": result.needs_clarification,
+    }

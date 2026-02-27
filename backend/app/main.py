@@ -1,0 +1,79 @@
+from __future__ import annotations
+
+from contextlib import asynccontextmanager
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from app.api.chat import router as chat_router
+from app.api.files import router as files_router
+from app.api.sessions import router as sessions_router
+from app.config import settings
+from app.db import check_db, close_pool, get_pool
+from app.models import HealthResponse
+from app.services.memory import close_checkpointer, open_checkpointer
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup: warm the connection pool (graceful if DB unavailable)
+    try:
+        pool = await get_pool()
+        await _run_migrations(pool)
+        checkpointer = await open_checkpointer()
+        app.state.checkpointer = checkpointer
+    except Exception as exc:
+        import logging
+        logging.getLogger(__name__).warning("DB unavailable, starting in degraded mode: %s", exc)
+        app.state.checkpointer = None
+
+    yield
+
+    # Shutdown
+    try:
+        await close_checkpointer()
+        await close_pool()
+    except Exception:
+        pass
+
+
+async def _run_migrations(pool) -> None:
+    """Execute SQL migration files from backend/migrations/ in order."""
+    import pathlib
+
+    migrations_dir = pathlib.Path(__file__).resolve().parent.parent / "migrations"
+    if not migrations_dir.is_dir():
+        return
+
+    async with pool.acquire() as conn:
+        for sql_file in sorted(migrations_dir.glob("*.sql")):
+            await conn.execute(sql_file.read_text())
+
+
+app = FastAPI(
+    title="Medical Research Assistant",
+    version="0.1.0",
+    lifespan=lifespan,
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_origin_list,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+app.include_router(chat_router)
+app.include_router(files_router)
+app.include_router(sessions_router)
+
+
+@app.get("/health", response_model=HealthResponse)
+async def health():
+    db_ok = await check_db()
+    return HealthResponse(
+        status="ok" if db_ok else "degraded",
+        db=db_ok,
+    )
