@@ -17,9 +17,9 @@ class Settings(BaseSettings):
     # Search
     tavily_api_key: str = ""
 
-    # Database
-    database_url: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/research_chatbot"
-    database_url_sync: str = "postgresql://postgres:postgres@localhost:5432/research_chatbot"
+    # Database (Supabase or local PostgreSQL)
+    database_url: str = ""
+    database_url_sync: str = ""
 
     # Storage (optional)
     supabase_url: str = ""
@@ -37,6 +37,16 @@ class Settings(BaseSettings):
     @property
     def is_dev(self) -> bool:
         return self.app_env == "development"
+
+    @property
+    def has_database(self) -> bool:
+        """True when a database URL is configured."""
+        return bool(self.database_url)
+
+    @property
+    def database_dsn(self) -> str:
+        """Return a plain ``postgresql://`` DSN suitable for asyncpg/psycopg."""
+        return self.database_url.replace("postgresql+asyncpg://", "postgresql://")
 
 
 settings = Settings()

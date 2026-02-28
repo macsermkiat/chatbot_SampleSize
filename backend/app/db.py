@@ -1,19 +1,46 @@
 from __future__ import annotations
 
+import logging
+from urllib.parse import urlparse
+
 import asyncpg
 
 from app.config import settings
 
+_logger = logging.getLogger(__name__)
 _pool: asyncpg.Pool | None = None
+
+
+def _pool_kwargs() -> dict:
+    """Build extra kwargs for asyncpg.create_pool based on the DSN."""
+    kwargs: dict = {}
+    parsed = urlparse(settings.database_dsn)
+    hostname = parsed.hostname or ""
+
+    # Supabase hosts require SSL
+    if ".supabase.co" in hostname or ".supabase.com" in hostname:
+        kwargs["ssl"] = "require"
+
+    # Transaction-mode pooler (port 6543) needs statement_cache_size=0
+    if parsed.port == 6543:
+        kwargs["statement_cache_size"] = 0
+
+    return kwargs
 
 
 async def get_pool() -> asyncpg.Pool:
     global _pool
     if _pool is None:
-        # Extract components from the async URL
-        # database_url format: postgresql+asyncpg://user:pass@host:port/db
-        dsn = settings.database_url.replace("postgresql+asyncpg://", "postgresql://")
-        _pool = await asyncpg.create_pool(dsn=dsn, min_size=2, max_size=10)
+        if not settings.has_database:
+            raise RuntimeError("No DATABASE_URL configured")
+        extra = _pool_kwargs()
+        _logger.info("Creating asyncpg pool (ssl=%s)", extra.get("ssl", "off"))
+        _pool = await asyncpg.create_pool(
+            dsn=settings.database_dsn,
+            min_size=2,
+            max_size=10,
+            **extra,
+        )
     return _pool
 
 

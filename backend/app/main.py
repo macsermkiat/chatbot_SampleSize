@@ -16,16 +16,22 @@ from app.services.memory import close_checkpointer, open_checkpointer
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    import logging
+    logger = logging.getLogger(__name__)
+
     # Startup: warm the connection pool (graceful if DB unavailable)
-    try:
-        pool = await get_pool()
-        await _run_migrations(pool)
-        checkpointer = await open_checkpointer()
-        app.state.checkpointer = checkpointer
-    except Exception as exc:
-        import logging
-        logging.getLogger(__name__).warning("DB unavailable, starting in degraded mode: %s", exc)
-        app.state.checkpointer = None
+    if settings.has_database:
+        try:
+            pool = await get_pool()
+            await _run_migrations(pool)
+        except Exception as exc:
+            logger.warning("DB pool/migration failed, starting in degraded mode: %s", exc)
+    else:
+        logger.info("No DATABASE_URL configured -- running without PostgreSQL")
+
+    # Always initialise the checkpointer (falls back to in-memory if no DB)
+    checkpointer = await open_checkpointer()
+    app.state.checkpointer = checkpointer
 
     yield
 
