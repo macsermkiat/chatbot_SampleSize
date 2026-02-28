@@ -80,12 +80,10 @@ class OrchestratorOutput(BaseModel):
 
 
 class GapSearchOutput(BaseModel):
-    """ResearchGapAgentSearch returns numbered search terms."""
+    """ResearchGapAgentSearch returns 3-5 search terms."""
 
-    # The n8n parser expects {"1": "term1", "2": "term2", ...}
-    # We model this as a dict for flexibility.
-    terms: dict[str, str] = Field(
-        ..., description="Numbered search terms, e.g. {'1': 'term1', '2': 'term2', '3': 'term3'}"
+    terms: list[str] = Field(
+        ..., description="List of 3-5 search query terms for literature search."
     )
 
 

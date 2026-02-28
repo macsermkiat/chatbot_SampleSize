@@ -108,22 +108,35 @@ async def coding_node(state: ResearchState) -> dict:
 # ---------------------------------------------------------------------------
 
 async def biostats_secretary_node(state: ResearchState) -> dict:
-    """Summarize biostatistics/coding output and ask user what to do next."""
+    """Summarize biostatistics/coding output and wait for user input."""
 
     llm = get_chat_model("biostats_secretary").with_structured_output(SecretaryOutput)
 
-    # Build input from both coding and biostats agent outputs (matching n8n template)
-    forwarded = state.get("forwarded_message", "") or "-"
+    agent_output_parts = []
+    for msg in reversed(state.get("messages", [])):
+        if getattr(msg, "type", None) == "ai":
+            agent_output_parts.append(msg.content)
+        elif getattr(msg, "type", None) == "human":
+            break
+    agent_output = "\n\n".join(reversed(agent_output_parts))
+
     messages = [
         SystemMessage(content=BIOSTATS_SECRETARY_PROMPT),
-        HumanMessage(content=f"Input from agents: {forwarded}"),
+        HumanMessage(
+            content=(
+                f"Agent output to summarize:\n{agent_output}\n\n"
+                "The user has NOT responded yet. Summarize the findings and "
+                "ask the user what they want to do next. Set agent_to_route_to "
+                "to empty string."
+            )
+        ),
     ]
 
     result: SecretaryOutput = await llm.ainvoke(messages)
 
     return {
         "messages": [AIMessage(content=result.direct_response_to_user)],
-        "agent_to_route_to": result.agent_to_route_to,
+        "agent_to_route_to": "",
         "forwarded_message": result.forwarded_message,
     }
 

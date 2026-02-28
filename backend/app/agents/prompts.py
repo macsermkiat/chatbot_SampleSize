@@ -604,17 +604,17 @@ Please return JSON like:
 # Model mapping (n8n node name -> OpenAI model ID)
 # ---------------------------------------------------------------------------
 AGENT_MODEL_MAP: dict[str, str] = {
-    "orchestrator": "gpt-4.1-mini",
-    "gap_search": "gpt-5-mini",
-    "gap_summarize": "gemini-flash-latest",
-    "gap_secretary": "gpt-5-nano",
-    "methodology": "gpt-5-mini",
-    "methodology_secretary": "gpt-5-nano",
-    "biostatistics": "gpt-5.2",
-    "diagnostic": "gpt-5-mini",
-    "coding": "gpt-5.2",
-    "biostats_secretary": "gpt-5-nano",
-    "biostats_routing": "gpt-5-nano",
+    "orchestrator": "gpt-4o-mini",
+    "gap_search": "gpt-4o-mini",
+    "gap_summarize": "gemini-2.0-flash",
+    "gap_secretary": "gpt-4o-mini",
+    "methodology": "gpt-4o",
+    "methodology_secretary": "gpt-4o-mini",
+    "biostatistics": "gpt-4o",
+    "diagnostic": "gpt-4o-mini",
+    "coding": "gpt-4o",
+    "biostats_secretary": "gpt-4o-mini",
+    "biostats_routing": "gpt-4o-mini",
 }
 
 

@@ -40,7 +40,7 @@ async def gap_search_node(state: ResearchState) -> dict:
 
     result: GapSearchOutput = await llm.ainvoke(messages)
 
-    queries = list(result.terms.values())
+    queries = list(result.terms)
     search_results: list[SearchResult] = await search(queries)
 
     # Emit a progress message
@@ -89,21 +89,42 @@ async def gap_summarize_node(state: ResearchState) -> dict:
 # ---------------------------------------------------------------------------
 
 async def gap_secretary_node(state: ResearchState) -> dict:
-    """Summarize the gap phase output and decide next routing."""
+    """Summarize the gap phase output and wait for user input.
+
+    The secretary summarizes what the search+summarize pipeline produced.
+    After the first pass it should always return to the user (agent_to_route_to="")
+    rather than looping back into gap_search -- the user decides next steps.
+    """
 
     llm = get_chat_model("gap_secretary").with_structured_output(SecretaryOutput)
 
-    user_text = _build_input_text(state)
+    # Collect the last AI messages as the agents' output to summarize
+    agent_output_parts = []
+    for msg in reversed(state.get("messages", [])):
+        if getattr(msg, "type", None) == "ai":
+            agent_output_parts.append(msg.content)
+        elif getattr(msg, "type", None) == "human":
+            break
+    agent_output = "\n\n".join(reversed(agent_output_parts))
+
     messages = [
         SystemMessage(content=GAP_SECRETARY_PROMPT),
-        HumanMessage(content=user_text),
+        HumanMessage(
+            content=(
+                f"Agent output to summarize:\n{agent_output}\n\n"
+                "The user has NOT responded yet. Summarize the findings and "
+                "ask the user what they want to do next. Set agent_to_route_to "
+                "to empty string."
+            )
+        ),
     ]
 
     result: SecretaryOutput = await llm.ainvoke(messages)
 
     return {
         "messages": [AIMessage(content=result.direct_response_to_user)],
-        "agent_to_route_to": result.agent_to_route_to,
+        # Force end-of-turn: let the user decide the next step
+        "agent_to_route_to": "",
         "forwarded_message": result.forwarded_message,
     }
 

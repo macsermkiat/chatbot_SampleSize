@@ -40,21 +40,35 @@ async def methodology_node(state: ResearchState) -> dict:
 # ---------------------------------------------------------------------------
 
 async def methodology_secretary_node(state: ResearchState) -> dict:
-    """Summarize methodology output and decide next phase."""
+    """Summarize methodology output and wait for user input."""
 
     llm = get_chat_model("methodology_secretary").with_structured_output(SecretaryOutput)
 
-    user_text = _build_input_text(state)
+    agent_output_parts = []
+    for msg in reversed(state.get("messages", [])):
+        if getattr(msg, "type", None) == "ai":
+            agent_output_parts.append(msg.content)
+        elif getattr(msg, "type", None) == "human":
+            break
+    agent_output = "\n\n".join(reversed(agent_output_parts))
+
     messages = [
         SystemMessage(content=METHODOLOGY_SECRETARY_PROMPT),
-        HumanMessage(content=user_text),
+        HumanMessage(
+            content=(
+                f"Agent output to summarize:\n{agent_output}\n\n"
+                "The user has NOT responded yet. Summarize the findings and "
+                "ask the user what they want to do next. Set agent_to_route_to "
+                "to empty string."
+            )
+        ),
     ]
 
     result: SecretaryOutput = await llm.ainvoke(messages)
 
     return {
         "messages": [AIMessage(content=result.direct_response_to_user)],
-        "agent_to_route_to": result.agent_to_route_to,
+        "agent_to_route_to": "",
         "forwarded_message": result.forwarded_message,
     }
 
