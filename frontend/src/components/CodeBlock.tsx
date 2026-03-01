@@ -11,15 +11,19 @@ export default function CodeBlock({ language, script }: CodeBlockProps) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = useCallback(async () => {
-    await navigator.clipboard.writeText(script);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    try {
+      await navigator.clipboard.writeText(script);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Clipboard API may be unavailable over HTTP or when unfocused
+    }
   }, [script]);
 
   const langLabel = language.toUpperCase();
 
   return (
-    <div className="animate-fade-in-up rounded-lg overflow-hidden border border-parchment-200 shadow-sm">
+    <div className="rounded-lg overflow-hidden border border-parchment-200 shadow-sm">
       {/* Header bar */}
       <div className="flex items-center justify-between px-4 py-2 bg-ink-800">
         <span className="text-caption font-mono text-parchment-400 tracking-wider">

@@ -6,7 +6,6 @@ import type { ChatMessage } from "@/lib/api";
 
 interface MessageBubbleProps {
   message: ChatMessage;
-  isLatest?: boolean;
 }
 
 const NODE_LABELS: Record<string, string> = {
@@ -22,7 +21,7 @@ const NODE_LABELS: Record<string, string> = {
   biostats_routing: "Phase Router",
 };
 
-export default function MessageBubble({ message, isLatest }: MessageBubbleProps) {
+export default function MessageBubble({ message }: MessageBubbleProps) {
   const isUser = message.role === "user";
 
   return (
@@ -30,7 +29,6 @@ export default function MessageBubble({ message, isLatest }: MessageBubbleProps)
       className={`
         flex w-full
         ${isUser ? "justify-end" : "justify-start"}
-        ${isLatest ? "animate-fade-in-up" : ""}
       `}
     >
       <div
@@ -80,7 +78,7 @@ export default function MessageBubble({ message, isLatest }: MessageBubbleProps)
             ${isUser ? "text-right mr-1" : "ml-1"}
           `}
         >
-          {new Date(message.timestamp).toLocaleTimeString([], {
+          {new Date(message.timestamp).toLocaleTimeString("en-US", {
             hour: "2-digit",
             minute: "2-digit",
           })}

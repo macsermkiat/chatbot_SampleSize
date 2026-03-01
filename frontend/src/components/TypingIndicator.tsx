@@ -6,7 +6,7 @@ interface TypingIndicatorProps {
 
 export default function TypingIndicator({ label }: TypingIndicatorProps) {
   return (
-    <div className="flex items-start gap-3 animate-fade-in-up">
+    <div className="flex items-start gap-3">
       <div className="flex flex-col items-start gap-1.5">
         {label && (
           <div className="flex items-center gap-2 ml-0.5">

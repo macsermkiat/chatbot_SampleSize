@@ -66,10 +66,6 @@ const config: Config = {
         "chat": "44rem",
       },
       keyframes: {
-        "fade-in-up": {
-          "0%": { opacity: "0", transform: "translateY(12px)" },
-          "100%": { opacity: "1", transform: "translateY(0)" },
-        },
         "pulse-warm": {
           "0%, 100%": { opacity: "0.4" },
           "50%": { opacity: "0.8" },
@@ -80,7 +76,6 @@ const config: Config = {
         },
       },
       animation: {
-        "fade-in-up": "fade-in-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) both",
         "pulse-warm": "pulse-warm 2s ease-in-out infinite",
         "dot-bounce": "dot-bounce 1.4s ease-in-out infinite",
       },

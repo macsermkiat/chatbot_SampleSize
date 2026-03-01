@@ -1,8 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import CodeBlock from "@/components/CodeBlock";
 import FileUpload from "@/components/FileUpload";
+import FloatingParticles from "@/components/FloatingParticles";
 import MessageBubble from "@/components/MessageBubble";
 import PhaseIndicator from "@/components/PhaseIndicator";
 import TypingIndicator from "@/components/TypingIndicator";
@@ -12,6 +14,13 @@ import {
   type ChatMessage,
   type FileUploadResult,
 } from "@/lib/api";
+import {
+  presenceVariants,
+  welcomeVariants,
+  userMessageVariants,
+  assistantMessageVariants,
+  sendButtonVariants,
+} from "@/lib/motion.config";
 
 type Phase = "orchestrator" | "research_gap" | "methodology" | "biostatistics";
 
@@ -190,98 +199,181 @@ export default function Home() {
       {/* Messages area */}
       <main ref={scrollRef} className="flex-1 overflow-y-auto">
         <div className="max-w-chat mx-auto px-6">
-          {isEmpty ? (
-            /* Empty state -- scholarly welcome */
-            <div className="flex flex-col items-center justify-center min-h-[60vh] py-16">
-              {/* Decorative mark */}
-              <div className="relative mb-10">
-                <svg
-                  className="w-16 h-16 text-ink-800"
-                  viewBox="0 0 64 64"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1"
+          <AnimatePresence mode="wait" initial={false}>
+            {isEmpty ? (
+              /* Empty state -- scholarly welcome with animations */
+              <motion.div
+                key="welcome"
+                variants={presenceVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                className="flex flex-col items-center justify-center min-h-[60vh] py-16 relative"
+              >
+                <FloatingParticles count={14} />
+
+                {/* Decorative mark */}
+                <motion.div
+                  className="relative mb-10"
+                  variants={welcomeVariants.logo}
                 >
-                  {/* Tree silhouette inspired by reference */}
-                  <line x1="32" y1="58" x2="32" y2="30" strokeWidth="2" />
-                  <ellipse cx="32" cy="22" rx="18" ry="16" strokeWidth="1.2" />
-                  <ellipse cx="26" cy="18" rx="10" ry="9" strokeWidth="0.8" />
-                  <ellipse cx="38" cy="20" rx="12" ry="10" strokeWidth="0.8" />
-                  {/* Ground line */}
-                  <line x1="18" y1="58" x2="46" y2="58" strokeWidth="1.5" />
-                </svg>
-                {/* Warm glow */}
-                <div
-                  className="
-                    absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/3
-                    w-20 h-20 rounded-full
-                    bg-[radial-gradient(circle,oklch(0.88_0.14_85/0.35)_0%,transparent_70%)]
-                    pointer-events-none
-                  "
-                />
-              </div>
-
-              <div className="divider w-full max-w-xs mb-8">
-                Research Assistant
-              </div>
-
-              <p className="text-body-lg text-ink-600 text-center max-w-md leading-relaxed mb-2 font-body">
-                I guide medical researchers through gap analysis,
-                study methodology design, and biostatistical analysis.
-              </p>
-
-              <p className="text-body-sm text-ink-400 italic text-center max-w-sm mb-10 font-body">
-                {WELCOME_QUOTE}
-              </p>
-
-              {/* Starter prompts */}
-              <div className="flex flex-col gap-2.5 w-full max-w-md">
-                <span className="text-caption text-ink-400 font-display text-center tracking-wider uppercase mb-1">
-                  Try asking
-                </span>
-                {STARTER_PROMPTS.map((prompt) => (
-                  <button
-                    key={prompt}
-                    onClick={() => sendMessage(prompt)}
-                    className="
-                      text-left px-4 py-3 rounded-xl
-                      bg-parchment-50 border border-parchment-200
-                      text-body-sm text-ink-700
-                      hover:border-gold-400 hover:bg-gold-50
-                      transition-all duration-200
-                      active:scale-[0.98]
-                    "
+                  <svg
+                    className="w-16 h-16 text-ink-800"
+                    viewBox="0 0 64 64"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1"
                   >
-                    {prompt}
-                  </button>
+                    <line x1="32" y1="58" x2="32" y2="30" strokeWidth="2" />
+                    <ellipse
+                      cx="32"
+                      cy="22"
+                      rx="18"
+                      ry="16"
+                      strokeWidth="1.2"
+                    />
+                    <ellipse
+                      cx="26"
+                      cy="18"
+                      rx="10"
+                      ry="9"
+                      strokeWidth="0.8"
+                    />
+                    <ellipse
+                      cx="38"
+                      cy="20"
+                      rx="12"
+                      ry="10"
+                      strokeWidth="0.8"
+                    />
+                    <line x1="18" y1="58" x2="46" y2="58" strokeWidth="1.5" />
+                  </svg>
+                  {/* Warm glow */}
+                  <div
+                    className="
+                      absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/3
+                      w-20 h-20 rounded-full
+                      bg-[radial-gradient(circle,oklch(0.88_0.14_85/0.35)_0%,transparent_70%)]
+                      pointer-events-none
+                    "
+                  />
+                </motion.div>
+
+                <motion.div
+                  className="divider w-full max-w-xs mb-8"
+                  variants={welcomeVariants.divider}
+                  style={{ originX: "50%" }}
+                >
+                  Research Assistant
+                </motion.div>
+
+                <motion.p
+                  className="text-body-lg text-ink-600 text-center max-w-md leading-relaxed mb-2 font-body"
+                  variants={welcomeVariants.text}
+                >
+                  I guide medical researchers through gap analysis, study
+                  methodology design, and biostatistical analysis.
+                </motion.p>
+
+                <motion.p
+                  className="text-body-sm text-ink-400 italic text-center max-w-sm mb-10 font-body"
+                  variants={welcomeVariants.quote}
+                >
+                  {WELCOME_QUOTE}
+                </motion.p>
+
+                {/* Starter prompts */}
+                <motion.div
+                  className="flex flex-col gap-2.5 w-full max-w-md"
+                  variants={welcomeVariants.promptContainer}
+                >
+                  <span className="text-caption text-ink-400 font-display text-center tracking-wider uppercase mb-1">
+                    Try asking
+                  </span>
+                  {STARTER_PROMPTS.map((prompt) => (
+                    <motion.button
+                      key={prompt}
+                      variants={welcomeVariants.promptItem}
+                      whileHover={{
+                        scale: 1.015,
+                        borderColor: "#e6ad36",
+                        transition: { duration: 0.15 },
+                      }}
+                      whileTap={{ scale: 0.975 }}
+                      onClick={() => sendMessage(prompt)}
+                      className="
+                        text-left px-4 py-3 rounded-xl
+                        bg-parchment-50 border border-parchment-200
+                        text-body-sm text-ink-700
+                        hover:bg-gold-50
+                        transition-colors duration-200
+                      "
+                    >
+                      {prompt}
+                    </motion.button>
+                  ))}
+                </motion.div>
+              </motion.div>
+            ) : (
+              /* Conversation */
+              <motion.div
+                key="conversation"
+                variants={presenceVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                className="flex flex-col gap-5 py-6"
+              >
+                {messages.map((msg, i) => (
+                  <motion.div
+                    key={msg.id}
+                    variants={
+                      msg.role === "user"
+                        ? userMessageVariants
+                        : assistantMessageVariants
+                    }
+                    initial="initial"
+                    animate="animate"
+                  >
+                    <MessageBubble message={msg} />
+                  </motion.div>
                 ))}
-              </div>
-            </div>
-          ) : (
-            /* Conversation */
-            <div className="flex flex-col gap-5 py-6">
-              {messages.map((msg, i) => (
-                <MessageBubble
-                  key={msg.id}
-                  message={msg}
-                  isLatest={i === messages.length - 1}
-                />
-              ))}
 
-              {/* Code blocks */}
-              {codeBlocks.map((block, i) => (
-                <div key={`code-${i}`} className="w-full">
-                  <CodeBlock language={block.language} script={block.script} />
-                </div>
-              ))}
+                {/* Code blocks */}
+                {codeBlocks.map((block, i) => (
+                  <motion.div
+                    key={`code-${i}`}
+                    variants={assistantMessageVariants}
+                    initial="initial"
+                    animate="animate"
+                  >
+                    <CodeBlock
+                      language={block.language}
+                      script={block.script}
+                    />
+                  </motion.div>
+                ))}
 
-              {/* Typing indicator */}
-              {streaming && <TypingIndicator label="Thinking..." />}
+                {/* Typing indicator */}
+                <AnimatePresence>
+                  {streaming && (
+                    <motion.div
+                      key="typing"
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -4 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <TypingIndicator label="Thinking..." />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
 
-              {/* Bottom spacer for scroll */}
-              <div className="h-4" />
-            </div>
-          )}
+                {/* Bottom spacer for scroll */}
+                <div className="h-4" />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </main>
 
@@ -325,29 +417,63 @@ export default function Home() {
               "
             />
 
-            <button
+            <motion.button
               type="submit"
               disabled={!input.trim() || streaming}
+              variants={sendButtonVariants}
+              animate={
+                streaming ? "sending" : input.trim() ? "ready" : "idle"
+              }
+              whileTap={{ scale: 0.88 }}
               className="
                 flex items-center justify-center
                 w-9 h-9 rounded-xl
                 bg-ink-900 text-parchment-100
                 hover:bg-ink-800
                 disabled:bg-parchment-300 disabled:text-ink-400
-                transition-all duration-200
-                active:scale-95
+                transition-colors duration-200
                 flex-none
               "
               aria-label="Send message"
             >
-              <svg
-                className="w-4 h-4"
-                viewBox="0 0 16 16"
-                fill="currentColor"
-              >
-                <path d="M1.724 1.053a.5.5 0 01.55-.042l12.5 7a.5.5 0 010 .878l-12.5 7A.5.5 0 011 15.5V.5a.5.5 0 01.724-.447zM2.5 2.31v4.94L7.1 8 2.5 8.75v4.94L13.85 8 2.5 2.31z" />
-              </svg>
-            </button>
+              <AnimatePresence mode="wait" initial={false}>
+                {streaming ? (
+                  <motion.span
+                    key="stop"
+                    initial={{ opacity: 0, rotate: -90 }}
+                    animate={{ opacity: 1, rotate: 0 }}
+                    exit={{ opacity: 0, rotate: 90 }}
+                    transition={{ duration: 0.15 }}
+                    className="flex items-center justify-center"
+                  >
+                    <svg
+                      className="w-3.5 h-3.5"
+                      viewBox="0 0 14 14"
+                      fill="currentColor"
+                    >
+                      <rect x="3" y="3" width="8" height="8" rx="1.5" />
+                    </svg>
+                  </motion.span>
+                ) : (
+                  <motion.span
+                    key="arrow"
+                    initial={{ opacity: 0, x: -4 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 4 }}
+                    transition={{ duration: 0.15 }}
+                    className="flex items-center justify-center"
+                  >
+                    <svg
+                      className="w-4 h-4"
+                      viewBox="0 0 16 16"
+                      fill="currentColor"
+                    >
+                      <path d="M1.724 1.053a.5.5 0 01.55-.042l12.5 7a.5.5 0 010 .878l-12.5 7A.5.5 0 011 15.5V.5a.5.5 0 01.724-.447zM2.5 2.31v4.94L7.1 8 2.5 8.75v4.94L13.85 8 2.5 2.31z" />
+                    </svg>
+                  </motion.span>
+                )}
+              </AnimatePresence>
+            </motion.button>
           </div>
 
           <p className="text-center mt-2.5 text-caption text-ink-400 font-display">
