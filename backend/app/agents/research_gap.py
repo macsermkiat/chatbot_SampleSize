@@ -1,22 +1,18 @@
-"""Research Gap phase nodes: search, summarize, secretary."""
+"""Research Gap phase nodes: search and summarize.
+
+The secretary node has been removed -- the summarize node now handles
+routing decisions directly, reducing one LLM call per phase execution.
+"""
 
 from __future__ import annotations
 
-import json
+from urllib.parse import urlparse
 
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
-from app.agents.prompts import (
-    GAP_SEARCH_PROMPT,
-    GAP_SECRETARY_PROMPT,
-    GAP_SUMMARIZE_PROMPT,
-)
-from app.agents.state import (
-    GapSearchOutput,
-    GapSummarizeOutput,
-    ResearchState,
-    SecretaryOutput,
-)
+from app.agents.helpers import build_input_text
+from app.agents.prompts import GAP_SEARCH_PROMPT, GAP_SUMMARIZE_PROMPT
+from app.agents.state import GapSearchOutput, GapSummarizeOutput, ResearchState
 from app.services.llm import get_chat_model
 from app.services.memory import trim_messages
 from app.services.tavily import SearchResult, search
@@ -31,10 +27,10 @@ async def gap_search_node(state: ResearchState) -> dict:
 
     llm = get_chat_model("gap_search").with_structured_output(GapSearchOutput)
 
-    # Build the prompt text matching the n8n template
-    user_text = _build_input_text(state)
+    user_text = build_input_text(state)
     messages = [
         SystemMessage(content=GAP_SEARCH_PROMPT),
+        *trim_messages(state["messages"]),
         HumanMessage(content=user_text),
     ]
 
@@ -43,9 +39,7 @@ async def gap_search_node(state: ResearchState) -> dict:
     queries = list(result.terms)
     search_results: list[SearchResult] = await search(queries)
 
-    # Emit a progress message
-    term_list = "\n".join(f"  {i+1}. {q}" for i, q in enumerate(queries))
-    progress_msg = f"Searching with {len(queries)} terms:\n{term_list}"
+    progress_msg = _format_progress(queries, search_results)
 
     return {
         "messages": [AIMessage(content=progress_msg)],
@@ -57,21 +51,24 @@ async def gap_search_node(state: ResearchState) -> dict:
 
 
 # ---------------------------------------------------------------------------
-# 2. ResearchGapSummarize -- appraises evidence, classifies gaps
+# 2. ResearchGapSummarize -- appraises evidence, classifies gaps, routes
 # ---------------------------------------------------------------------------
 
 async def gap_summarize_node(state: ResearchState) -> dict:
-    """Summarize search results, classify gaps, and draft PICOTS question."""
+    """Summarize search results, classify gaps, and decide next step.
+
+    This node now also handles routing (previously done by the secretary).
+    """
 
     llm = get_chat_model("gap_summarize").with_structured_output(GapSummarizeOutput)
 
-    # Format search results into the prompt (matches n8n template)
     search_block = _format_search_results(state.get("search_results", []))
-    user_text = _build_input_text(state)
+    user_text = build_input_text(state)
     combined = f"{user_text}\n\nSearch Result: {search_block}"
 
     messages = [
         SystemMessage(content=GAP_SUMMARIZE_PROMPT),
+        *trim_messages(state["messages"]),
         HumanMessage(content=combined),
     ]
 
@@ -80,51 +77,7 @@ async def gap_summarize_node(state: ResearchState) -> dict:
     return {
         "messages": [AIMessage(content=result.direct_response_to_user)],
         "agent_to_route_to": result.agent_to_route_to,
-        "forwarded_message": result.forwarded_message,
-    }
-
-
-# ---------------------------------------------------------------------------
-# 3. ResearchGapSecretary -- summarizes and routes
-# ---------------------------------------------------------------------------
-
-async def gap_secretary_node(state: ResearchState) -> dict:
-    """Summarize the gap phase output and wait for user input.
-
-    The secretary summarizes what the search+summarize pipeline produced.
-    After the first pass it should always return to the user (agent_to_route_to="")
-    rather than looping back into gap_search -- the user decides next steps.
-    """
-
-    llm = get_chat_model("gap_secretary").with_structured_output(SecretaryOutput)
-
-    # Collect the last AI messages as the agents' output to summarize
-    agent_output_parts = []
-    for msg in reversed(state.get("messages", [])):
-        if getattr(msg, "type", None) == "ai":
-            agent_output_parts.append(msg.content)
-        elif getattr(msg, "type", None) == "human":
-            break
-    agent_output = "\n\n".join(reversed(agent_output_parts))
-
-    messages = [
-        SystemMessage(content=GAP_SECRETARY_PROMPT),
-        HumanMessage(
-            content=(
-                f"Agent output to summarize:\n{agent_output}\n\n"
-                "The user has NOT responded yet. Summarize the findings and "
-                "ask the user what they want to do next. Set agent_to_route_to "
-                "to empty string."
-            )
-        ),
-    ]
-
-    result: SecretaryOutput = await llm.ainvoke(messages)
-
-    return {
-        "messages": [AIMessage(content=result.direct_response_to_user)],
-        # Force end-of-turn: let the user decide the next step
-        "agent_to_route_to": "",
+        "current_phase": result.agent_to_route_to or "research_gap",
         "forwarded_message": result.forwarded_message,
     }
 
@@ -133,23 +86,63 @@ async def gap_secretary_node(state: ResearchState) -> dict:
 # Helpers
 # ---------------------------------------------------------------------------
 
-def _build_input_text(state: ResearchState) -> str:
-    """Construct the input text block matching the n8n template variables."""
-    forwarded = state.get("forwarded_message", "") or "-"
-    # Get the latest user message
-    user_msg = "-"
-    for msg in reversed(state.get("messages", [])):
-        if getattr(msg, "type", None) == "human":
-            user_msg = msg.content
-            break
-    return f"Query from other agent: {forwarded}\n\nUser response: {user_msg}"
-
-
 def _format_search_results(results: list[dict]) -> str:
-    """Format search results into the text block the n8n template uses."""
+    """Format search results for the LLM prompt (includes URLs for citation)."""
     if not results:
         return "No search results available."
-    lines = []
+    lines: list[str] = []
     for i, r in enumerate(results, 1):
-        lines.append(f"{i}. {r.get('title', '')}\n{r.get('url', '')}\n{r.get('content', '')}")
+        title = r.get("title", "Untitled")
+        url = r.get("url", "")
+        content = r.get("content", "")
+        score = r.get("score", 0.0)
+        lines.append(
+            f"{i}. **{title}**\n"
+            f"   URL: {url}\n"
+            f"   Relevance: {score:.2f}\n"
+            f"   {content}"
+        )
     return "\n\n".join(lines)
+
+
+def _format_progress(queries: list[str], results: list[SearchResult]) -> str:
+    """Build a user-friendly progress message with clickable links."""
+    parts: list[str] = []
+
+    parts.append("## \U0001f50d Search Terms\n")
+    for i, q in enumerate(queries, 1):
+        parts.append(f"{i}. {q}")
+    parts.append("")
+
+    if not results:
+        parts.append("No results found. Try refining your topic.\n")
+        return "\n".join(parts)
+
+    parts.append(f"## \U0001f4da Found {len(results)} Sources\n")
+    for i, r in enumerate(results, 1):
+        title = r.title or "Untitled"
+        link = f"[{title}]({r.url})" if r.url else title
+        domain = _extract_domain(r.url)
+        domain_badge = f" \u2014 *{domain}*" if domain else ""
+        content = r.content or ""
+        snippet = (content[:180] + "...") if len(content) > 180 else content
+        parts.append(f"**{i}.** {link}{domain_badge}\n")
+        parts.append(f"> {snippet}\n")
+
+    parts.append("---")
+    parts.append("\u23f3 *Analyzing these sources...*")
+
+    return "\n".join(parts)
+
+
+def _extract_domain(url: str) -> str:
+    """Extract a readable domain name from a URL."""
+    if not url:
+        return ""
+    try:
+        domain = urlparse(url).hostname or ""
+    except Exception:
+        return ""
+    if domain.startswith("www."):
+        domain = domain[4:]
+    return domain

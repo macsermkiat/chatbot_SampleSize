@@ -20,18 +20,12 @@ async def orchestrator_node(state: ResearchState) -> dict:
 
     result: OrchestratorOutput = await llm.ainvoke(prompt_messages)
 
-    # Map n8n routing keys to internal phase names
-    route_map = {
-        "ResearchGapAgent": "research_gap",
-        "MethodologyAgent": "methodology",
-        "BiostatisticsAgent": "biostatistics",
-    }
-
-    next_phase = route_map.get(result.agent_to_route_to, "")
+    # agent_to_route_to now uses internal names directly (research_gap, etc.)
+    next_phase = result.agent_to_route_to or state.get("current_phase", "orchestrator")
 
     return {
         "messages": [AIMessage(content=result.direct_response_to_user)],
-        "current_phase": next_phase or state["current_phase"],
+        "current_phase": next_phase,
         "agent_to_route_to": result.agent_to_route_to,
         "forwarded_message": result.forwarded_message,
         "needs_clarification": result.needs_clarification,

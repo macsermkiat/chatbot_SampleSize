@@ -12,6 +12,7 @@ class Settings(BaseSettings):
 
     # LLM providers
     openai_api_key: str = ""
+    anthropic_api_key: str = ""
     google_gemini_api_key: str = ""
 
     # Search

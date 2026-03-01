@@ -1,7 +1,4 @@
-"""LangGraph state definition and structured output schemas.
-
-These mirror the JSON contracts enforced by the n8n structured output parsers.
-"""
+"""LangGraph state definition and structured output schemas."""
 
 from __future__ import annotations
 
@@ -70,8 +67,8 @@ class OrchestratorOutput(BaseModel):
     agent_to_route_to: str = Field(
         default="",
         description=(
-            "Exact agent key: 'ResearchGapAgent', 'MethodologyAgent', "
-            "'BiostatisticsAgent', or '' to stay."
+            "Route to: 'research_gap', 'methodology', "
+            "'biostatistics', or '' to stay."
         ),
     )
     forwarded_message: str = Field(
@@ -88,29 +85,30 @@ class GapSearchOutput(BaseModel):
 
 
 class GapSummarizeOutput(BaseModel):
-    """ResearchGapSummarize node output -- same routing contract."""
-
-    direct_response_to_user: str
-    agent_to_route_to: str = ""
-    forwarded_message: str = ""
-
-
-class SecretaryOutput(BaseModel):
-    """Shared schema for all three secretary agents (gap, methodology, biostats)."""
+    """ResearchGapSummarize node output with routing."""
 
     direct_response_to_user: str
     agent_to_route_to: str = Field(
         default="",
-        description="'ResearchGapAgent', 'MethodologyAgent', 'BiostatisticsAgent', or '' to stay.",
+        description=(
+            "Route to: 'research_gap', 'methodology', "
+            "'biostatistics', or '' to stay."
+        ),
     )
     forwarded_message: str = ""
 
 
 class MethodologyOutput(BaseModel):
-    """MethodologyAgent node output -- same routing contract."""
+    """MethodologyAgent node output with routing."""
 
     direct_response_to_user: str
-    agent_to_route_to: str = ""
+    agent_to_route_to: str = Field(
+        default="",
+        description=(
+            "Route to: 'research_gap', 'methodology', "
+            "'biostatistics', or '' to stay."
+        ),
+    )
     forwarded_message: str = ""
 
 
@@ -120,7 +118,15 @@ class BiostatisticsOutput(BaseModel):
     session_id: str = ""
     direct_response_to_user: str
     need_info: bool = Field(
-        default=True, description="True if the agent still needs more info from the user."
+        default=False, description="True if the agent still needs more info from the user."
+    )
+    diagnostic_query: str = Field(
+        default="",
+        description=(
+            "If non-empty, calls the diagnostic tool with this query to recommend "
+            "the appropriate statistical test. Include variable types, distribution, "
+            "dependency, and number of groups."
+        ),
     )
     forwarded_message: str = Field(
         default="", description="Detailed instruction for the coding agent."
@@ -141,14 +147,13 @@ class CodingOutput(BaseModel):
     script: str = Field(
         default="", description="Generated code script."
     )
-    forwarded_message: str = Field(
-        default="", description="Summary for the biostats secretary."
+    agent_to_route_to: str = Field(
+        default="",
+        description=(
+            "Route to another phase: 'research_gap', 'methodology', "
+            "'biostatistics', or '' to stay."
+        ),
     )
-
-
-class RoutingOutput(BaseModel):
-    """BiostatsRouting node output."""
-
-    direct_response_to_user: str
-    agent_to_route_to: str = ""
-    forwarded_message: str = ""
+    forwarded_message: str = Field(
+        default="", description="Context summary for the next agent."
+    )
