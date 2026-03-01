@@ -42,6 +42,14 @@ _PHASE_ENTRY = {
     "biostatistics": "biostatistics",
 }
 
+# Follow-up routing: user messages within an active phase skip the search
+# step and go to the conversational node instead.
+_PHASE_FOLLOWUP = {
+    "research_gap": "gap_summarize",
+    "methodology": "methodology",
+    "biostatistics": "biostatistics",
+}
+
 # Keywords that signal the user wants to switch phases
 _PHASE_SWITCH_PATTERNS = re.compile(
     r"\b(switch|change|go\s+to|move\s+to|start\s+over|new\s+topic|different\s+topic)\b",
@@ -56,10 +64,11 @@ _PHASE_SWITCH_PATTERNS = re.compile(
 def _entry_router(state: ResearchState) -> dict:
     """Decide whether to route to orchestrator or directly to current phase.
 
-    Returns a state update (empty dict) -- the actual routing decision is
-    handled by ``_route_from_entry`` via conditional edges.
+    Resets ``search_count`` so the per-turn loop guard starts fresh.
+    The actual routing decision is handled by ``_route_from_entry``
+    via conditional edges.
     """
-    return {}
+    return {"search_count": 0}
 
 
 def _route_from_entry(state: ResearchState) -> str:
@@ -75,8 +84,8 @@ def _route_from_entry(state: ResearchState) -> str:
     if _PHASE_SWITCH_PATTERNS.search(last_msg):
         return "orchestrator"
 
-    # Route directly to current phase entry point (saves 1 LLM call)
-    return _PHASE_ENTRY.get(phase, "orchestrator")
+    # Route to conversational node (not search) for follow-up messages
+    return _PHASE_FOLLOWUP.get(phase, "orchestrator")
 
 
 # ---------------------------------------------------------------------------
@@ -93,11 +102,19 @@ def _route_from_orchestrator(state: ResearchState) -> str:
 
 
 def _route_from_gap_summarize(state: ResearchState) -> str:
-    """After gap summarize: route to another phase or end (wait for user)."""
+    """After gap summarize: route to another phase or end (wait for user).
+
+    Loop guard: only allows one search per graph invocation.  If
+    ``search_count >= 1`` and the LLM requests another search, we END
+    instead -- the next user message will re-enter via entry_router.
+    """
     target = state.get("agent_to_route_to", "")
     if not target:
         return END
     if target == "research_gap":
+        if state.get("search_count", 0) >= 1:
+            _logger.info("Search loop capped (search_count=%d), ending turn", state.get("search_count", 0))
+            return END
         return "gap_search"
     mapped = _PHASE_ENTRY.get(target)
     if mapped is None:
@@ -176,6 +193,7 @@ def build_graph() -> StateGraph:
         {
             "orchestrator": "orchestrator",
             "gap_search": "gap_search",
+            "gap_summarize": "gap_summarize",
             "methodology": "methodology",
             "biostatistics": "biostatistics",
         },

@@ -29,14 +29,14 @@ _logger = logging.getLogger(__name__)
 AGENT_MODEL_MAP: dict[str, tuple[str, str]] = {
     "orchestrator":  ("openai",    "gpt-5-mini"),
     "gap_search":    ("openai",    "gpt-5-mini"),
-    "gap_summarize": ("anthropic", "claude-sonnet-4-6-20250514"),
-    "methodology":   ("anthropic", "claude-sonnet-4-6-20250514"),
-    "biostatistics": ("anthropic", "claude-sonnet-4-6-20250514"),
+    "gap_summarize": ("anthropic", "claude-sonnet-4-6"),
+    "methodology":   ("anthropic", "claude-sonnet-4-6"),
+    "biostatistics": ("anthropic", "claude-sonnet-4-6"),
     "diagnostic":    ("openai",    "gpt-5-mini"),
-    "coding":        ("anthropic", "claude-sonnet-4-6-20250514"),
+    "coding":        ("anthropic", "claude-sonnet-4-6"),
 }
 
-_FALLBACK_MODEL = "gemini-2.0-flash"
+_FALLBACK_MODEL = "gemini-3-flash-preview"
 
 
 # ---------------------------------------------------------------------------

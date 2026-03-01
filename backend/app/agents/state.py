@@ -50,6 +50,9 @@ class ResearchState(TypedDict):
     # Search results (Tavily)
     search_results: list[dict]      # [{url, title, content, score}]
 
+    # Loop guard: counts searches executed within a single graph invocation
+    search_count: int               # reset to 0 at entry_router
+
 
 # ---------------------------------------------------------------------------
 # Structured output schemas (one per agent family)

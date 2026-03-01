@@ -1,7 +1,5 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
-
 ## Workflow Orchestration
 
 ### 1. Plan Node Default
@@ -57,186 +55,52 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Goal
 
-Port the n8n multi-agent workflow (`Research Handoff agent.json`) into a fully functional web application. The app is a medical research assistant that guides users through three phases: **research gap analysis**, **study methodology design**, and **biostatistical analysis** (including sample size calculations).
+Medical research assistant chatbot -- ported from n8n workflow (`Research Handoff agent.json`) into a web app. Three phases: **research gap analysis**, **study methodology design**, **biostatistical analysis**.
+
+`Research Handoff agent.json` is the reference spec. Do not modify it.
 
 ## Tech Stack
 
 - **Backend:** Python, FastAPI, LangGraph (multi-agent orchestration)
-- **Frontend:** React (Next.js)
-- **LLM Providers:** OpenAI (primary), Google Gemini (fallback)
-- **Database:** PostgreSQL (chat memory, session persistence)
-- **Storage:** Supabase (structured data), Google Drive (file export)
-- **Search:** Tavily API (literature search)
-
-## Reference Workflow
-
-`Research Handoff agent.json` is the source n8n workflow to replicate. Do not modify this file -- it is the reference specification.
-
-## Architecture: LangGraph Multi-Agent with Supervisor
-
-The n8n workflow uses an orchestrator/handoff pattern. Port this to a **LangGraph StateGraph** with a supervisor node.
-
-```
-                         Next.js Frontend (Chat UI)
-                                |
-                          FastAPI Backend
-                           /api/chat
-                                |
-                                v
-                    LangGraph StateGraph
-                                |
-                    +-----------+-----------+
-                    |                       |
-              Orchestrator            File Processor
-              (supervisor)            (PDF/DOCX/image)
-                    |
-       +------------+------------+
-       |            |            |
-  ResearchGap   Methodology   Biostatistics
-    Phase         Phase         Phase
-       |            |            |
-  gap_search    methodology   biostats_agent
-  gap_summarize  agent        coding_agent
-  gap_secretary  meth_secr.   diagnostic_tool
-                              biostats_secr.
-```
-
-### Agent Definitions (from n8n system prompts)
-
-| Agent | Role | Key Behavior |
-|-------|------|-------------|
-| **Orchestrator** | Supervisor / triage | Validates scope (gap/methodology/biostats only), routes to specialist, rejects off-topic |
-| **ResearchGapSearch** | Literature search | Generates 3-5 search terms, calls Tavily, returns structured results |
-| **ResearchGapSummarize** | Evidence appraisal | Gap classification (6 types), PICO/PICOTS formulation, FINER criteria |
-| **MethodologyAgent** | Study design | Target Trial Emulation, DAG-based confounding, bias detection, EQUATOR reporting |
-| **BiostatisticsAgent** | Power/sample size | Clarification-first approach, "EL12" explanations, calls DiagnosticTool |
-| **CodingAgent** | Code generation | Python/R/STATA statistical scripts, code interpreter validation |
-| **DiagnosticTool** | Test selection | Statistical test recommendation based on variable types (used as tool, not standalone agent) |
-| **Secretary agents** (x3) | Summarize + route | Each phase has a secretary that summarizes output and decides next routing |
-
-### Routing Contract
-
-All agents must return structured output matching this schema:
-
-```python
-class AgentOutput(BaseModel):
-    direct_response_to_user: str
-    agent_to_route_to: str  # "" = stay in current phase
-    forwarded_message: str  # context for next agent
-    needs_clarification: bool = False
-    need_info: bool = False  # biostats-specific
-    need_code: bool = False  # coding-specific
-```
-
-The supervisor inspects `agent_to_route_to` to decide the next node in the graph. Empty string means continue current conversation; a populated value routes to that phase.
-
-### LangGraph State Design
-
-```python
-class ResearchState(TypedDict):
-    messages: Annotated[list, add_messages]
-    current_phase: str           # "orchestrator" | "research_gap" | "methodology" | "biostatistics"
-    agent_to_route_to: str
-    forwarded_message: str
-    needs_clarification: bool
-    session_id: str
-    uploaded_files: list[dict]   # extracted file contents
-```
-
-### Memory Strategy
-
-- Per-session message history in PostgreSQL (20-message sliding window, matching n8n config)
-- Each agent phase reads from the shared state `messages` list
-- `forwarded_message` carries context across phase transitions (not full history replay)
-
-## Planned Directory Structure
-
-```
-chatbot_SampleSize/
-  Research Handoff agent.json   # reference spec (do not modify)
-  CLAUDE.md
-  backend/
-    app/
-      main.py                   # FastAPI app, CORS, lifespan
-      config.py                 # env vars, settings
-      api/
-        chat.py                 # POST /api/chat, WebSocket /api/ws
-        files.py                # POST /api/upload (PDF/DOCX/image)
-        sessions.py             # session CRUD
-      agents/
-        state.py                # ResearchState, AgentOutput schema
-        graph.py                # LangGraph StateGraph definition
-        orchestrator.py         # supervisor/router node
-        research_gap.py         # gap_search, gap_summarize, gap_secretary
-        methodology.py          # methodology_agent, methodology_secretary
-        biostatistics.py        # biostats_agent, coding_agent, diagnostic_tool, biostats_secretary
-        prompts.py              # all system prompts (extracted from n8n JSON)
-      services/
-        llm.py                  # OpenAI + Gemini client setup
-        memory.py               # PostgreSQL chat memory (async)
-        tavily.py               # Tavily search wrapper
-        file_processor.py       # PDF/DOCX/image text extraction
-      db.py                     # async PostgreSQL connection
-      models.py                 # SQLAlchemy/Pydantic models
-    pyproject.toml
-    .env.example
-  frontend/
-    src/
-      app/                      # Next.js app router
-        page.tsx                # chat interface
-        layout.tsx
-      components/
-        ChatWindow.tsx
-        MessageBubble.tsx
-        FileUpload.tsx
-        PhaseIndicator.tsx      # shows current research phase
-      lib/
-        api.ts                  # fetch/WebSocket helpers
-    package.json
-    next.config.js
-```
+- **Frontend:** Next.js (React)
+- **LLM:** OpenAI (primary), Google Gemini (fallback)
+- **Database:** Supabase PostgreSQL
+- **Search:** Tavily API
 
 ## Commands
 
 ```bash
 # Backend
-cd backend
-pip install -e ".[dev]"
+cd backend && uv pip install -e ".[dev]"
 uvicorn app.main:app --reload --port 8000
 
 # Frontend
-cd frontend
-npm install
-npm run dev          # starts on port 3000
+cd frontend && npm install && npm run dev
 
 # Tests
-cd backend
-pytest                        # all tests
-pytest tests/test_agents.py   # single file
-pytest -k "test_orchestrator" # single test
-
-# Lint
-cd backend && ruff check . && ruff format --check .
+cd backend && pytest
 cd frontend && npm run lint
 ```
 
-## Environment Variables
+## Key Patterns
 
-```
-OPENAI_API_KEY=
-GOOGLE_GEMINI_API_KEY=
-TAVILY_API_KEY=
-DATABASE_URL=postgresql+asyncpg://user:pass@localhost:5432/research_chatbot
-SUPABASE_URL=
-SUPABASE_KEY=
-GOOGLE_DRIVE_CREDENTIALS=     # JSON service account or OAuth
-```
+- All agents return `AgentOutput` (see `backend/app/agents/state.py`) with routing fields
+- Supervisor reads `agent_to_route_to` to decide graph transitions
+- Secretary agents summarize phase output and set routing
+- 20-message sliding window per session (PostgreSQL)
+- `forwarded_message` carries context across phase transitions
 
-## Implementation Notes
+## Gotchas
 
-- Extract all system prompts from the n8n JSON `systemMessage` fields into `prompts.py` -- these are the core domain logic
-- The n8n workflow uses OpenAI code interpreter for BiostatisticsAgent/CodingAgent -- replicate via the OpenAI Assistants API `code_interpreter` tool or a sandboxed execution environment
-- Tavily search returns `{url, title, content, score}` per result -- the gap_search agent generates 3-5 queries and aggregates results
-- File upload pipeline: detect MIME type -> extract text (PyPDF2/python-docx/Pillow+pytesseract) -> attach to state as `uploaded_files`
-- The n8n workflow has 22+ webhook chat interaction points -- consolidate these into a single WebSocket connection with message types
-- Secretary agents in n8n are separate LLM calls -- in LangGraph these become nodes that summarize the current phase output and set `agent_to_route_to` for the conditional edge
+- Use `uv` not `pip` for package management
+- `timeout` unavailable on macOS -- use `gtimeout` or Python httpx ASGITransport
+- Build backend uses `setuptools.build_meta`, not `setuptools.backends._legacy:_Backend`
+
+## Task Tracking
+
+- Plans: `tasks/todo.md`
+- Lessons: `tasks/lessons.md` (update after corrections)
+
+## Architecture Details
+
+See `.claude/rules/architecture.md` for full agent definitions, routing contract, state design, and architecture diagram.

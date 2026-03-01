@@ -47,6 +47,11 @@ async def gap_search_node(state: ResearchState) -> dict:
             {"url": r.url, "title": r.title, "content": r.content, "score": r.score}
             for r in search_results
         ],
+        # Increment loop guard counter
+        "search_count": state.get("search_count", 0) + 1,
+        # Clear stale routing state so gap_summarize starts with a clean slate
+        "agent_to_route_to": "",
+        "forwarded_message": "",
     }
 
 
