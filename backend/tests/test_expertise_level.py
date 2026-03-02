@@ -353,8 +353,10 @@ class TestPromptContentQuality:
     def test_simple_orchestrator_warm_tone(self):
         assert "warm" in SIMPLE_ORCHESTRATOR_ADDENDUM.lower() or "reassuring" in SIMPLE_ORCHESTRATOR_ADDENDUM.lower()
 
-    def test_simple_coding_descriptive_variables(self):
-        assert "descriptive variable names" in SIMPLE_CODING_ADDENDUM.lower()
+    def test_simple_coding_no_code_by_default(self):
+        """Simple coding addendum must instruct no code output by default."""
+        assert "need_code" in SIMPLE_CODING_ADDENDUM.lower()
+        assert "false" in SIMPLE_CODING_ADDENDUM.lower()
 
     def test_simple_diagnostic_recommendation_format(self):
         assert "you should use" in SIMPLE_DIAGNOSTIC_ADDENDUM.lower()

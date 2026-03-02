@@ -46,7 +46,19 @@
 - [x] Updated 2 tests to check composed prompt instead of addendum alone
 - [x] All 116/116 tests pass
 
-### Files Modified
+### Ralph Loop Iteration (8 iterations, B- -> A-)
+- [x] Iteration 1: 7.95/10 -- identified raw search output leaking, multi-question dumps
+- [x] Iteration 2: Fixed search progress for simple mode (hide MeSH), added compactness hard limits
+- [x] Iteration 3: 8.48/10 -- KG length improved, M4 jargon persists
+- [x] Iteration 4: 8.90/10 -- KG follow-up fixed, B2 improved
+- [x] Iteration 5: Fixed "pooled analysis"/"PROSPERO" jargon, route-faster instruction
+- [x] Iteration 6: 8.74/10 -- code dump in B4 identified as critical blocker
+- [x] Iteration 7: Fixed coding addendum (no code by default in simple mode)
+- [x] Iteration 8: **9.11/10, Mode Adherence 9/10 -- PASS**
+  - Biostatistics: 9.46, Methodology: 9.12, Knowledge Gap: 8.55
+  - 117/117 tests pass
+
+### Files Modified (Ralph Loop)
 - `backend/app/agents/state.py` -- added ExpertiseLevel type + field
 - `backend/app/models.py` -- added expertise_level to ChatRequest
 - `backend/app/api/chat.py` -- passes expertise_level to graph state

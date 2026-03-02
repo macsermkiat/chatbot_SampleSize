@@ -40,18 +40,26 @@ class TestFormatSearchResults:
 # ---------------------------------------------------------------------------
 
 class TestFormatProgress:
-    def test_with_results(self):
+    def test_with_results_advanced(self):
         queries = ["term1"]
         results = [SearchResult(url="https://example.com", title="Title", content="content", score=0.9)]
-        progress = _format_progress(queries, results)
+        progress = _format_progress(queries, results, "advanced")
         assert "term1" in progress
         assert "Title" in progress
-        assert "1 Sources" in progress
+        assert "Found 1 sources" in progress
+
+    def test_with_results_simple_hides_terms(self):
+        queries = ["(\"Sepsis\"[MeSH]) AND randomized"]
+        results = [SearchResult(url="https://example.com", title="Title", content="content", score=0.9)]
+        progress = _format_progress(queries, results, "simple")
+        # Simple mode should NOT show raw MeSH search terms
+        assert "MeSH" not in progress
+        assert "Title" in progress
+        assert "Searching for relevant studies" in progress
 
     def test_without_results(self):
         progress = _format_progress(["term1"], [])
         assert "No results found" in progress
-        assert "term1" in progress
 
 
 # ---------------------------------------------------------------------------

@@ -41,7 +41,7 @@ async def gap_search_node(state: ResearchState) -> dict:
     queries = list(result.terms)
     search_results: list[SearchResult] = await search(queries)
 
-    progress_msg = _format_progress(queries, search_results)
+    progress_msg = _format_progress(queries, search_results, expertise)
 
     return {
         "messages": [AIMessage(content=progress_msg)],
@@ -125,32 +125,54 @@ def _format_search_results(results: list[dict]) -> str:
     return "\n\n".join(lines)
 
 
-def _format_progress(queries: list[str], results: list[SearchResult]) -> str:
-    """Build a user-friendly progress message with clickable links."""
-    parts: list[str] = []
+def _format_progress(
+    queries: list[str],
+    results: list[SearchResult],
+    expertise_level: str = "advanced",
+) -> str:
+    """Build a user-friendly progress message with clickable links.
 
-    parts.append("## \U0001f50d Search Terms\n")
-    for i, q in enumerate(queries, 1):
-        parts.append(f"{i}. {q}")
-    parts.append("")
+    In simple mode: hides raw search terms and limits to top 5 sources
+    with no raw snippets. In advanced mode: shows full detail.
+    """
+    parts: list[str] = []
+    is_simple = expertise_level == "simple"
+
+    if is_simple:
+        # Simple mode: hide MeSH/boolean search terms from user
+        parts.append(f"**Searching for relevant studies...** "
+                     f"(checked {len(queries)} search strategies)\n")
+    else:
+        parts.append("## Search Terms\n")
+        for i, q in enumerate(queries, 1):
+            parts.append(f"{i}. {q}")
+        parts.append("")
 
     if not results:
         parts.append("No results found. Try refining your topic.\n")
         return "\n".join(parts)
 
-    parts.append(f"## \U0001f4da Found {len(results)} Sources\n")
-    for i, r in enumerate(results, 1):
+    # Simple mode: show top 5 titles only, no raw snippets
+    display_results = results[:5] if is_simple else results
+    parts.append(f"**Found {len(results)} sources.** "
+                 f"Here are the most relevant:\n")
+
+    for i, r in enumerate(display_results, 1):
         title = r.title or "Untitled"
         link = f"[{title}]({r.url})" if r.url else title
         domain = _extract_domain(r.url)
-        domain_badge = f" \u2014 *{domain}*" if domain else ""
-        content = r.content or ""
-        snippet = (content[:180] + "...") if len(content) > 180 else content
-        parts.append(f"**{i}.** {link}{domain_badge}\n")
-        parts.append(f"> {snippet}\n")
+        domain_badge = f" -- *{domain}*" if domain else ""
+        parts.append(f"**{i}.** {link}{domain_badge}")
+
+        if not is_simple:
+            content = r.content or ""
+            snippet = (content[:180] + "...") if len(content) > 180 else content
+            parts.append(f"> {snippet}\n")
+        else:
+            parts.append("")
 
     parts.append("---")
-    parts.append("\u23f3 *Analyzing these sources...*")
+    parts.append("*Analyzing these sources now...*")
 
     return "\n".join(parts)
 
