@@ -8,8 +8,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from langchain_core.messages import HumanMessage
 
-from app.agents.state import ResearchState
-
 
 # ---------------------------------------------------------------------------
 # State factory
@@ -91,10 +89,15 @@ def patch_get_chat_model():
 
 @pytest.fixture()
 def patch_tavily_search():
-    """Patches app.agents.research_gap.search with a mock returning given results."""
+    """Patches app.agents.research_gap.search with a mock returning given results.
+
+    Auto-cleans up on teardown -- callers do NOT need to stop the patcher.
+    """
     from app.services.tavily import SearchResult
 
-    def _patch(results: list[SearchResult] | None = None):
+    patches: list[Any] = []
+
+    def _patch(results: list[SearchResult] | None = None) -> AsyncMock:
         if results is None:
             results = [
                 SearchResult(
@@ -106,7 +109,11 @@ def patch_tavily_search():
             ]
         mock = AsyncMock(return_value=results)
         p = patch("app.agents.research_gap.search", mock)
+        patches.append(p)
         p.start()
-        return p, mock
+        return mock
 
     yield _patch
+
+    for p in patches:
+        p.stop()

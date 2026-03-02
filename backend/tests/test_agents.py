@@ -68,14 +68,11 @@ class TestGapSearchNode:
             SearchResult(url="https://pubmed.ncbi.nlm.nih.gov/1", title="Study 1", content="content1", score=0.9),
             SearchResult(url="https://pubmed.ncbi.nlm.nih.gov/2", title="Study 2", content="content2", score=0.8),
         ]
-        patcher, _ = patch_tavily_search(mock_results)
+        patch_tavily_search(mock_results)
 
-        state = base_state(search_count=0)
+        state = base_state()
 
-        try:
-            result = await gap_search_node(state)
-        finally:
-            patcher.stop()
+        result = await gap_search_node(state)
 
         assert len(result["search_results"]) == 2
         assert result["search_count"] == 1
@@ -84,14 +81,11 @@ class TestGapSearchNode:
     async def test_increments_count(self, patch_get_chat_model, patch_tavily_search):
         output = GapSearchOutput(terms=["term"])
         patch_get_chat_model("app.agents.research_gap", output)
-        patcher, _ = patch_tavily_search([])
+        patch_tavily_search([])
 
         state = base_state(search_count=2)
 
-        try:
-            result = await gap_search_node(state)
-        finally:
-            patcher.stop()
+        result = await gap_search_node(state)
 
         assert result["search_count"] == 3
 
@@ -211,14 +205,10 @@ class TestBiostatisticsNode:
         diagnostic_mock = MagicMock()
         diagnostic_mock.ainvoke = AsyncMock(return_value=MagicMock(content="Use t-test"))
 
-        call_count = [0]
-        original_return = mock
+        models = {"biostatistics": mock, "diagnostic": diagnostic_mock}
 
         def side_effect(agent_name):
-            call_count[0] += 1
-            if agent_name == "diagnostic":
-                return diagnostic_mock
-            return original_return
+            return models[agent_name]
 
         with patch("app.agents.biostatistics.get_chat_model", side_effect=side_effect):
             state = base_state(current_phase="biostatistics")
