@@ -1,5 +1,6 @@
 "use client";
 
+import type { Components } from "react-markdown";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import type { ChatMessage } from "@/lib/api";
@@ -21,6 +22,48 @@ const NODE_LABELS: Record<string, string> = {
   biostats_routing: "Phase Router",
 };
 
+/**
+ * Custom react-markdown components to fix rendering issues:
+ * - Hide empty code blocks
+ * - Style <hr> elegantly
+ * - Prevent text overflow in <pre>
+ */
+const markdownComponents: Partial<Components> = {
+  pre({ children, ...props }) {
+    // Skip rendering if children are empty or whitespace-only
+    const content = extractTextContent(children);
+    if (!content.trim()) return null;
+    return <pre {...props}>{children}</pre>;
+  },
+  code({ children, className, ...props }) {
+    const content = String(children ?? "").replace(/\n$/, "");
+    if (!content.trim()) return null;
+    return (
+      <code className={className} {...props}>
+        {content}
+      </code>
+    );
+  },
+  hr() {
+    return (
+      <hr className="my-4 border-none h-px bg-gradient-to-r from-transparent via-parchment-400 to-transparent" />
+    );
+  },
+};
+
+/** Recursively extract text from React children. */
+function extractTextContent(node: React.ReactNode): string {
+  if (node == null) return "";
+  if (typeof node === "string") return node;
+  if (typeof node === "number") return String(node);
+  if (Array.isArray(node)) return node.map(extractTextContent).join("");
+  if (typeof node === "object" && "props" in node) {
+    const el = node as React.ReactElement<{ children?: React.ReactNode }>;
+    return extractTextContent(el.props.children);
+  }
+  return "";
+}
+
 export default function MessageBubble({ message }: MessageBubbleProps) {
   const isUser = message.role === "user";
 
@@ -33,7 +76,7 @@ export default function MessageBubble({ message }: MessageBubbleProps) {
     >
       <div
         className={`
-          max-w-[85%] sm:max-w-[75%]
+          max-w-[85%] sm:max-w-[75%] min-w-0
           ${isUser ? "ml-8" : "mr-8"}
         `}
       >
@@ -50,7 +93,7 @@ export default function MessageBubble({ message }: MessageBubbleProps) {
         {/* Message body */}
         <div
           className={`
-            relative px-5 py-3.5 rounded-2xl
+            relative px-5 py-3.5 rounded-2xl overflow-hidden
             ${
               isUser
                 ? "bg-ink-900 text-parchment-100 rounded-br-md"
@@ -59,12 +102,15 @@ export default function MessageBubble({ message }: MessageBubbleProps) {
           `}
         >
           {isUser ? (
-            <p className="text-body-md leading-relaxed whitespace-pre-wrap">
+            <p className="text-body-md leading-relaxed whitespace-pre-wrap break-words">
               {message.content}
             </p>
           ) : (
             <div className="prose-research text-body-md">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                components={markdownComponents}
+              >
                 {message.content}
               </ReactMarkdown>
             </div>

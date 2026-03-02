@@ -102,6 +102,20 @@
   }
 
   /* Prose styling for markdown content */
+  .prose-research {
+    overflow-wrap: break-word;
+    word-break: break-word;
+    min-width: 0;
+  }
+
+  .prose-research > *:first-child {
+    margin-top: 0;
+  }
+
+  .prose-research > *:last-child {
+    margin-bottom: 0;
+  }
+
   .prose-research h1,
   .prose-research h2,
   .prose-research h3 {
@@ -110,11 +124,12 @@
     color: #2c2417;
     margin-top: 1.2em;
     margin-bottom: 0.4em;
+    line-height: 1.3;
   }
 
-  .prose-research h1 { font-size: 1.5rem; }
-  .prose-research h2 { font-size: 1.25rem; }
-  .prose-research h3 { font-size: 1.1rem; }
+  .prose-research h1 { font-size: 1.35rem; }
+  .prose-research h2 { font-size: 1.15rem; }
+  .prose-research h3 { font-size: 1.05rem; }
 
   .prose-research p {
     margin-bottom: 0.75em;
@@ -142,15 +157,18 @@
     color: #5e554a;
   }
 
+  /* Inline code */
   .prose-research code {
     font-family: var(--font-jetbrains), Menlo, monospace;
-    font-size: 0.875em;
+    font-size: 0.85em;
     background: #ede7d6;
-    padding: 0.15em 0.35em;
+    padding: 0.15em 0.4em;
     border-radius: 3px;
     color: #745f44;
+    overflow-wrap: break-word;
   }
 
+  /* Code blocks */
   .prose-research pre {
     background: #2c2417;
     color: #ede7d6;
@@ -158,8 +176,16 @@
     border-radius: 6px;
     overflow-x: auto;
     margin: 0.75em 0;
-    font-size: 0.85rem;
-    line-height: 1.5;
+    font-size: 0.82rem;
+    line-height: 1.55;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  /* Hide empty code blocks */
+  .prose-research pre:empty,
+  .prose-research pre:has(code:empty) {
+    display: none;
   }
 
   .prose-research pre code {
@@ -167,6 +193,16 @@
     padding: 0;
     color: inherit;
     font-size: inherit;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  /* Horizontal rule */
+  .prose-research hr {
+    border: none;
+    height: 1px;
+    background: linear-gradient(to right, transparent, #c9b890, transparent);
+    margin: 1.25em 0;
   }
 
   .prose-research blockquote {
@@ -189,11 +225,14 @@
     text-decoration-color: #a87320;
   }
 
+  /* Tables */
   .prose-research table {
     width: 100%;
     border-collapse: collapse;
     margin: 0.75em 0;
     font-size: 0.9rem;
+    display: block;
+    overflow-x: auto;
   }
 
   .prose-research th,
@@ -201,6 +240,7 @@
     border-bottom: 1px solid #ddd3b8;
     padding: 0.5em 0.75em;
     text-align: left;
+    white-space: nowrap;
   }
 
   .prose-research th {
