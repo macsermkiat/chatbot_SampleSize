@@ -254,7 +254,6 @@ class TestAgentNodeExpertiseLevel:
 
         output = CodingOutput(
             direct_response_to_user="Code output",
-            need_code=False,
         )
         patch_get_chat_model("app.agents.biostatistics", output)
 
@@ -353,10 +352,11 @@ class TestPromptContentQuality:
     def test_simple_orchestrator_warm_tone(self):
         assert "warm" in SIMPLE_ORCHESTRATOR_ADDENDUM.lower() or "reassuring" in SIMPLE_ORCHESTRATOR_ADDENDUM.lower()
 
-    def test_simple_coding_no_code_by_default(self):
-        """Simple coding addendum must instruct no code output by default."""
-        assert "need_code" in SIMPLE_CODING_ADDENDUM.lower()
-        assert "false" in SIMPLE_CODING_ADDENDUM.lower()
+    def test_simple_coding_generates_script_but_plain_results(self):
+        """Simple coding addendum must still generate python_script for execution."""
+        lower = SIMPLE_CODING_ADDENDUM.lower()
+        assert "python_script" in lower
+        assert "plain english" in lower
 
     def test_simple_diagnostic_recommendation_format(self):
         assert "you should use" in SIMPLE_DIAGNOSTIC_ADDENDUM.lower()

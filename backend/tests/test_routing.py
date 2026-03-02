@@ -159,6 +159,60 @@ class TestRouteFromBiostats:
 
 
 # ---------------------------------------------------------------------------
+# Code request shortcut in _route_from_entry
+# ---------------------------------------------------------------------------
+
+class TestCodeRequestRouting:
+    def test_code_request_with_pending_code_routes_to_coding(self):
+        state = base_state(
+            current_phase="biostatistics",
+            has_pending_code=True,
+            messages=[HumanMessage(content="Show me the Python code")],
+        )
+        assert _route_from_entry(state) == "coding"
+
+    def test_code_request_without_pending_code_routes_to_biostats(self):
+        state = base_state(
+            current_phase="biostatistics",
+            has_pending_code=False,
+            messages=[HumanMessage(content="Show me the code")],
+        )
+        assert _route_from_entry(state) == "biostatistics"
+
+    def test_non_code_message_with_pending_code_routes_to_biostats(self):
+        state = base_state(
+            current_phase="biostatistics",
+            has_pending_code=True,
+            messages=[HumanMessage(content="What about alpha 0.01?")],
+        )
+        assert _route_from_entry(state) == "biostatistics"
+
+    def test_code_request_in_non_biostats_phase_goes_to_followup(self):
+        state = base_state(
+            current_phase="methodology",
+            has_pending_code=True,
+            messages=[HumanMessage(content="Show me the code")],
+        )
+        assert _route_from_entry(state) == "methodology"
+
+    def test_see_how_i_calculated_routes_to_coding(self):
+        state = base_state(
+            current_phase="biostatistics",
+            has_pending_code=True,
+            messages=[HumanMessage(content="Can I see how you calculated that?")],
+        )
+        assert _route_from_entry(state) == "coding"
+
+    def test_give_me_r_code_routes_to_coding(self):
+        state = base_state(
+            current_phase="biostatistics",
+            has_pending_code=True,
+            messages=[HumanMessage(content="Give me the R code")],
+        )
+        assert _route_from_entry(state) == "coding"
+
+
+# ---------------------------------------------------------------------------
 # _route_from_coding
 # ---------------------------------------------------------------------------
 

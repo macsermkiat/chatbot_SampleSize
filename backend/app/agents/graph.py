@@ -22,7 +22,11 @@ import re
 
 from langgraph.graph import END, StateGraph
 
-from app.agents.biostatistics import biostatistics_node, coding_node
+from app.agents.biostatistics import (
+    _is_code_request,
+    biostatistics_node,
+    coding_node,
+)
 from app.agents.helpers import get_latest_user_message
 from app.agents.methodology import methodology_node
 from app.agents.orchestrator import orchestrator_node
@@ -83,6 +87,14 @@ def _route_from_entry(state: ResearchState) -> str:
     last_msg = get_latest_user_message(state)
     if _PHASE_SWITCH_PATTERNS.search(last_msg):
         return "orchestrator"
+
+    # Shortcut: if user requests code and we have pending code, go to coding
+    if (
+        phase == "biostatistics"
+        and state.get("has_pending_code")
+        and _is_code_request(last_msg)
+    ):
+        return "coding"
 
     # Route to conversational node (not search) for follow-up messages
     return _PHASE_FOLLOWUP.get(phase, "orchestrator")
@@ -196,6 +208,7 @@ def build_graph() -> StateGraph:
             "gap_summarize": "gap_summarize",
             "methodology": "methodology",
             "biostatistics": "biostatistics",
+            "coding": "coding",
         },
     )
 

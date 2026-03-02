@@ -38,7 +38,6 @@ class ResearchState(TypedDict):
     # Flags
     needs_clarification: bool
     need_info: bool                 # biostats-specific: still gathering params
-    need_code: bool                 # coding-specific: user wants script
 
     # Session
     session_id: str
@@ -57,6 +56,11 @@ class ResearchState(TypedDict):
 
     # User expertise level -- controls prompt tone/depth
     expertise_level: ExpertiseLevel  # "simple" or "advanced" (default "advanced")
+
+    # Code execution state (auto-execute via Code Interpreter)
+    execution_result: dict          # {success, stdout, error_message}
+    stored_python_script: str       # last generated script (for follow-up code requests)
+    has_pending_code: bool          # True when code is available for follow-up
 
 
 # ---------------------------------------------------------------------------
@@ -142,18 +146,13 @@ class BiostatisticsOutput(BaseModel):
 
 
 class CodingOutput(BaseModel):
-    """CodingAgent node output."""
+    """CodingAgent node output -- always generates a runnable Python script."""
 
     session_id: str = ""
     direct_response_to_user: str
-    need_code: bool = Field(
-        default=False, description="True if the user requested code generation."
-    )
-    language: str = Field(
-        default="", description="'python', 'r', or 'stata'."
-    )
-    script: str = Field(
-        default="", description="Generated code script."
+    python_script: str = Field(
+        default="",
+        description="Always generate a runnable Python script that prints results to stdout.",
     )
     agent_to_route_to: str = Field(
         default="",

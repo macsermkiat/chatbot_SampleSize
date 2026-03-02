@@ -25,13 +25,15 @@ def base_state(**overrides: Any) -> dict:
         "forwarded_message": "",
         "needs_clarification": False,
         "need_info": False,
-        "need_code": False,
         "session_id": "test-session",
         "uploaded_files": [],
         "code_output": {},
         "search_results": [],
         "search_count": 0,
         "expertise_level": "advanced",
+        "execution_result": {},
+        "stored_python_script": "",
+        "has_pending_code": False,
     }
     return {**defaults, **overrides}
 

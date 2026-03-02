@@ -56,12 +56,14 @@ async def _stream_graph(
             "forwarded_message": "",
             "needs_clarification": False,
             "need_info": False,
-            "need_code": False,
             "session_id": session_id,
             "uploaded_files": [],
             "code_output": {},
             "search_results": [],
             "expertise_level": expertise_level or "advanced",
+            "execution_result": {},
+            "stored_python_script": "",
+            "has_pending_code": False,
         }
 
     async for event in compiled.astream_events(input_state, config=config, version="v2"):
