@@ -67,9 +67,21 @@ async def gap_summarize_node(state: ResearchState) -> dict:
 
     llm = get_chat_model("gap_summarize").with_structured_output(GapSummarizeOutput)
 
-    search_block = _format_search_results(state.get("search_results", []))
+    raw_results = state.get("search_results", [])
+    search_block = _format_search_results(raw_results)
+    is_fresh = state.get("search_count", 0) >= 1
+
+    if is_fresh or not raw_results:
+        results_section = f"Search Results:\n{search_block}"
+    else:
+        results_section = (
+            "Previous Search Results (from a prior query -- use these if the user "
+            "is asking about them, otherwise set agent_to_route_to='research_gap' "
+            "to trigger a fresh search):\n" + search_block
+        )
+
     user_text = build_input_text(state)
-    combined = f"{user_text}\n\nSearch Result: {search_block}"
+    combined = f"{user_text}\n\n{results_section}"
 
     messages = [
         SystemMessage(content=GAP_SUMMARIZE_PROMPT),
