@@ -33,6 +33,19 @@
 - `frontend/src/components/ExpertisePicker.tsx` -- two-card expertise selector
 - `backend/tests/test_expertise_level.py` -- 39 test cases
 
+### Scoring & Fixes (Post-testing)
+- [x] Aggressive API testing: 28 test cases across orchestrator, methodology, biostatistics
+- [x] Scoring report generated: Overall Grade B- (7.8/10), 25 jargon terms leaked
+- [x] Fix: Added BANNED JARGON list (29 terms + replacements) to SIMPLE_STYLE_DIRECTIVE
+- [x] Fix: Added no-emoji, varied-opener, response-chunking rules to SIMPLE_STYLE_DIRECTIVE
+- [x] Fix: Added formal tone + no-emoji to ADVANCED_STYLE_DIRECTIVE
+- [x] Fix: Updated orchestrator to reframe clinical questions instead of routing them
+- [x] Fix: Strengthened methodology addendum -- explicit test-name ban, response length cap
+- [x] Fix: Strengthened biostatistics addendum -- one-at-a-time questioning, test-name ban
+- [x] Fix: Strengthened orchestrator addendum -- jargon ban in routing messages
+- [x] Updated 2 tests to check composed prompt instead of addendum alone
+- [x] All 116/116 tests pass
+
 ### Files Modified
 - `backend/app/agents/state.py` -- added ExpertiseLevel type + field
 - `backend/app/models.py` -- added expertise_level to ChatRequest

@@ -332,10 +332,14 @@ class TestPromptContentQuality:
     """Verify simple-mode addenda include key plain-language concepts."""
 
     def test_simple_biostats_explains_power(self):
-        assert "how many patients" in SIMPLE_BIOSTATS_ADDENDUM.lower()
+        """The composed simple biostats prompt must explain power in plain language."""
+        composed = get_prompt(BIOSTATS_PROMPT, "simple", "biostatistics").lower()
+        assert "how many patients" in composed
 
     def test_simple_biostats_explains_effect_size(self):
-        assert "how big" in SIMPLE_BIOSTATS_ADDENDUM.lower()
+        """The composed simple biostats prompt must explain effect size in plain language."""
+        composed = get_prompt(BIOSTATS_PROMPT, "simple", "biostatistics").lower()
+        assert "how big" in composed
 
     def test_simple_methodology_avoids_dag(self):
         assert "Do NOT use DAG notation" in SIMPLE_METHODOLOGY_ADDENDUM
