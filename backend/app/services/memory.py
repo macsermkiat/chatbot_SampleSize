@@ -38,6 +38,12 @@ def _connect_kwargs() -> dict:
     if ".supabase.co" in hostname or ".supabase.com" in hostname:
         kwargs["sslmode"] = "require"
 
+    # TCP keepalive to prevent Supabase from dropping idle connections
+    kwargs["keepalives"] = 1
+    kwargs["keepalives_idle"] = 30
+    kwargs["keepalives_interval"] = 10
+    kwargs["keepalives_count"] = 3
+
     return kwargs
 
 

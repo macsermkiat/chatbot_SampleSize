@@ -69,17 +69,33 @@ Medical research assistant chatbot -- ported from n8n workflow (`Research Handof
 
 ## Commands
 
-```bash
-# Backend
-cd backend && uv pip install -e ".[dev]"
-uvicorn app.main:app --reload --port 8000
+CRITICAL: Always use the Makefile or explicit `.venv/bin/` paths. Never run bare
+`uvicorn` or `pytest` -- the system PATH may resolve to Anaconda or another Python
+that lacks project dependencies.
 
-# Frontend
-cd frontend && npm install && npm run dev
+```bash
+# First-time setup
+make install
+
+# Start both servers (backend + frontend)
+make -j2 dev
+
+# Or individually
+make backend          # FastAPI on :8000 via .venv/bin/uvicorn
+make frontend         # Next.js on :3000
 
 # Tests
-cd backend && pytest
-cd frontend && npm run lint
+make test             # pytest via .venv/bin/pytest
+make lint             # frontend linting
+
+# Verify environment is healthy
+make check-env
+```
+
+If you must run commands directly, always prefix with the venv:
+```bash
+cd backend && .venv/bin/uvicorn app.main:app --reload --port 8000
+cd backend && .venv/bin/pytest
 ```
 
 ## Key Patterns
@@ -92,6 +108,7 @@ cd frontend && npm run lint
 
 ## Gotchas
 
+- **NEVER run bare `uvicorn` or `pytest`** -- Anaconda shadows the venv. Always use `make backend` / `make test` or explicit `.venv/bin/` paths
 - Use `uv` not `pip` for package management
 - `timeout` unavailable on macOS -- use `gtimeout` or Python httpx ASGITransport
 - Build backend uses `setuptools.build_meta`, not `setuptools.backends._legacy:_Backend`

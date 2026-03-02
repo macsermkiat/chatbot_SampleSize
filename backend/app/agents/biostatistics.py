@@ -133,7 +133,10 @@ def _format_execution_results(execution_result: dict) -> str:
     if not execution_result:
         return ""
     if execution_result.get("success"):
-        return f"\n\n### Computed Results\n\n```\n{execution_result['stdout']}\n```"
+        stdout = execution_result.get("stdout", "").strip()
+        if not stdout:
+            return ""
+        return f"\n\n---\n\n**Computed Results**\n\n```text\n{stdout}\n```"
     return (
         f"\n\n*Code execution encountered an issue: "
         f"{execution_result.get('error_message', 'unknown error')}. "

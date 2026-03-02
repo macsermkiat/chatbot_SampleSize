@@ -25,6 +25,14 @@ def _pool_kwargs() -> dict:
     if parsed.port == 6543:
         kwargs["statement_cache_size"] = 0
 
+    # TCP keepalive to prevent Supabase from dropping idle connections
+    kwargs["server_settings"] = {
+        "tcp_keepalives_idle": "30",
+        "tcp_keepalives_interval": "10",
+        "tcp_keepalives_count": "3",
+    }
+    kwargs["command_timeout"] = 60
+
     return kwargs
 
 

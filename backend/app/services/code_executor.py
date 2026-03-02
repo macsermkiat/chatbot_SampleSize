@@ -48,7 +48,7 @@ async def _get_or_create_assistant(client: AsyncOpenAI) -> str:
         return _ASSISTANT_ID
 
 
-async def execute_python(script: str, timeout: int = 60) -> ExecutionResult:
+async def execute_python(script: str, timeout: int = 300) -> ExecutionResult:
     """Run *script* in a sandboxed Code Interpreter and return output.
 
     Returns an ``ExecutionResult`` -- never raises.
