@@ -9,6 +9,7 @@ from __future__ import annotations
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
 from app.agents.helpers import build_input_text
+from app.agents.prompt_composer import get_prompt
 from app.agents.prompts import BIOSTATS_PROMPT, CODING_PROMPT, DIAGNOSTIC_PROMPT
 from app.agents.state import BiostatisticsOutput, CodingOutput, ResearchState
 from app.services.llm import get_chat_model
@@ -28,9 +29,10 @@ async def biostatistics_node(state: ResearchState) -> dict:
 
     llm = get_chat_model("biostatistics").with_structured_output(BiostatisticsOutput)
 
+    expertise = state.get("expertise_level", "advanced")
     user_text = build_input_text(state)
     messages = [
-        SystemMessage(content=BIOSTATS_PROMPT),
+        SystemMessage(content=get_prompt(BIOSTATS_PROMPT, expertise, "biostatistics")),
         *trim_messages(state["messages"]),
         HumanMessage(content=user_text),
     ]
@@ -41,7 +43,9 @@ async def biostatistics_node(state: ResearchState) -> dict:
 
     # Auto-call diagnostic tool if the agent requested it
     if result.diagnostic_query:
-        diagnostic_result = await run_diagnostic(result.diagnostic_query)
+        diagnostic_result = await run_diagnostic(
+            result.diagnostic_query, expertise,
+        )
         response_text = (
             f"{response_text}\n\n"
             f"### Diagnostic Tool Recommendation\n\n{diagnostic_result}"
@@ -58,7 +62,7 @@ async def biostatistics_node(state: ResearchState) -> dict:
 # 2. DiagnosticTool -- statistical test selection (used as tool by biostats)
 # ---------------------------------------------------------------------------
 
-async def run_diagnostic(query: str) -> str:
+async def run_diagnostic(query: str, expertise_level: str = "advanced") -> str:
     """Run the diagnostic tool to recommend a statistical test.
 
     Called as a tool by the biostatistics agent, not as a standalone graph node.
@@ -66,8 +70,9 @@ async def run_diagnostic(query: str) -> str:
 
     llm = get_chat_model("diagnostic")
 
+    system_prompt = get_prompt(DIAGNOSTIC_PROMPT, expertise_level, "diagnostic")
     messages = [
-        SystemMessage(content=DIAGNOSTIC_PROMPT),
+        SystemMessage(content=system_prompt),
         HumanMessage(content=query),
     ]
 
@@ -87,9 +92,10 @@ async def coding_node(state: ResearchState) -> dict:
 
     llm = get_chat_model("coding").with_structured_output(CodingOutput)
 
+    expertise = state.get("expertise_level", "advanced")
     instruction = state.get("forwarded_message", "")
     messages = [
-        SystemMessage(content=CODING_PROMPT),
+        SystemMessage(content=get_prompt(CODING_PROMPT, expertise, "coding")),
         *trim_messages(state["messages"]),
         HumanMessage(content=f"Instruction: {instruction}"),
     ]

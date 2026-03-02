@@ -21,6 +21,8 @@ Phase = Literal[
     "biostatistics",
 ]
 
+ExpertiseLevel = Literal["simple", "advanced"]
+
 
 class ResearchState(TypedDict):
     """Shared state passed through every node in the LangGraph."""
@@ -52,6 +54,9 @@ class ResearchState(TypedDict):
 
     # Loop guard: counts searches executed within a single graph invocation
     search_count: int               # reset to 0 at entry_router
+
+    # User expertise level -- controls prompt tone/depth
+    expertise_level: ExpertiseLevel  # "simple" or "advanced" (default "advanced")
 
 
 # ---------------------------------------------------------------------------

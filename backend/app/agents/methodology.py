@@ -9,6 +9,7 @@ from __future__ import annotations
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
 from app.agents.helpers import build_input_text
+from app.agents.prompt_composer import get_prompt
 from app.agents.prompts import METHODOLOGY_PROMPT
 from app.agents.state import MethodologyOutput, ResearchState
 from app.services.llm import get_chat_model
@@ -27,9 +28,10 @@ async def methodology_node(state: ResearchState) -> dict:
 
     llm = get_chat_model("methodology").with_structured_output(MethodologyOutput)
 
+    expertise = state.get("expertise_level", "advanced")
     user_text = build_input_text(state)
     messages = [
-        SystemMessage(content=METHODOLOGY_PROMPT),
+        SystemMessage(content=get_prompt(METHODOLOGY_PROMPT, expertise, "methodology")),
         *trim_messages(state["messages"]),
         HumanMessage(content=user_text),
     ]

@@ -11,6 +11,7 @@ from urllib.parse import urlparse
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
 from app.agents.helpers import build_input_text
+from app.agents.prompt_composer import get_prompt
 from app.agents.prompts import GAP_SEARCH_PROMPT, GAP_SUMMARIZE_PROMPT
 from app.agents.state import GapSearchOutput, GapSummarizeOutput, ResearchState
 from app.services.llm import get_chat_model
@@ -27,9 +28,10 @@ async def gap_search_node(state: ResearchState) -> dict:
 
     llm = get_chat_model("gap_search").with_structured_output(GapSearchOutput)
 
+    expertise = state.get("expertise_level", "advanced")
     user_text = build_input_text(state)
     messages = [
-        SystemMessage(content=GAP_SEARCH_PROMPT),
+        SystemMessage(content=get_prompt(GAP_SEARCH_PROMPT, expertise, "gap_search")),
         *trim_messages(state["messages"]),
         HumanMessage(content=user_text),
     ]
@@ -83,8 +85,9 @@ async def gap_summarize_node(state: ResearchState) -> dict:
     user_text = build_input_text(state)
     combined = f"{user_text}\n\n{results_section}"
 
+    expertise = state.get("expertise_level", "advanced")
     messages = [
-        SystemMessage(content=GAP_SUMMARIZE_PROMPT),
+        SystemMessage(content=get_prompt(GAP_SUMMARIZE_PROMPT, expertise, "gap_summarize")),
         *trim_messages(state["messages"]),
         HumanMessage(content=combined),
     ]

@@ -31,6 +31,7 @@ def base_state(**overrides: Any) -> dict:
         "code_output": {},
         "search_results": [],
         "search_count": 0,
+        "expertise_level": "advanced",
     }
     return {**defaults, **overrides}
 

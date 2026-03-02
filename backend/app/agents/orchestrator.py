@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from langchain_core.messages import AIMessage, SystemMessage
 
+from app.agents.prompt_composer import get_prompt
 from app.agents.prompts import ORCHESTRATOR_PROMPT
 from app.agents.state import OrchestratorOutput, ResearchState
 from app.services.llm import get_chat_model
@@ -15,8 +16,11 @@ async def orchestrator_node(state: ResearchState) -> dict:
 
     llm = get_chat_model("orchestrator").with_structured_output(OrchestratorOutput)
 
+    expertise = state.get("expertise_level", "advanced")
+    system_prompt = get_prompt(ORCHESTRATOR_PROMPT, expertise, "orchestrator")
+
     messages = trim_messages(state["messages"])
-    prompt_messages = [SystemMessage(content=ORCHESTRATOR_PROMPT), *messages]
+    prompt_messages = [SystemMessage(content=system_prompt), *messages]
 
     result: OrchestratorOutput = await llm.ainvoke(prompt_messages)
 

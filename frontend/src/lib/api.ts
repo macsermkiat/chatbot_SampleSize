@@ -34,11 +34,20 @@ export interface FileUploadResult {
 export async function* streamChat(
   message: string,
   sessionId: string,
+  expertiseLevel?: "simple" | "advanced",
 ): AsyncGenerator<{ event: string; data: ChatEventData }> {
+  const body: Record<string, string> = {
+    message,
+    session_id: sessionId,
+  };
+  if (expertiseLevel) {
+    body.expertise_level = expertiseLevel;
+  }
+
   const response = await fetch(`${API_BASE}/chat`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ message, session_id: sessionId }),
+    body: JSON.stringify(body),
   });
 
   if (!response.ok) {

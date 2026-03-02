@@ -3,6 +3,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import CodeBlock from "@/components/CodeBlock";
+import ExpertisePicker, {
+  type ExpertiseLevel,
+} from "@/components/ExpertisePicker";
 import FileUpload from "@/components/FileUpload";
 import FloatingParticles from "@/components/FloatingParticles";
 import MessageBubble from "@/components/MessageBubble";
@@ -43,6 +46,11 @@ export default function Home() {
   const [codeBlocks, setCodeBlocks] = useState<
     { language: string; script: string }[]
   >([]);
+  const [expertiseLevel, setExpertiseLevel] = useState<ExpertiseLevel | null>(
+    null,
+  );
+  // Track whether the level has been sent to the backend at least once
+  const expertiseSentRef = useRef(false);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -87,8 +95,18 @@ export default function Home() {
         inputRef.current.style.height = "auto";
       }
 
+      // Send expertise_level on first message or when it changes
+      const shouldSendLevel = !expertiseSentRef.current && expertiseLevel;
+      if (shouldSendLevel) {
+        expertiseSentRef.current = true;
+      }
+
       try {
-        for await (const { event, data } of streamChat(trimmed, sessionId)) {
+        for await (const { event, data } of streamChat(
+          trimmed,
+          sessionId,
+          shouldSendLevel ? expertiseLevel : undefined,
+        )) {
           switch (event) {
             case "message": {
               if (data.content) {
@@ -145,7 +163,7 @@ export default function Home() {
         inputRef.current?.focus();
       }
     },
-    [sessionId, streaming],
+    [sessionId, streaming, expertiseLevel],
   );
 
   const handleSubmit = useCallback(
@@ -185,7 +203,28 @@ export default function Home() {
             <h1 className="font-display text-display-md font-semibold text-ink-900 tracking-tight">
               {WELCOME_HEADING}
             </h1>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
+              {expertiseLevel && (
+                <button
+                  onClick={() =>
+                    setExpertiseLevel((prev) => {
+                      const next = prev === "simple" ? "advanced" : "simple";
+                      expertiseSentRef.current = false; // resend on next message
+                      return next;
+                    })
+                  }
+                  className="
+                    text-caption font-display px-2.5 py-1 rounded-full
+                    border border-parchment-300 hover:border-gold-400
+                    text-ink-600 hover:text-ink-800
+                    transition-all duration-200
+                    cursor-pointer
+                  "
+                  title="Click to switch expertise level"
+                >
+                  {expertiseLevel === "simple" ? "Simple" : "Advanced"}
+                </button>
+              )}
               <span className="block w-2 h-2 rounded-full bg-gold-500 animate-pulse-warm" />
               <span className="text-caption text-ink-500 font-display">
                 Active
@@ -282,37 +321,43 @@ export default function Home() {
                   {WELCOME_QUOTE}
                 </motion.p>
 
-                {/* Starter prompts */}
-                <motion.div
-                  className="flex flex-col gap-2.5 w-full max-w-md"
-                  variants={welcomeVariants.promptContainer}
-                >
-                  <span className="text-caption text-ink-400 font-display text-center tracking-wider uppercase mb-1">
-                    Try asking
-                  </span>
-                  {STARTER_PROMPTS.map((prompt) => (
-                    <motion.button
-                      key={prompt}
-                      variants={welcomeVariants.promptItem}
-                      whileHover={{
-                        scale: 1.015,
-                        borderColor: "#e6ad36",
-                        transition: { duration: 0.15 },
-                      }}
-                      whileTap={{ scale: 0.975 }}
-                      onClick={() => sendMessage(prompt)}
-                      className="
-                        text-left px-4 py-3 rounded-xl
-                        bg-parchment-50 border border-parchment-200
-                        text-body-sm text-ink-700
-                        hover:bg-gold-50
-                        transition-colors duration-200
-                      "
-                    >
-                      {prompt}
-                    </motion.button>
-                  ))}
-                </motion.div>
+                {/* Expertise picker or Starter prompts */}
+                {!expertiseLevel ? (
+                  <ExpertisePicker onSelect={setExpertiseLevel} />
+                ) : (
+                  <motion.div
+                    className="flex flex-col gap-2.5 w-full max-w-md"
+                    variants={welcomeVariants.promptContainer}
+                    initial="initial"
+                    animate="animate"
+                  >
+                    <span className="text-caption text-ink-400 font-display text-center tracking-wider uppercase mb-1">
+                      Try asking
+                    </span>
+                    {STARTER_PROMPTS.map((prompt) => (
+                      <motion.button
+                        key={prompt}
+                        variants={welcomeVariants.promptItem}
+                        whileHover={{
+                          scale: 1.015,
+                          borderColor: "#e6ad36",
+                          transition: { duration: 0.15 },
+                        }}
+                        whileTap={{ scale: 0.975 }}
+                        onClick={() => sendMessage(prompt)}
+                        className="
+                          text-left px-4 py-3 rounded-xl
+                          bg-parchment-50 border border-parchment-200
+                          text-body-sm text-ink-700
+                          hover:bg-gold-50
+                          transition-colors duration-200
+                        "
+                      >
+                        {prompt}
+                      </motion.button>
+                    ))}
+                  </motion.div>
+                )}
               </motion.div>
             ) : (
               /* Conversation */

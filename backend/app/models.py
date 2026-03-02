@@ -12,6 +12,11 @@ from pydantic import BaseModel, Field
 class ChatRequest(BaseModel):
     message: str = Field(..., min_length=1, max_length=10000)
     session_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    expertise_level: str = Field(
+        default="advanced",
+        pattern=r"^(simple|advanced)$",
+        description="User expertise level: 'simple' for plain language, 'advanced' for full technical detail.",
+    )
 
 
 class SessionCreate(BaseModel):
