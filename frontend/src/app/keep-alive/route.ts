@@ -1,10 +1,8 @@
 import { NextResponse } from "next/server";
 
 /**
- * Vercel cron job endpoint that pings the backend /health to prevent
- * Render cold starts. Configured in vercel.json to run every 10 minutes.
- *
- * Can also be called on-demand (e.g. from the frontend on page load).
+ * Endpoint that pings the backend /health to prevent Render cold starts.
+ * Called on page load and by external uptime monitors (e.g. UptimeRobot).
  */
 export async function GET() {
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
