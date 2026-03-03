@@ -127,6 +127,8 @@ def _route_from_gap_summarize(state: ResearchState) -> str:
     ``search_count >= 1`` and the LLM requests another search, we END
     instead -- the next user message will re-enter via entry_router.
     """
+    if state.get("needs_clarification"):
+        return END
     target = state.get("agent_to_route_to", "")
     if not target:
         return END
@@ -144,6 +146,8 @@ def _route_from_gap_summarize(state: ResearchState) -> str:
 
 def _route_from_methodology(state: ResearchState) -> str:
     """After methodology: route to another phase or end (wait for user)."""
+    if state.get("needs_clarification"):
+        return END
     target = state.get("agent_to_route_to", "")
     if not target:
         return END

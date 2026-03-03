@@ -61,6 +61,7 @@ async def biostatistics_node(state: ResearchState) -> dict:
     return {
         "messages": [AIMessage(content=response_text)],
         "need_info": result.need_info,
+        "agent_to_route_to": "",
         "forwarded_message": result.forwarded_message,
     }
 

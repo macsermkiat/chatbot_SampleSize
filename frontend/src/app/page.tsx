@@ -154,7 +154,7 @@ export default function Home() {
           id: uid(),
           role: "assistant",
           content:
-            "I couldn't reach the server. Please check that the backend is running on port 8000.",
+            "I couldn't reach the server. Please try again in a moment.",
           timestamp: Date.now(),
         };
         setMessages((prev) => [...prev, errMsg]);

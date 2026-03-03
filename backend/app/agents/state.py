@@ -100,11 +100,16 @@ class GapSummarizeOutput(BaseModel):
     """ResearchGapSummarize node output with routing."""
 
     direct_response_to_user: str
+    needs_clarification: bool = Field(
+        default=False,
+        description="True if you asked the user a question and need their answer before proceeding.",
+    )
     agent_to_route_to: str = Field(
         default="",
         description=(
             "Route to: 'research_gap', 'methodology', "
-            "'biostatistics', or '' to stay."
+            "'biostatistics', or '' to stay. "
+            "MUST be '' when needs_clarification is true."
         ),
     )
     forwarded_message: str = ""
@@ -114,11 +119,16 @@ class MethodologyOutput(BaseModel):
     """MethodologyAgent node output with routing."""
 
     direct_response_to_user: str
+    needs_clarification: bool = Field(
+        default=False,
+        description="True if you asked the user a question and need their answer before proceeding.",
+    )
     agent_to_route_to: str = Field(
         default="",
         description=(
             "Route to: 'research_gap', 'methodology', "
-            "'biostatistics', or '' to stay."
+            "'biostatistics', or '' to stay. "
+            "MUST be '' when needs_clarification is true."
         ),
     )
     forwarded_message: str = ""

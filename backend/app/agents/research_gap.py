@@ -96,7 +96,8 @@ async def gap_summarize_node(state: ResearchState) -> dict:
 
     return {
         "messages": [AIMessage(content=result.direct_response_to_user)],
-        "agent_to_route_to": result.agent_to_route_to,
+        "needs_clarification": result.needs_clarification,
+        "agent_to_route_to": "" if result.needs_clarification else result.agent_to_route_to,
         "current_phase": result.agent_to_route_to or "research_gap",
         "forwarded_message": result.forwarded_message,
     }
