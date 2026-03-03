@@ -1,3 +1,5 @@
+import { fetchWithRetry } from "./retry";
+
 const API_BASE = "/api";
 
 export interface ChatMessage {
@@ -44,7 +46,7 @@ export async function* streamChat(
     body.expertise_level = expertiseLevel;
   }
 
-  const response = await fetch(`${API_BASE}/chat`, {
+  const response = await fetchWithRetry(`${API_BASE}/chat`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
@@ -94,7 +96,7 @@ export async function uploadFile(file: File): Promise<FileUploadResult> {
   const form = new FormData();
   form.append("file", file);
 
-  const response = await fetch(`${API_BASE}/upload`, {
+  const response = await fetchWithRetry(`${API_BASE}/upload`, {
     method: "POST",
     body: form,
   });
@@ -115,7 +117,7 @@ export async function createSession(): Promise<{
   created_at: string;
   current_phase: string;
 }> {
-  const response = await fetch(`${API_BASE}/sessions`, { method: "POST" });
+  const response = await fetchWithRetry(`${API_BASE}/sessions`, { method: "POST" });
   if (!response.ok) throw new Error("Failed to create session");
   return response.json();
 }

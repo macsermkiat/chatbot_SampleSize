@@ -55,6 +55,11 @@ export default function Home() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
+  // Warm up the backend on page load (fire-and-forget)
+  useEffect(() => {
+    fetch("/api/keep-alive").catch(() => {});
+  }, []);
+
   // Auto-scroll on new messages
   useEffect(() => {
     const el = scrollRef.current;
