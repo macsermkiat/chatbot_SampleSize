@@ -9,6 +9,7 @@ from __future__ import annotations
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
 from app.agents.helpers import build_input_text
+from app.agents.progress import emit_progress
 from app.agents.prompt_composer import get_prompt
 from app.agents.prompts import METHODOLOGY_PROMPT
 from app.agents.state import MethodologyOutput, ResearchState
@@ -36,6 +37,7 @@ async def methodology_node(state: ResearchState) -> dict:
         HumanMessage(content=user_text),
     ]
 
+    await emit_progress("Designing study methodology...")
     result: MethodologyOutput = await llm.ainvoke(messages)
 
     return {

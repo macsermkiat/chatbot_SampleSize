@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from langchain_core.messages import AIMessage, SystemMessage
 
+from app.agents.progress import emit_progress
 from app.agents.prompt_composer import get_prompt
 from app.agents.prompts import ORCHESTRATOR_PROMPT
 from app.agents.state import OrchestratorOutput, ResearchState
@@ -43,6 +44,7 @@ async def orchestrator_node(state: ResearchState) -> dict:
     messages = trim_messages(state["messages"])
     prompt_messages = [SystemMessage(content=system_prompt), *messages]
 
+    await emit_progress("Analyzing your request...")
     result: OrchestratorOutput = await llm.ainvoke(prompt_messages)
 
     # agent_to_route_to now uses internal names directly (research_gap, etc.)

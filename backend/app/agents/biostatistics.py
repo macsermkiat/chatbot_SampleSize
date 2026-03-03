@@ -13,6 +13,7 @@ import re
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
 from app.agents.helpers import build_input_text, get_latest_user_message
+from app.agents.progress import emit_progress
 from app.agents.prompt_composer import get_prompt
 from app.agents.prompts import BIOSTATS_PROMPT, CODING_PROMPT, DIAGNOSTIC_PROMPT
 from app.agents.state import BiostatisticsOutput, CodingOutput, ResearchState
@@ -44,12 +45,14 @@ async def biostatistics_node(state: ResearchState) -> dict:
         HumanMessage(content=user_text),
     ]
 
+    await emit_progress("Running biostatistical analysis...")
     result: BiostatisticsOutput = await llm.ainvoke(messages)
 
     response_text = result.direct_response_to_user
 
     # Auto-call diagnostic tool if the agent requested it
     if result.diagnostic_query:
+        await emit_progress("Consulting diagnostic tool...")
         diagnostic_result = await run_diagnostic(
             result.diagnostic_query, expertise,
         )
@@ -224,6 +227,7 @@ async def coding_node(state: ResearchState) -> dict:
         HumanMessage(content=f"Instruction: {instruction}"),
     ]
 
+    await emit_progress("Generating computation code...")
     result: CodingOutput = await llm.ainvoke(messages)
 
     response_text = result.direct_response_to_user
@@ -232,6 +236,7 @@ async def coding_node(state: ResearchState) -> dict:
     has_pending = False
 
     if result.python_script:
+        await emit_progress("Executing code in sandbox...")
         execution = await execute_python(result.python_script)
         exec_result = {
             "success": execution.success,

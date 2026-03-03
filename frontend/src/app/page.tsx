@@ -43,6 +43,7 @@ export default function Home() {
   const [input, setInput] = useState("");
   const [phase, setPhase] = useState<Phase>("orchestrator");
   const [streaming, setStreaming] = useState(false);
+  const [statusLabel, setStatusLabel] = useState("Thinking...");
   const [codeBlocks, setCodeBlocks] = useState<
     { language: string; script: string }[]
   >([]);
@@ -96,6 +97,7 @@ export default function Home() {
       setMessages((prev) => [...prev, userMsg]);
       setInput("");
       setStreaming(true);
+      setStatusLabel("Thinking...");
 
       // Reset textarea height
       if (inputRef.current) {
@@ -135,6 +137,12 @@ export default function Home() {
                   timestamp: Date.now(),
                 };
                 setMessages((prev) => [...prev, assistantMsg]);
+              }
+              break;
+            }
+            case "progress": {
+              if (data.status) {
+                setStatusLabel(data.status);
               }
               break;
             }
@@ -453,7 +461,7 @@ export default function Home() {
                       exit={{ opacity: 0, y: -4 }}
                       transition={{ duration: 0.2 }}
                     >
-                      <TypingIndicator label="Thinking..." />
+                      <TypingIndicator label={statusLabel} />
                     </motion.div>
                   )}
                 </AnimatePresence>

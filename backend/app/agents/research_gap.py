@@ -11,6 +11,7 @@ from urllib.parse import urlparse
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
 from app.agents.helpers import build_input_text
+from app.agents.progress import emit_progress
 from app.agents.prompt_composer import get_prompt
 from app.agents.prompts import GAP_SEARCH_PROMPT, GAP_SUMMARIZE_PROMPT
 from app.agents.state import GapSearchOutput, GapSummarizeOutput, ResearchState
@@ -36,10 +37,13 @@ async def gap_search_node(state: ResearchState) -> dict:
         HumanMessage(content=user_text),
     ]
 
+    await emit_progress("Generating search terms...")
     result: GapSearchOutput = await llm.ainvoke(messages)
 
     queries = list(result.terms)
+    await emit_progress(f"Searching {len(queries)} medical databases...")
     search_results: list[SearchResult] = await search(queries)
+    await emit_progress(f"Found {len(search_results)} sources, preparing analysis...")
 
     progress_msg = _format_progress(queries, search_results, expertise)
 
@@ -92,6 +96,7 @@ async def gap_summarize_node(state: ResearchState) -> dict:
         HumanMessage(content=combined),
     ]
 
+    await emit_progress("Appraising evidence and classifying research gaps...")
     result: GapSummarizeOutput = await llm.ainvoke(messages)
 
     return {

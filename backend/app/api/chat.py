@@ -72,6 +72,14 @@ async def _stream_graph(
     async for event in compiled.astream_events(input_state, config=config, version="v2"):
         kind = event.get("event", "")
 
+        # Emit real-time progress updates from agent nodes
+        if kind == "on_custom_event" and event.get("name") == "progress":
+            yield {
+                "event": "progress",
+                "data": json.dumps(event.get("data", {})),
+            }
+            continue
+
         # Stream node completions as SSE events
         if kind == "on_chain_end" and event.get("name") in _graph.nodes:
             node_name = event["name"]
