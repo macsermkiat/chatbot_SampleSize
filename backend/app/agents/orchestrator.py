@@ -47,6 +47,17 @@ async def orchestrator_node(state: ResearchState) -> dict:
     await emit_progress("Analyzing your request...")
     result: OrchestratorOutput = await llm.ainvoke(prompt_messages)
 
+    # When the orchestrator asks a clarification question, stay in orchestrator
+    # so the user's reply routes back here instead of skipping to a specialist.
+    if result.needs_clarification:
+        return {
+            "messages": [AIMessage(content=result.direct_response_to_user)],
+            "current_phase": "orchestrator",
+            "agent_to_route_to": "",
+            "forwarded_message": "",
+            "needs_clarification": True,
+        }
+
     # agent_to_route_to now uses internal names directly (research_gap, etc.)
     next_phase = result.agent_to_route_to or state.get("current_phase", "orchestrator")
 
@@ -55,5 +66,5 @@ async def orchestrator_node(state: ResearchState) -> dict:
         "current_phase": next_phase,
         "agent_to_route_to": result.agent_to_route_to,
         "forwarded_message": result.forwarded_message,
-        "needs_clarification": result.needs_clarification,
+        "needs_clarification": False,
     }
