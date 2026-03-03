@@ -133,14 +133,19 @@ def _detect_language(message: str) -> str:
 
 
 def _format_execution_results(execution_result: dict) -> str:
-    """Format code execution results for display to the user."""
+    """Format code execution results for display to the user.
+
+    Stdout is rendered as raw markdown (not wrapped in a code fence) so that
+    markdown tables produced by the coding agent display as proper HTML tables
+    in the frontend.
+    """
     if not execution_result:
         return ""
     if execution_result.get("success"):
         stdout = execution_result.get("stdout", "").strip()
         if not stdout:
             return ""
-        return f"\n\n---\n\n**Computed Results**\n\n```text\n{stdout}\n```"
+        return f"\n\n---\n\n**Computed Results**\n\n{stdout}"
     return (
         f"\n\n*Code execution encountered an issue: "
         f"{execution_result.get('error_message', 'unknown error')}. "

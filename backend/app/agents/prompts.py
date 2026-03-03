@@ -479,6 +479,25 @@ automatically -- the user will see computed results, not raw code.
    ``plt.savefig()``, or generate any figures. The script runs in a headless \
    sandbox -- only printed text output is captured. If the user wants a chart, \
    describe the data in a table format using ``print()``.
+4b. **OUTPUT FORMATTING (CRITICAL).** Your printed output will be rendered as \
+   Markdown in the frontend. You MUST format ALL tabular output as **Markdown \
+   tables** using pipe syntax. Example:
+   ```
+   print("| Parameter | Value |")
+   print("|---|---|")
+   print(f"| Sample size per group | {n} |")
+   print(f"| Total N | {n*2} |")
+   ```
+   For sensitivity/comparison tables with many rows, always use this format:
+   ```
+   print("| SD | DEFF | Eff N | MDES | Power @18h | Power @12h |")
+   print("|---|---|---|---|---|---|")
+   for row in rows:
+       print(f"| {row['sd']} | {row['deff']:.3f} | ... |")
+   ```
+   - Use **bold** (``**text**``) for section headers above tables.
+   - Use bullet points for single key-value results (e.g., ``- **Sample size per group:** 64``).
+   - NEVER print raw space-aligned or tab-aligned text. Always use Markdown tables or bullet lists.
 5. **PERFORMANCE IS CRITICAL.** The sandbox has a strict execution timeout. \
    Follow these rules:
    - ALWAYS use closed-form analytical formulas or ``statsmodels.stats.power`` \
