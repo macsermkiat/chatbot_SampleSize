@@ -57,7 +57,7 @@ export default function Home() {
 
   // Warm up the backend on page load (fire-and-forget)
   useEffect(() => {
-    fetch("/api/keep-alive").catch(() => {});
+    fetch("/keep-alive").catch(() => {});
   }, []);
 
   // Auto-scroll on new messages
