@@ -66,6 +66,19 @@ function extractTextContent(node: React.ReactNode): string {
 
 export default function MessageBubble({ message }: MessageBubbleProps) {
   const isUser = message.role === "user";
+  const isSystem = message.role === "system";
+
+  if (isSystem) {
+    return (
+      <div className="flex w-full justify-center">
+        <div className="px-4 py-2 rounded-xl bg-parchment-100 border border-parchment-300 text-caption text-ink-500 font-display max-w-[85%]">
+          <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
+            {message.content}
+          </ReactMarkdown>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div

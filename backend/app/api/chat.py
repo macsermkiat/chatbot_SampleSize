@@ -26,6 +26,7 @@ async def _stream_graph(
     session_id: str,
     request: Request,
     expertise_level: str = "advanced",
+    uploaded_files: list[dict] | None = None,
 ) -> AsyncGenerator[dict, None]:
     """Run the graph and yield SSE events for each node output."""
 
@@ -47,6 +48,8 @@ async def _stream_graph(
         }
         if expertise_level and expertise_level != existing.values.get("expertise_level"):
             input_state["expertise_level"] = expertise_level
+        # Clear or set uploaded_files each turn so stale files don't persist
+        input_state["uploaded_files"] = uploaded_files or []
     else:
         # Brand-new session: provide full initial state
         input_state: ResearchState = {
@@ -57,7 +60,7 @@ async def _stream_graph(
             "needs_clarification": False,
             "need_info": False,
             "session_id": session_id,
-            "uploaded_files": [],
+            "uploaded_files": uploaded_files or [],
             "code_output": {},
             "search_results": [],
             "expertise_level": expertise_level or "advanced",
@@ -113,10 +116,12 @@ async def chat(request: Request, body: ChatRequest):
 
     session_id = body.session_id or str(uuid.uuid4())
 
+    uploaded_files = [f.model_dump() for f in body.uploaded_files] if body.uploaded_files else None
+
     async def event_generator():
         try:
             async for event in _stream_graph(
-                body.message, session_id, request, body.expertise_level,
+                body.message, session_id, request, body.expertise_level, uploaded_files,
             ):
                 yield event
         except Exception as exc:

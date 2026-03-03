@@ -17,7 +17,7 @@ from app.agents.prompt_composer import get_prompt
 from app.agents.prompts import BIOSTATS_PROMPT, CODING_PROMPT, DIAGNOSTIC_PROMPT
 from app.agents.state import BiostatisticsOutput, CodingOutput, ResearchState
 from app.services.code_executor import execute_python
-from app.services.llm import get_chat_model
+from app.services.llm import get_chat_model, get_structured_model
 from app.services.memory import trim_messages
 
 _logger = logging.getLogger(__name__)
@@ -34,7 +34,7 @@ async def biostatistics_node(state: ResearchState) -> dict:
     and its recommendation is appended to the response.
     """
 
-    llm = get_chat_model("biostatistics").with_structured_output(BiostatisticsOutput)
+    llm = get_structured_model("biostatistics", BiostatisticsOutput)
 
     expertise = state.get("expertise_level", "advanced")
     user_text = build_input_text(state)
@@ -214,7 +214,7 @@ async def coding_node(state: ResearchState) -> dict:
         return await _serve_code(state, language)
 
     # Path A: generate & execute
-    llm = get_chat_model("coding").with_structured_output(CodingOutput)
+    llm = get_structured_model("coding", CodingOutput)
 
     expertise = state.get("expertise_level", "advanced")
     instruction = state.get("forwarded_message", "")

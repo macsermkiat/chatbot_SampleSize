@@ -80,7 +80,8 @@ class OrchestratorOutput(BaseModel):
         default="",
         description=(
             "Route to: 'research_gap', 'methodology', "
-            "'biostatistics', or '' to stay."
+            "'biostatistics', or '' to stay. "
+            "MUST be '' when needs_clarification is true."
         ),
     )
     forwarded_message: str = Field(

@@ -5,12 +5,17 @@ import { uploadFile, type FileUploadResult } from "@/lib/api";
 
 interface FileUploadProps {
   onFileProcessed: (result: FileUploadResult) => void;
+  onError?: (message: string) => void;
   disabled?: boolean;
 }
 
-const ACCEPTED = ".pdf,.docx,.doc,.txt,.png,.jpg,.jpeg,.gif,.webp";
+const ACCEPTED = ".pdf,.docx,.txt,.png,.jpg,.jpeg,.gif,.webp";
 
-export default function FileUpload({ onFileProcessed, disabled }: FileUploadProps) {
+export default function FileUpload({
+  onFileProcessed,
+  onError,
+  disabled,
+}: FileUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
@@ -22,12 +27,14 @@ export default function FileUpload({ onFileProcessed, disabled }: FileUploadProp
         const result = await uploadFile(file);
         onFileProcessed(result);
       } catch (err) {
-        console.error("Upload failed:", err);
+        const message =
+          err instanceof Error ? err.message : "Upload failed. Please try again.";
+        onError?.(message);
       } finally {
         setUploading(false);
       }
     },
-    [onFileProcessed],
+    [onFileProcessed, onError],
   );
 
   const handleChange = useCallback(
@@ -91,7 +98,9 @@ export default function FileUpload({ onFileProcessed, disabled }: FileUploadProp
             fill="none"
           >
             <circle
-              cx="12" cy="12" r="10"
+              cx="12"
+              cy="12"
+              r="10"
               stroke="currentColor"
               strokeWidth="2.5"
               strokeDasharray="32"

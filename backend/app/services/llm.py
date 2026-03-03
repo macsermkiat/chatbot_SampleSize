@@ -49,7 +49,7 @@ def _build_openai(model: str, *, temperature: float = 0.3, timeout: int = 200) -
         api_key=settings.openai_api_key,
         temperature=temperature,
         request_timeout=timeout,
-        max_retries=2,
+        max_retries=4,
     )
 
 
@@ -61,7 +61,7 @@ def _build_anthropic(model: str, *, temperature: float = 0.3, timeout: float = 2
         api_key=settings.anthropic_api_key,
         temperature=temperature,
         timeout=timeout,
-        max_retries=2,
+        max_retries=4,
     )
 
 
@@ -85,15 +85,37 @@ _PROVIDER_BUILDERS = {
 # ---------------------------------------------------------------------------
 
 @lru_cache(maxsize=32)
+def _get_base_model(agent_name: str) -> BaseChatModel:
+    """Return the base ChatModel (no fallback) for the agent."""
+    provider, model_id = AGENT_MODEL_MAP[agent_name]
+    builder = _PROVIDER_BUILDERS[provider]
+    return builder(model_id)
+
+
+@lru_cache(maxsize=1)
+def _get_fallback_model() -> BaseChatModel:
+    return _build_gemini(_FALLBACK_MODEL)
+
+
+@lru_cache(maxsize=32)
 def get_chat_model(agent_name: str) -> BaseChatModel:
     """Return the correct ChatModel for *agent_name* with a Gemini fallback.
 
+    Use this for plain text (non-structured) LLM calls.
     Raises ``KeyError`` if the agent name is not in AGENT_MODEL_MAP.
     """
-    provider, model_id = AGENT_MODEL_MAP[agent_name]
-    builder = _PROVIDER_BUILDERS[provider]
-    primary = builder(model_id)
+    primary = _get_base_model(agent_name)
+    fallback = _get_fallback_model()
+    return primary.with_fallbacks([fallback])
 
-    # Wrap with Gemini fallback for resilience
-    fallback = _build_gemini(_FALLBACK_MODEL)
+
+def get_structured_model(agent_name: str, schema: type) -> BaseChatModel:
+    """Return a ChatModel with structured output AND a Gemini fallback.
+
+    Applies ``with_structured_output`` to both the primary and fallback
+    models *before* chaining them, so the fallback produces the same
+    Pydantic schema if the primary provider is overloaded or errors.
+    """
+    primary = _get_base_model(agent_name).with_structured_output(schema)
+    fallback = _get_fallback_model().with_structured_output(schema)
     return primary.with_fallbacks([fallback])

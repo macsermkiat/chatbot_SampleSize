@@ -51,6 +51,8 @@ export default function Home() {
   );
   // Track whether the level has been sent to the backend at least once
   const expertiseSentRef = useRef(false);
+  // Store uploaded file data until the user sends their next message
+  const pendingFileRef = useRef<FileUploadResult | null>(null);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -106,11 +108,20 @@ export default function Home() {
         expertiseSentRef.current = true;
       }
 
+      // Attach pending uploaded file (if any) to this message
+      const pendingFile = pendingFileRef.current;
+      if (pendingFile) {
+        pendingFileRef.current = null;
+      }
+
       try {
         for await (const { event, data } of streamChat(
           trimmed,
           sessionId,
           shouldSendLevel ? expertiseLevel : undefined,
+          pendingFile
+            ? [{ filename: pendingFile.filename, mime_type: pendingFile.mime_type, extracted_text: pendingFile.extracted_text }]
+            : undefined,
         )) {
           switch (event) {
             case "message": {
@@ -191,11 +202,39 @@ export default function Home() {
 
   const handleFileProcessed = useCallback(
     (result: FileUploadResult) => {
-      const notice = `Uploaded **${result.filename}** (${result.char_count.toLocaleString()} characters extracted)`;
-      sendMessage(notice);
+      pendingFileRef.current = result;
+
+      let noticeText = `Uploaded **${result.filename}** (${result.char_count.toLocaleString()} characters extracted`;
+      if (result.has_tables) {
+        noticeText += ", includes tables";
+      }
+      noticeText += "). Type your question about this file.";
+
+      if (result.warning) {
+        noticeText += `\n\n**Note:** ${result.warning}`;
+      }
+
+      const notice: ChatMessage = {
+        id: uid(),
+        role: "system",
+        content: noticeText,
+        timestamp: Date.now(),
+      };
+      setMessages((prev) => [...prev, notice]);
+      inputRef.current?.focus();
     },
-    [sendMessage],
+    [],
   );
+
+  const handleFileError = useCallback((message: string) => {
+    const errMsg: ChatMessage = {
+      id: uid(),
+      role: "system",
+      content: `Upload failed: ${message}`,
+      timestamp: Date.now(),
+    };
+    setMessages((prev) => [...prev, errMsg]);
+  }, []);
 
   const isEmpty = messages.length === 0;
 
@@ -445,6 +484,7 @@ export default function Home() {
           >
             <FileUpload
               onFileProcessed={handleFileProcessed}
+              onError={handleFileError}
               disabled={streaming}
             />
 

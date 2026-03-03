@@ -12,7 +12,7 @@ from app.agents.helpers import build_input_text
 from app.agents.prompt_composer import get_prompt
 from app.agents.prompts import METHODOLOGY_PROMPT
 from app.agents.state import MethodologyOutput, ResearchState
-from app.services.llm import get_chat_model
+from app.services.llm import get_structured_model
 from app.services.memory import trim_messages
 
 
@@ -26,7 +26,7 @@ async def methodology_node(state: ResearchState) -> dict:
     This node now also handles routing (previously done by the secretary).
     """
 
-    llm = get_chat_model("methodology").with_structured_output(MethodologyOutput)
+    llm = get_structured_model("methodology", MethodologyOutput)
 
     expertise = state.get("expertise_level", "advanced")
     user_text = build_input_text(state)

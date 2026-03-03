@@ -2,11 +2,18 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
+from typing import Literal
 
 from pydantic import BaseModel, Field
 
 
 # --- API Request schemas ---
+
+
+class UploadedFile(BaseModel):
+    filename: str
+    mime_type: str
+    extracted_text: str
 
 
 class ChatRequest(BaseModel):
@@ -16,6 +23,10 @@ class ChatRequest(BaseModel):
         default="advanced",
         pattern=r"^(simple|advanced)$",
         description="User expertise level: 'simple' for plain language, 'advanced' for full technical detail.",
+    )
+    uploaded_files: list[UploadedFile] = Field(
+        default_factory=list,
+        description="Files uploaded by the user (text already extracted).",
     )
 
 
@@ -44,6 +55,9 @@ class FileUploadResponse(BaseModel):
     mime_type: str
     extracted_text: str
     char_count: int
+    has_tables: bool = False
+    extraction_quality: Literal["full", "partial", "metadata_only", "empty"] = "full"
+    warning: str | None = None
 
 
 class HealthResponse(BaseModel):

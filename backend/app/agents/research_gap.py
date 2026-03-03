@@ -14,7 +14,7 @@ from app.agents.helpers import build_input_text
 from app.agents.prompt_composer import get_prompt
 from app.agents.prompts import GAP_SEARCH_PROMPT, GAP_SUMMARIZE_PROMPT
 from app.agents.state import GapSearchOutput, GapSummarizeOutput, ResearchState
-from app.services.llm import get_chat_model
+from app.services.llm import get_chat_model, get_structured_model
 from app.services.memory import trim_messages
 from app.services.tavily import SearchResult, search
 
@@ -26,7 +26,7 @@ from app.services.tavily import SearchResult, search
 async def gap_search_node(state: ResearchState) -> dict:
     """Generate search terms and execute Tavily searches."""
 
-    llm = get_chat_model("gap_search").with_structured_output(GapSearchOutput)
+    llm = get_structured_model("gap_search", GapSearchOutput)
 
     expertise = state.get("expertise_level", "advanced")
     user_text = build_input_text(state)
@@ -67,7 +67,7 @@ async def gap_summarize_node(state: ResearchState) -> dict:
     This node now also handles routing (previously done by the secretary).
     """
 
-    llm = get_chat_model("gap_summarize").with_structured_output(GapSummarizeOutput)
+    llm = get_structured_model("gap_summarize", GapSummarizeOutput)
 
     raw_results = state.get("search_results", [])
     search_block = _format_search_results(raw_results)

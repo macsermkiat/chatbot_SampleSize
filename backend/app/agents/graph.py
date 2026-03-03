@@ -105,18 +105,13 @@ def _route_from_entry(state: ResearchState) -> str:
 # ---------------------------------------------------------------------------
 
 def _route_from_orchestrator(state: ResearchState) -> str:
-    """After orchestrator: route to a specialist or wait for user clarification.
-
-    Routing takes priority: if the orchestrator chose a valid specialist,
-    proceed even when ``needs_clarification`` is set (the specialist will
-    handle its own clarification).  Only stop when there is no route target.
-    """
+    """After orchestrator: route to a specialist or wait for user clarification."""
+    if state.get("needs_clarification"):
+        return END
     target = state.get("agent_to_route_to", "")
     mapped = _PHASE_ENTRY.get(target)
     if mapped is not None:
         return mapped
-
-    # No valid route target -- wait for user input
     return END
 
 

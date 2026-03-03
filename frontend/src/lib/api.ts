@@ -27,6 +27,9 @@ export interface FileUploadResult {
   mime_type: string;
   extracted_text: string;
   char_count: number;
+  has_tables: boolean;
+  extraction_quality: "full" | "partial" | "metadata_only" | "empty";
+  warning: string | null;
 }
 
 /**
@@ -37,13 +40,17 @@ export async function* streamChat(
   message: string,
   sessionId: string,
   expertiseLevel?: "simple" | "advanced",
+  uploadedFiles?: { filename: string; mime_type: string; extracted_text: string }[],
 ): AsyncGenerator<{ event: string; data: ChatEventData }> {
-  const body: Record<string, string> = {
+  const body: Record<string, unknown> = {
     message,
     session_id: sessionId,
   };
   if (expertiseLevel) {
     body.expertise_level = expertiseLevel;
+  }
+  if (uploadedFiles && uploadedFiles.length > 0) {
+    body.uploaded_files = uploadedFiles;
   }
 
   const response = await fetchWithRetry(`${API_BASE}/chat`, {
