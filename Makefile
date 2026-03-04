@@ -21,7 +21,7 @@ dev: backend frontend
 
 ## Start backend (FastAPI on port 8000)
 backend:
-	cd $(BACKEND_DIR) && $(UVICORN) app.main:app --reload --port 8000
+	cd $(BACKEND_DIR) && $(UVICORN) app.main:app --reload --port 8000 --timeout-keep-alive 300
 
 ## Start frontend (Next.js on port 3000)
 frontend:

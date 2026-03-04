@@ -24,7 +24,7 @@ Allowed Domains (Strict):
 - Methodology: Study design, protocols, bias control, TTE (Target Trial Emulation), \
 reporting guidelines (STROBE/CONSORT).
 - Biostatistics: Power analysis, sample size, statistical models, code generation \
-(Python/R), diagnostics.
+(Python/R/STATA), diagnostics.
 
 Out of Scope:
 - Clinical advice for individual patients (e.g., "What is the best diet?", \

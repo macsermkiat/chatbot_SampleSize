@@ -116,76 +116,101 @@ export default function Home() {
         pendingFileRef.current = null;
       }
 
-      try {
-        for await (const { event, data } of streamChat(
-          trimmed,
-          sessionId,
-          shouldSendLevel ? expertiseLevel : undefined,
-          pendingFile
-            ? [{ filename: pendingFile.filename, mime_type: pendingFile.mime_type, extracted_text: pendingFile.extracted_text }]
-            : undefined,
-        )) {
-          switch (event) {
-            case "message": {
-              if (data.content) {
-                const assistantMsg: ChatMessage = {
+      const MAX_STREAM_RETRIES = 1;
+      let attempt = 0;
+      let streamCompleted = false;
+
+      while (attempt <= MAX_STREAM_RETRIES && !streamCompleted) {
+        try {
+          for await (const { event, data } of streamChat(
+            trimmed,
+            sessionId,
+            shouldSendLevel ? expertiseLevel : undefined,
+            pendingFile
+              ? [{ filename: pendingFile.filename, mime_type: pendingFile.mime_type, extracted_text: pendingFile.extracted_text }]
+              : undefined,
+          )) {
+            switch (event) {
+              case "message": {
+                if (data.content) {
+                  const assistantMsg: ChatMessage = {
+                    id: uid(),
+                    role: "assistant",
+                    content: data.content,
+                    node: data.node,
+                    phase: data.phase,
+                    timestamp: Date.now(),
+                  };
+                  setMessages((prev) => [...prev, assistantMsg]);
+                }
+                break;
+              }
+              case "progress": {
+                if (data.status) {
+                  setStatusLabel(data.status);
+                }
+                break;
+              }
+              case "phase_change": {
+                if (data.phase) {
+                  setPhase(data.phase as Phase);
+                }
+                break;
+              }
+              case "code": {
+                if (data.script && data.language) {
+                  setCodeBlocks((prev) => [
+                    ...prev,
+                    { language: data.language!, script: data.script! },
+                  ]);
+                }
+                break;
+              }
+              case "done": {
+                streamCompleted = true;
+                break;
+              }
+              case "error": {
+                streamCompleted = true;
+                const errMsg: ChatMessage = {
                   id: uid(),
                   role: "assistant",
-                  content: data.content,
-                  node: data.node,
-                  phase: data.phase,
+                  content: `Something went wrong: ${data.error || "Unknown error"}. Please try again.`,
                   timestamp: Date.now(),
                 };
-                setMessages((prev) => [...prev, assistantMsg]);
+                setMessages((prev) => [...prev, errMsg]);
+                break;
               }
-              break;
-            }
-            case "progress": {
-              if (data.status) {
-                setStatusLabel(data.status);
-              }
-              break;
-            }
-            case "phase_change": {
-              if (data.phase) {
-                setPhase(data.phase as Phase);
-              }
-              break;
-            }
-            case "code": {
-              if (data.script && data.language) {
-                setCodeBlocks((prev) => [
-                  ...prev,
-                  { language: data.language!, script: data.script! },
-                ]);
-              }
-              break;
-            }
-            case "error": {
-              const errMsg: ChatMessage = {
-                id: uid(),
-                role: "assistant",
-                content: `Something went wrong: ${data.error || "Unknown error"}. Please try again.`,
-                timestamp: Date.now(),
-              };
-              setMessages((prev) => [...prev, errMsg]);
-              break;
             }
           }
+          // If the stream ended without a "done" event, treat as incomplete
+          if (!streamCompleted && attempt < MAX_STREAM_RETRIES) {
+            attempt++;
+            setStatusLabel("Reconnecting...");
+            await new Promise((r) => setTimeout(r, 2000));
+            continue;
+          }
+          break;
+        } catch (err) {
+          attempt++;
+          if (attempt <= MAX_STREAM_RETRIES) {
+            setStatusLabel("Reconnecting...");
+            await new Promise((r) => setTimeout(r, 2000));
+            continue;
+          }
+          const errMsg: ChatMessage = {
+            id: uid(),
+            role: "assistant",
+            content:
+              "I couldn't reach the server. Please try again in a moment.",
+            timestamp: Date.now(),
+          };
+          setMessages((prev) => [...prev, errMsg]);
         }
-      } catch (err) {
-        const errMsg: ChatMessage = {
-          id: uid(),
-          role: "assistant",
-          content:
-            "I couldn't reach the server. Please try again in a moment.",
-          timestamp: Date.now(),
-        };
-        setMessages((prev) => [...prev, errMsg]);
-      } finally {
-        setStreaming(false);
-        inputRef.current?.focus();
       }
+
+      setStreaming(false);
+      inputRef.current?.focus();
     },
     [sessionId, streaming, expertiseLevel],
   );

@@ -14,6 +14,7 @@ from app.agents.graph import build_graph
 from app.agents.state import ResearchState
 from app.models import ChatRequest
 from app.services.memory import get_checkpointer
+from app.services.message_logger import log_message
 
 router = APIRouter(prefix="/api", tags=["chat"])
 
@@ -69,6 +70,9 @@ async def _stream_graph(
             "has_pending_code": False,
         }
 
+    # Log the user message (fire-and-forget)
+    log_message(session_id, "user", message)
+
     async for event in compiled.astream_events(input_state, config=config, version="v2"):
         kind = event.get("event", "")
 
@@ -90,12 +94,14 @@ async def _stream_graph(
             for msg in messages:
                 content = getattr(msg, "content", "")
                 if content:
+                    phase = output.get("current_phase", "")
+                    log_message(session_id, "assistant", content, node=node_name, phase=phase)
                     yield {
                         "event": "message",
                         "data": json.dumps({
                             "node": node_name,
                             "content": content,
-                            "phase": output.get("current_phase", ""),
+                            "phase": phase,
                         }),
                     }
 
@@ -138,4 +144,4 @@ async def chat(request: Request, body: ChatRequest):
                 "data": json.dumps({"error": str(exc)}),
             }
 
-    return EventSourceResponse(event_generator())
+    return EventSourceResponse(event_generator(), ping=20)
