@@ -76,6 +76,12 @@ app.include_router(files_router)
 app.include_router(sessions_router)
 
 
+@app.get("/ping")
+async def ping():
+    """Lightweight liveness check -- no DB, no I/O."""
+    return {"status": "ok"}
+
+
 @app.get("/health", response_model=HealthResponse)
 async def health():
     db_ok = await check_db()
