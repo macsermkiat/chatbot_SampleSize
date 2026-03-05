@@ -39,17 +39,14 @@ def base_state(**overrides: Any) -> dict:
 
 
 # ---------------------------------------------------------------------------
-# Mock LLM builder
+# Mock LLM builders
 # ---------------------------------------------------------------------------
 
 def make_mock_llm(return_value: Any) -> MagicMock:
     """Build a mock that mimics ``get_chat_model().with_structured_output().ainvoke()``.
 
-    Usage::
-
-        mock = make_mock_llm(OrchestratorOutput(direct_response_to_user="hi"))
-        with patch("app.agents.orchestrator.get_chat_model", return_value=mock):
-            result = await orchestrator_node(state)
+    Used for tests that manually patch ``get_chat_model`` (e.g. diagnostic tool,
+    R/STATA translation).
     """
     inner = AsyncMock(return_value=return_value)
     structured = MagicMock()
@@ -61,21 +58,35 @@ def make_mock_llm(return_value: Any) -> MagicMock:
     return llm
 
 
+def make_mock_structured_llm(return_value: Any) -> MagicMock:
+    """Build a mock that mimics ``get_structured_model()`` return value.
+
+    The returned mock has ``.ainvoke()`` that returns *return_value* directly,
+    matching the behavior of a model with structured output already applied.
+    """
+    mock = MagicMock()
+    mock.ainvoke = AsyncMock(return_value=return_value)
+    return mock
+
+
 # ---------------------------------------------------------------------------
 # Reusable patch fixtures
 # ---------------------------------------------------------------------------
 
 @pytest.fixture()
 def patch_get_chat_model():
-    """Yields a function that patches get_chat_model for a given module path.
+    """Yields a function that patches get_structured_model for a given module path.
 
-    Clears the lru_cache on teardown.
+    Most agent nodes use ``get_structured_model`` (which returns a model with
+    structured output already applied). This fixture patches that import.
     """
     patches: list[Any] = []
+    mocks: list[MagicMock] = []
 
     def _patch(module_path: str, return_value: Any) -> MagicMock:
-        mock = make_mock_llm(return_value)
-        p = patch(f"{module_path}.get_chat_model", return_value=mock)
+        mock = make_mock_structured_llm(return_value)
+        mocks.append(mock)
+        p = patch(f"{module_path}.get_structured_model", return_value=mock)
         patches.append(p)
         p.start()
         return mock
@@ -84,10 +95,6 @@ def patch_get_chat_model():
 
     for p in patches:
         p.stop()
-
-    # Clear LLM cache
-    from app.services.llm import get_chat_model
-    get_chat_model.cache_clear()
 
 
 @pytest.fixture()

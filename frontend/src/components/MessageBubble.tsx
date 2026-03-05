@@ -14,13 +14,9 @@ const NODE_LABELS: Record<string, string> = {
   orchestrator: "Research Orchestrator",
   gap_search: "Literature Search",
   gap_summarize: "Evidence Appraisal",
-  gap_secretary: "Gap Analysis Summary",
   methodology: "Methodology Consultant",
-  methodology_secretary: "Methodology Summary",
   biostatistics: "Biostatistics Advisor",
   coding: "Code Generation",
-  biostats_secretary: "Biostatistics Summary",
-  biostats_routing: "Phase Router",
 };
 
 /**

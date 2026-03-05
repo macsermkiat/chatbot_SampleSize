@@ -560,6 +560,7 @@ export default function Home() {
               placeholder="Describe your research question..."
               disabled={streaming}
               rows={1}
+              maxLength={10000}
               aria-label="Research question input"
               className="
                 flex-1 bg-transparent resize-none

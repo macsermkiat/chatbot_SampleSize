@@ -91,7 +91,9 @@ export async function* streamChat(
           yield { event: currentEvent, data };
           currentEvent = "message"; // reset after yielding
         } catch {
-          // Skip malformed JSON
+          if (process.env.NODE_ENV !== "production") {
+            console.warn("[SSE] Malformed JSON skipped:", raw.slice(0, 200));
+          }
         }
       } else if (line.trim() === "") {
         // Blank line = SSE event delimiter, reset event type

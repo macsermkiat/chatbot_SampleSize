@@ -107,7 +107,7 @@ class TestGapSummarizeNode:
         await gap_summarize_node(state)
 
         # Verify the prompt sent to the LLM contains "Search Results:" (fresh label)
-        call_args = mock.with_structured_output.return_value.ainvoke.call_args
+        call_args = mock.ainvoke.call_args
         sent_messages = call_args[0][0]
         human_msg = sent_messages[-1].content
         assert "Search Results:" in human_msg
@@ -123,7 +123,7 @@ class TestGapSummarizeNode:
 
         await gap_summarize_node(state)
 
-        call_args = mock.with_structured_output.return_value.ainvoke.call_args
+        call_args = mock.ainvoke.call_args
         sent_messages = call_args[0][0]
         human_msg = sent_messages[-1].content
         assert "Previous Search Results" in human_msg
@@ -135,7 +135,7 @@ class TestGapSummarizeNode:
 
         await gap_summarize_node(state)
 
-        call_args = mock.with_structured_output.return_value.ainvoke.call_args
+        call_args = mock.ainvoke.call_args
         sent_messages = call_args[0][0]
         human_msg = sent_messages[-1].content
         assert "Search Results:" in human_msg
@@ -200,18 +200,13 @@ class TestBiostatisticsNode:
             direct_response_to_user="Running diagnostic.",
             diagnostic_query="two groups, continuous, normal distribution",
         )
-        mock = patch_get_chat_model("app.agents.biostatistics", output)
+        patch_get_chat_model("app.agents.biostatistics", output)
 
-        # Also mock the diagnostic LLM call (non-structured)
+        # Mock the diagnostic LLM call (uses get_chat_model, not get_structured_model)
         diagnostic_mock = MagicMock()
         diagnostic_mock.ainvoke = AsyncMock(return_value=MagicMock(content="Use t-test"))
 
-        models = {"biostatistics": mock, "diagnostic": diagnostic_mock}
-
-        def side_effect(agent_name):
-            return models[agent_name]
-
-        with patch("app.agents.biostatistics.get_chat_model", side_effect=side_effect):
+        with patch("app.agents.biostatistics.get_chat_model", return_value=diagnostic_mock):
             state = base_state(current_phase="biostatistics")
             result = await biostatistics_node(state)
 

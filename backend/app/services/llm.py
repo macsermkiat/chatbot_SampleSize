@@ -109,6 +109,9 @@ def get_chat_model(agent_name: str) -> BaseChatModel:
     return primary.with_fallbacks([fallback])
 
 
+_structured_cache: dict[tuple[str, str], BaseChatModel] = {}
+
+
 def get_structured_model(agent_name: str, schema: type) -> BaseChatModel:
     """Return a ChatModel with structured output AND a Gemini fallback.
 
@@ -116,6 +119,9 @@ def get_structured_model(agent_name: str, schema: type) -> BaseChatModel:
     models *before* chaining them, so the fallback produces the same
     Pydantic schema if the primary provider is overloaded or errors.
     """
-    primary = _get_base_model(agent_name).with_structured_output(schema)
-    fallback = _get_fallback_model().with_structured_output(schema)
-    return primary.with_fallbacks([fallback])
+    key = (agent_name, schema.__name__)
+    if key not in _structured_cache:
+        primary = _get_base_model(agent_name).with_structured_output(schema)
+        fallback = _get_fallback_model().with_structured_output(schema)
+        _structured_cache[key] = primary.with_fallbacks([fallback])
+    return _structured_cache[key]

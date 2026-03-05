@@ -20,6 +20,16 @@ router = APIRouter(prefix="/api", tags=["chat"])
 
 # Build the graph once at module level (stateless; state is per-invocation)
 _graph = build_graph()
+_compiled_graph = None
+
+
+def _get_compiled_graph():
+    """Return the compiled graph, compiling once on first call."""
+    global _compiled_graph
+    if _compiled_graph is None:
+        checkpointer = get_checkpointer()
+        _compiled_graph = _graph.compile(checkpointer=checkpointer)
+    return _compiled_graph
 
 
 async def _stream_graph(
@@ -31,8 +41,7 @@ async def _stream_graph(
 ) -> AsyncGenerator[dict, None]:
     """Run the graph and yield SSE events for each node output."""
 
-    checkpointer = get_checkpointer()
-    compiled = _graph.compile(checkpointer=checkpointer)
+    compiled = _get_compiled_graph()
 
     config = {"configurable": {"thread_id": session_id}}
     last_emitted_phase = ""

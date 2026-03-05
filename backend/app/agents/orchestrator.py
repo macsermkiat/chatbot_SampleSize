@@ -12,13 +12,20 @@ from app.services.llm import get_structured_model
 from app.services.memory import trim_messages
 
 
+def _sanitize_filename(name: str) -> str:
+    """Strip control chars and truncate to prevent prompt injection via filename."""
+    # Keep only printable ASCII and common unicode letters
+    sanitized = "".join(ch for ch in name if ch.isprintable())
+    return sanitized[:255]
+
+
 def _build_file_context(uploaded_files: list[dict]) -> str:
     """Format uploaded file metadata for the orchestrator system prompt."""
     if not uploaded_files:
         return ""
     lines: list[str] = []
     for f in uploaded_files:
-        name = f.get("filename", "unknown")
+        name = _sanitize_filename(f.get("filename", "unknown"))
         text = f.get("extracted_text", "")
         char_count = len(text)
         lines.append(f"- {name} ({char_count:,} characters extracted)")
