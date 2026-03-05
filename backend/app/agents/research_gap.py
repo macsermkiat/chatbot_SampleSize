@@ -87,7 +87,11 @@ async def gap_summarize_node(state: ResearchState) -> dict:
         )
 
     user_text = build_input_text(state)
-    combined = f"{user_text}\n\n{results_section}"
+    grounding = (
+        "Base your analysis ONLY on the search results provided. "
+        "Do not cite studies not included in the results."
+    )
+    combined = f"{user_text}\n\n{grounding}\n\n{results_section}"
 
     expertise = state.get("expertise_level", "advanced")
     messages = [
@@ -116,6 +120,11 @@ def _format_search_results(results: list[dict]) -> str:
     """Format search results for the LLM prompt (includes URLs for citation)."""
     if not results:
         return "No search results available."
+    preamble = (
+        "IMPORTANT: The following are the ONLY sources available. Do not reference "
+        "any study not listed here. Use only the URLs provided below. Never invent "
+        "PMIDs, DOIs, or URLs not present in these results.\n\n"
+    )
     lines: list[str] = []
     for i, r in enumerate(results, 1):
         title = r.get("title", "Untitled")
@@ -128,7 +137,7 @@ def _format_search_results(results: list[dict]) -> str:
             f"   Relevance: {score:.2f}\n"
             f"   {content}"
         )
-    return "\n\n".join(lines)
+    return preamble + "\n\n".join(lines)
 
 
 def _format_progress(
