@@ -35,6 +35,7 @@ async def _stream_graph(
     compiled = _graph.compile(checkpointer=checkpointer)
 
     config = {"configurable": {"thread_id": session_id}}
+    last_emitted_phase = ""
 
     # Check whether this thread already has state (i.e. a returning session).
     # If so, send only the new user message -- the checkpointer restores
@@ -43,11 +44,11 @@ async def _stream_graph(
 
     if existing.values:
         # Continuing an existing conversation.
-        # If the caller sent a new expertise_level, update it.
+        # Only update expertise_level if the caller explicitly sent one.
         input_state: dict = {
             "messages": [HumanMessage(content=message)],
         }
-        if expertise_level and expertise_level != existing.values.get("expertise_level"):
+        if expertise_level is not None and expertise_level != existing.values.get("expertise_level"):
             input_state["expertise_level"] = expertise_level
         # Clear or set uploaded_files each turn so stale files don't persist
         input_state["uploaded_files"] = uploaded_files or []
@@ -64,7 +65,7 @@ async def _stream_graph(
             "uploaded_files": uploaded_files or [],
             "code_output": {},
             "search_results": [],
-            "expertise_level": expertise_level or "advanced",
+            "expertise_level": expertise_level if expertise_level is not None else "advanced",
             "execution_result": {},
             "stored_python_script": "",
             "has_pending_code": False,
@@ -105,9 +106,10 @@ async def _stream_graph(
                         }),
                     }
 
-            # Emit phase change if applicable
+            # Emit phase change only when the phase actually changes
             new_phase = output.get("current_phase")
-            if new_phase:
+            if new_phase and new_phase != last_emitted_phase:
+                last_emitted_phase = new_phase
                 yield {
                     "event": "phase_change",
                     "data": json.dumps({"phase": new_phase}),
@@ -139,9 +141,11 @@ async def chat(request: Request, body: ChatRequest):
             ):
                 yield event
         except Exception as exc:
+            import logging
+            logging.getLogger(__name__).exception("SSE stream error for session %s", session_id)
             yield {
                 "event": "error",
-                "data": json.dumps({"error": str(exc)}),
+                "data": json.dumps({"error": "An internal error occurred. Please try again."}),
             }
 
     return EventSourceResponse(event_generator(), ping=20)

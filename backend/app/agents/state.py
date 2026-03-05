@@ -100,7 +100,14 @@ class GapSearchOutput(BaseModel):
 class GapSummarizeOutput(BaseModel):
     """ResearchGapSummarize node output with routing."""
 
-    direct_response_to_user: str
+    direct_response_to_user: str = Field(
+        ...,
+        description=(
+            "The COMPLETE message shown to the user. When asking clarification "
+            "questions, include ALL questions in this field. Never announce "
+            "questions without listing them here."
+        ),
+    )
     needs_clarification: bool = Field(
         default=False,
         description="True if you asked the user a question and need their answer before proceeding.",
@@ -119,7 +126,14 @@ class GapSummarizeOutput(BaseModel):
 class MethodologyOutput(BaseModel):
     """MethodologyAgent node output with routing."""
 
-    direct_response_to_user: str
+    direct_response_to_user: str = Field(
+        ...,
+        description=(
+            "The COMPLETE message shown to the user. When asking clarification "
+            "questions, include ALL questions in this field. Never announce "
+            "questions without listing them here."
+        ),
+    )
     needs_clarification: bool = Field(
         default=False,
         description="True if you asked the user a question and need their answer before proceeding.",
@@ -139,7 +153,14 @@ class BiostatisticsOutput(BaseModel):
     """BiostatisticsAgent node output."""
 
     session_id: str = ""
-    direct_response_to_user: str
+    direct_response_to_user: str = Field(
+        ...,
+        description=(
+            "The COMPLETE message shown to the user. When asking clarification "
+            "questions, include ALL questions in this field. Never announce "
+            "questions without listing them here."
+        ),
+    )
     need_info: bool = Field(
         default=False, description="True if the agent still needs more info from the user."
     )
@@ -160,7 +181,13 @@ class CodingOutput(BaseModel):
     """CodingAgent node output -- always generates a runnable Python script."""
 
     session_id: str = ""
-    direct_response_to_user: str
+    direct_response_to_user: str = Field(
+        ...,
+        description=(
+            "The COMPLETE message shown to the user. Present all results, "
+            "explanations, and follow-up options in this field."
+        ),
+    )
     python_script: str = Field(
         default="",
         description="Always generate a runnable Python script that prints results to stdout.",

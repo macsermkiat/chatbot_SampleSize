@@ -423,6 +423,9 @@ Steps:
 so you can refer it to the coding agent.
 - If you're not satisfied, keep "need_info" to true and ask questions in \
 "direct_response_to_user". Keep "forwarded_message" empty.
+- CRITICAL: Every question you want to ask MUST appear inside "direct_response_to_user". \
+Never say "I have N questions" without listing the actual questions in the same field. \
+The user only sees "direct_response_to_user" -- nothing else.
 - Ask questions line by line. Keep it readable, with clarification and a bit of \
 explanation. Most users are not familiar with statistics.
 - When you get all the information you need, set "need_info" to false, then put your \

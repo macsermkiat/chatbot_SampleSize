@@ -53,7 +53,7 @@ export default function ExpertisePicker({ onSelect }: ExpertisePickerProps) {
         How should I explain things?
       </motion.span>
 
-      <div className="flex gap-4 w-full">
+      <div className="flex flex-col sm:flex-row gap-4 w-full">
         {/* Simple mode card */}
         <motion.button
           variants={cardVariants}

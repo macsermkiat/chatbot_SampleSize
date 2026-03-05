@@ -2,6 +2,7 @@
 
 import type { Components } from "react-markdown";
 import ReactMarkdown from "react-markdown";
+import rehypeSanitize from "rehype-sanitize";
 import remarkGfm from "remark-gfm";
 import type { ChatMessage } from "@/lib/api";
 
@@ -72,7 +73,7 @@ export default function MessageBubble({ message }: MessageBubbleProps) {
     return (
       <div className="flex w-full justify-center">
         <div className="px-4 py-2 rounded-xl bg-parchment-100 border border-parchment-300 text-caption text-ink-500 font-display max-w-[85%]">
-          <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
+          <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeSanitize]} components={markdownComponents}>
             {message.content}
           </ReactMarkdown>
         </div>
@@ -122,6 +123,7 @@ export default function MessageBubble({ message }: MessageBubbleProps) {
             <div className="prose-research text-body-md">
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
+                rehypePlugins={[rehypeSanitize]}
                 components={markdownComponents}
               >
                 {message.content}

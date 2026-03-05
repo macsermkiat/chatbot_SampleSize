@@ -132,9 +132,10 @@ class TestGetPrompt:
 class TestChatRequestExpertiseLevel:
     """Test expertise_level field on ChatRequest."""
 
-    def test_default_is_advanced(self):
+    def test_default_is_none(self):
+        """Default expertise_level is None (omit to keep existing session value)."""
         req = ChatRequest(message="test")
-        assert req.expertise_level == "advanced"
+        assert req.expertise_level is None
 
     def test_accepts_simple(self):
         req = ChatRequest(message="test", expertise_level="simple")

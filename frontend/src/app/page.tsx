@@ -38,7 +38,16 @@ const STARTER_PROMPTS = [
 ];
 
 export default function Home() {
-  const [sessionId] = useState(() => uid());
+  const [sessionId] = useState(() => {
+    if (typeof window !== "undefined") {
+      const stored = sessionStorage.getItem("research_session_id");
+      if (stored) return stored;
+      const fresh = uid();
+      sessionStorage.setItem("research_session_id", fresh);
+      return fresh;
+    }
+    return uid();
+  });
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [phase, setPhase] = useState<Phase>("orchestrator");
@@ -54,6 +63,10 @@ export default function Home() {
   const expertiseSentRef = useRef(false);
   // Store uploaded file data until the user sends their next message
   const pendingFileRef = useRef<FileUploadResult | null>(null);
+  // AbortController for cancelling in-flight streams
+  const abortRef = useRef<AbortController | null>(null);
+  // Ref-based guard against race conditions (state updates are async)
+  const isStreamingRef = useRef(false);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -85,7 +98,8 @@ export default function Home() {
   const sendMessage = useCallback(
     async (text: string) => {
       const trimmed = text.trim();
-      if (!trimmed || streaming) return;
+      if (!trimmed || isStreamingRef.current) return;
+      isStreamingRef.current = true;
 
       // Add user message
       const userMsg: ChatMessage = {
@@ -98,6 +112,10 @@ export default function Home() {
       setInput("");
       setStreaming(true);
       setStatusLabel("Thinking...");
+
+      // Create AbortController for this stream
+      const controller = new AbortController();
+      abortRef.current = controller;
 
       // Reset textarea height
       if (inputRef.current) {
@@ -121,6 +139,7 @@ export default function Home() {
       let streamCompleted = false;
 
       while (attempt <= MAX_STREAM_RETRIES && !streamCompleted) {
+        if (controller.signal.aborted) break;
         try {
           for await (const { event, data } of streamChat(
             trimmed,
@@ -129,7 +148,9 @@ export default function Home() {
             pendingFile
               ? [{ filename: pendingFile.filename, mime_type: pendingFile.mime_type, extracted_text: pendingFile.extracted_text }]
               : undefined,
+            controller.signal,
           )) {
+            if (controller.signal.aborted) break;
             switch (event) {
               case "message": {
                 if (data.content) {
@@ -184,7 +205,7 @@ export default function Home() {
             }
           }
           // If the stream ended without a "done" event, treat as incomplete
-          if (!streamCompleted && attempt < MAX_STREAM_RETRIES) {
+          if (!streamCompleted && !controller.signal.aborted && attempt < MAX_STREAM_RETRIES) {
             attempt++;
             setStatusLabel("Reconnecting...");
             await new Promise((r) => setTimeout(r, 2000));
@@ -192,6 +213,7 @@ export default function Home() {
           }
           break;
         } catch (err) {
+          if (controller.signal.aborted) break;
           attempt++;
           if (attempt <= MAX_STREAM_RETRIES) {
             setStatusLabel("Reconnecting...");
@@ -209,11 +231,20 @@ export default function Home() {
         }
       }
 
+      abortRef.current = null;
+      isStreamingRef.current = false;
       setStreaming(false);
       inputRef.current?.focus();
     },
-    [sessionId, streaming, expertiseLevel],
+    [sessionId, expertiseLevel],
   );
+
+  const handleStop = useCallback(() => {
+    abortRef.current?.abort();
+    abortRef.current = null;
+    isStreamingRef.current = false;
+    setStreaming(false);
+  }, []);
 
   const handleSubmit = useCallback(
     (e: React.FormEvent) => {
@@ -529,6 +560,7 @@ export default function Home() {
               placeholder="Describe your research question..."
               disabled={streaming}
               rows={1}
+              aria-label="Research question input"
               className="
                 flex-1 bg-transparent resize-none
                 text-body-md text-ink-800
@@ -540,13 +572,47 @@ export default function Home() {
               "
             />
 
+            {streaming ? (
+              <motion.button
+                type="button"
+                onClick={handleStop}
+                variants={sendButtonVariants}
+                animate="sending"
+                whileTap={{ scale: 0.88 }}
+                className="
+                  flex items-center justify-center
+                  w-9 h-9 rounded-xl
+                  bg-ink-900 text-parchment-100
+                  hover:bg-red-700
+                  transition-colors duration-200
+                  flex-none
+                  cursor-pointer
+                "
+                aria-label="Stop generating"
+              >
+                <motion.span
+                  key="stop"
+                  initial={{ opacity: 0, rotate: -90 }}
+                  animate={{ opacity: 1, rotate: 0 }}
+                  exit={{ opacity: 0, rotate: 90 }}
+                  transition={{ duration: 0.15 }}
+                  className="flex items-center justify-center"
+                >
+                  <svg
+                    className="w-3.5 h-3.5"
+                    viewBox="0 0 14 14"
+                    fill="currentColor"
+                  >
+                    <rect x="3" y="3" width="8" height="8" rx="1.5" />
+                  </svg>
+                </motion.span>
+              </motion.button>
+            ) : (
             <motion.button
               type="submit"
-              disabled={!input.trim() || streaming}
+              disabled={!input.trim()}
               variants={sendButtonVariants}
-              animate={
-                streaming ? "sending" : input.trim() ? "ready" : "idle"
-              }
+              animate={input.trim() ? "ready" : "idle"}
               whileTap={{ scale: 0.88 }}
               className="
                 flex items-center justify-center
@@ -559,44 +625,16 @@ export default function Home() {
               "
               aria-label="Send message"
             >
-              <AnimatePresence mode="wait" initial={false}>
-                {streaming ? (
-                  <motion.span
-                    key="stop"
-                    initial={{ opacity: 0, rotate: -90 }}
-                    animate={{ opacity: 1, rotate: 0 }}
-                    exit={{ opacity: 0, rotate: 90 }}
-                    transition={{ duration: 0.15 }}
-                    className="flex items-center justify-center"
-                  >
-                    <svg
-                      className="w-3.5 h-3.5"
-                      viewBox="0 0 14 14"
-                      fill="currentColor"
-                    >
-                      <rect x="3" y="3" width="8" height="8" rx="1.5" />
-                    </svg>
-                  </motion.span>
-                ) : (
-                  <motion.span
-                    key="arrow"
-                    initial={{ opacity: 0, x: -4 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 4 }}
-                    transition={{ duration: 0.15 }}
-                    className="flex items-center justify-center"
-                  >
-                    <svg
-                      className="w-4 h-4"
-                      viewBox="0 0 16 16"
-                      fill="currentColor"
-                    >
-                      <path d="M1.724 1.053a.5.5 0 01.55-.042l12.5 7a.5.5 0 010 .878l-12.5 7A.5.5 0 011 15.5V.5a.5.5 0 01.724-.447zM2.5 2.31v4.94L7.1 8 2.5 8.75v4.94L13.85 8 2.5 2.31z" />
-                    </svg>
-                  </motion.span>
-                )}
-              </AnimatePresence>
+
+              <svg
+                className="w-4 h-4"
+                viewBox="0 0 16 16"
+                fill="currentColor"
+              >
+                <path d="M1.724 1.053a.5.5 0 01.55-.042l12.5 7a.5.5 0 010 .878l-12.5 7A.5.5 0 011 15.5V.5a.5.5 0 01.724-.447zM2.5 2.31v4.94L7.1 8 2.5 8.75v4.94L13.85 8 2.5 2.31z" />
+              </svg>
             </motion.button>
+            )}
           </div>
 
           <p className="text-center mt-2.5 text-caption text-ink-400 font-display">

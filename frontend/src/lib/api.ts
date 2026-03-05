@@ -41,6 +41,7 @@ export async function* streamChat(
   sessionId: string,
   expertiseLevel?: "simple" | "advanced",
   uploadedFiles?: { filename: string; mime_type: string; extracted_text: string }[],
+  signal?: AbortSignal,
 ): AsyncGenerator<{ event: string; data: ChatEventData }> {
   const body: Record<string, unknown> = {
     message,
@@ -57,6 +58,7 @@ export async function* streamChat(
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
+    signal,
   });
 
   if (!response.ok) {
@@ -68,6 +70,7 @@ export async function* streamChat(
 
   const decoder = new TextDecoder();
   let buffer = "";
+  let currentEvent = "message";
 
   while (true) {
     const { done, value } = await reader.read();
@@ -76,8 +79,6 @@ export async function* streamChat(
     buffer += decoder.decode(value, { stream: true });
     const lines = buffer.split("\n");
     buffer = lines.pop() || "";
-
-    let currentEvent = "message";
 
     for (const line of lines) {
       if (line.startsWith("event: ")) {
@@ -88,11 +89,21 @@ export async function* streamChat(
         try {
           const data = JSON.parse(raw) as ChatEventData;
           yield { event: currentEvent, data };
+          currentEvent = "message"; // reset after yielding
         } catch {
           // Skip malformed JSON
         }
+      } else if (line.trim() === "") {
+        // Blank line = SSE event delimiter, reset event type
+        currentEvent = "message";
       }
     }
+  }
+
+  // Flush any remaining buffered bytes from the decoder
+  const remaining = decoder.decode();
+  if (remaining) {
+    buffer += remaining;
   }
 }
 
