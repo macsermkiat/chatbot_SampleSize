@@ -152,7 +152,6 @@ class MethodologyOutput(BaseModel):
 class BiostatisticsOutput(BaseModel):
     """BiostatisticsAgent node output."""
 
-    session_id: str = ""
     direct_response_to_user: str = Field(
         ...,
         description=(
@@ -180,7 +179,6 @@ class BiostatisticsOutput(BaseModel):
 class CodingOutput(BaseModel):
     """CodingAgent node output -- always generates a runnable Python script."""
 
-    session_id: str = ""
     direct_response_to_user: str = Field(
         ...,
         description=(

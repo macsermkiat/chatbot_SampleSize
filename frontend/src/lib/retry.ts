@@ -22,8 +22,18 @@ const DEFAULT_OPTIONS: Required<RetryOptions> = {
   backoffMultiplier: 2,
 };
 
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+function sleep(ms: number, signal?: AbortSignal): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (signal?.aborted) {
+      reject(signal.reason);
+      return;
+    }
+    const timer = setTimeout(resolve, ms);
+    signal?.addEventListener("abort", () => {
+      clearTimeout(timer);
+      reject(signal.reason);
+    }, { once: true });
+  });
 }
 
 export async function fetchWithRetry(
@@ -44,7 +54,7 @@ export async function fetchWithRetry(
       const response = await fetch(input, init);
 
       if (RETRYABLE_STATUS_CODES.has(response.status) && attempt < maxAttempts) {
-        await sleep(delay);
+        await sleep(delay, init?.signal ?? undefined);
         delay = delay * backoffMultiplier;
         continue;
       }
@@ -55,7 +65,7 @@ export async function fetchWithRetry(
       lastError = error;
 
       if (attempt < maxAttempts) {
-        await sleep(delay);
+        await sleep(delay, init?.signal ?? undefined);
         delay = delay * backoffMultiplier;
         continue;
       }

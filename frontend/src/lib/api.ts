@@ -62,7 +62,9 @@ export async function* streamChat(
   });
 
   if (!response.ok) {
-    throw new Error(`Chat request failed: ${response.status}`);
+    const detail = await response.json().catch(() => null);
+    const msg = detail?.detail || detail?.error || `Server error (${response.status})`;
+    throw new Error(msg);
   }
 
   const reader = response.body?.getReader();
@@ -112,13 +114,14 @@ export async function* streamChat(
 /**
  * Upload a file for text extraction.
  */
-export async function uploadFile(file: File): Promise<FileUploadResult> {
+export async function uploadFile(file: File, signal?: AbortSignal): Promise<FileUploadResult> {
   const form = new FormData();
   form.append("file", file);
 
   const response = await fetchWithRetry(`${API_BASE}/upload`, {
     method: "POST",
     body: form,
+    signal,
   });
 
   if (!response.ok) {

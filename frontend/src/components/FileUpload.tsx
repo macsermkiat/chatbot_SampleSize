@@ -10,6 +10,8 @@ interface FileUploadProps {
 }
 
 const ACCEPTED = ".pdf,.docx,.txt,.png,.jpg,.jpeg,.gif,.webp";
+const MAX_FILE_SIZE_MB = 20;
+const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
 
 export default function FileUpload({
   onFileProcessed,
@@ -19,18 +21,30 @@ export default function FileUpload({
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
+  const abortRef = useRef<AbortController | null>(null);
 
   const processFile = useCallback(
     async (file: File) => {
+      if (file.size > MAX_FILE_SIZE_BYTES) {
+        onError?.(`File exceeds ${MAX_FILE_SIZE_MB} MB limit. Please choose a smaller file.`);
+        return;
+      }
+
+      const controller = new AbortController();
+      abortRef.current = controller;
       setUploading(true);
       try {
-        const result = await uploadFile(file);
-        onFileProcessed(result);
+        const result = await uploadFile(file, controller.signal);
+        if (!controller.signal.aborted) {
+          onFileProcessed(result);
+        }
       } catch (err) {
+        if (controller.signal.aborted) return;
         const message =
           err instanceof Error ? err.message : "Upload failed. Please try again.";
         onError?.(message);
       } finally {
+        abortRef.current = null;
         setUploading(false);
       }
     },

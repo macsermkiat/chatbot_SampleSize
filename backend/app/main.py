@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.chat import router as chat_router
 from app.api.files import router as files_router
 from app.api.sessions import router as sessions_router
-from app.config import settings
+from app.config import settings, validate_required_keys
 from app.db import check_db, close_pool, get_pool
 from app.models import HealthResponse
 from app.services.memory import close_checkpointer, open_checkpointer
@@ -18,6 +18,10 @@ from app.services.memory import close_checkpointer, open_checkpointer
 async def lifespan(app: FastAPI):
     import logging
     logger = logging.getLogger(__name__)
+
+    # Validate API keys at startup
+    for warning in validate_required_keys():
+        logger.warning(warning)
 
     # Startup: warm the connection pool (graceful if DB unavailable)
     if settings.has_database:

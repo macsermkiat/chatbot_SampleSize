@@ -76,6 +76,13 @@ export default function Home() {
     fetch("/keep-alive").catch(() => {});
   }, []);
 
+  // Cleanup AbortController on unmount
+  useEffect(() => {
+    return () => {
+      abortRef.current?.abort();
+    };
+  }, []);
+
   // Auto-scroll on new messages
   useEffect(() => {
     const el = scrollRef.current;

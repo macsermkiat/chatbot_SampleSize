@@ -1,11 +1,26 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
+import hljs from "highlight.js/lib/core";
+import python from "highlight.js/lib/languages/python";
+import r from "highlight.js/lib/languages/r";
+import stata from "highlight.js/lib/languages/stata";
+
+hljs.registerLanguage("python", python);
+hljs.registerLanguage("r", r);
+hljs.registerLanguage("stata", stata);
 
 interface CodeBlockProps {
   language: string;
   script: string;
 }
+
+const LANG_ALIASES: Record<string, string> = {
+  py: "python",
+  python: "python",
+  r: "r",
+  stata: "stata",
+};
 
 export default function CodeBlock({ language, script }: CodeBlockProps) {
   const [copied, setCopied] = useState(false);
@@ -21,6 +36,18 @@ export default function CodeBlock({ language, script }: CodeBlockProps) {
   }, [script]);
 
   const langLabel = language.toUpperCase();
+  const hljsLang = LANG_ALIASES[language.toLowerCase()] || language.toLowerCase();
+
+  const highlighted = useMemo(() => {
+    try {
+      if (hljs.getLanguage(hljsLang)) {
+        return hljs.highlight(script, { language: hljsLang }).value;
+      }
+    } catch {
+      // Fall through to plain text
+    }
+    return null;
+  }, [script, hljsLang]);
 
   return (
     <div className="rounded-lg overflow-hidden border border-parchment-200 shadow-sm">
@@ -35,6 +62,7 @@ export default function CodeBlock({ language, script }: CodeBlockProps) {
             text-caption font-mono text-parchment-400
             hover:text-parchment-200 transition-colors
             flex items-center gap-1.5
+            cursor-pointer
           "
         >
           {copied ? (
@@ -58,7 +86,14 @@ export default function CodeBlock({ language, script }: CodeBlockProps) {
 
       {/* Code body */}
       <pre className="px-4 py-4 bg-ink-900 text-parchment-200 text-body-sm font-mono overflow-x-auto leading-relaxed">
-        <code>{script}</code>
+        {highlighted ? (
+          <code
+            className="hljs"
+            dangerouslySetInnerHTML={{ __html: highlighted }}
+          />
+        ) : (
+          <code>{script}</code>
+        )}
       </pre>
     </div>
   );

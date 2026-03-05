@@ -51,3 +51,15 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+
+def validate_required_keys() -> list[str]:
+    """Return a list of warnings for missing API keys. Called at startup."""
+    warnings: list[str] = []
+    if not settings.openai_api_key:
+        warnings.append("OPENAI_API_KEY is not set -- OpenAI agents will fail")
+    if not settings.anthropic_api_key:
+        warnings.append("ANTHROPIC_API_KEY is not set -- Anthropic agents will fail")
+    if not settings.tavily_api_key:
+        warnings.append("TAVILY_API_KEY is not set -- literature search will fail")
+    return warnings
