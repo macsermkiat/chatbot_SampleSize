@@ -1,0 +1,171 @@
+"""Orchestrate LLM judge evaluations across all cases and dimensions."""
+
+from __future__ import annotations
+
+import json
+import logging
+from pathlib import Path
+
+from anthropic import AsyncAnthropic
+
+from evaluation.config import EvalConfig
+from evaluation.llm_judge.blinding import BlindedPair, BlindedResponse
+from evaluation.llm_judge.judge_prompt import (
+    JUDGE_SYSTEM_PROMPT,
+    build_evaluation_prompt,
+    build_overall_quality_prompt,
+)
+from evaluation.rubrics.schema import (
+    DimensionScore,
+    EvaluationResult,
+    Rubric,
+)
+from evaluation.test_cases.schema import TestCase
+
+logger = logging.getLogger(__name__)
+
+
+async def evaluate_single_response(
+    response: BlindedResponse,
+    case: TestCase,
+    rubric: Rubric,
+    config: EvalConfig,
+    judge_run: int,
+) -> EvaluationResult:
+    """Evaluate a single blinded response across all rubric dimensions."""
+    client = AsyncAnthropic(api_key=config.anthropic_api_key)
+    dimension_scores: list[DimensionScore] = []
+
+    for dimension in rubric.dimensions:
+        prompt = build_evaluation_prompt(
+            dimension=dimension,
+            case_context=case.clinical_context,
+            user_prompt=case.prompt,
+            response_text=response.text,
+            expertise_mode=case.expertise_mode,
+            code_output=response.code if dimension.dimension_id in ("B3", "B8") else "",
+        )
+
+        score_data = await _call_judge(client, prompt, config)
+
+        dimension_scores.append(
+            DimensionScore(
+                dimension_id=dimension.dimension_id,
+                score=score_data.get("score", 3),
+                reasoning=score_data.get("reasoning", ""),
+                evidence=score_data.get("evidence", ""),
+            )
+        )
+
+    # Overall quality assessment
+    overall_prompt = build_overall_quality_prompt(
+        case_context=case.clinical_context,
+        user_prompt=case.prompt,
+        response_text=response.text,
+        expertise_mode=case.expertise_mode,
+        agent_type=case.agent_target,
+    )
+    overall_data = await _call_judge(client, overall_prompt, config)
+
+    return EvaluationResult(
+        case_id=case.case_id,
+        system_id=response.blinded_label,
+        judge_run=judge_run,
+        rubric_id=rubric.rubric_id,
+        dimension_scores=dimension_scores,
+        overall_quality=overall_data.get("score", 3),
+        overall_reasoning=overall_data.get("reasoning", ""),
+    )
+
+
+async def evaluate_blinded_pair(
+    pair: BlindedPair,
+    case: TestCase,
+    rubric: Rubric,
+    config: EvalConfig,
+) -> list[EvaluationResult]:
+    """Evaluate both systems in a blinded pair across all judge runs."""
+    results: list[EvaluationResult] = []
+
+    for run in range(1, config.judge_runs_per_case + 1):
+        for response in [pair.system_a, pair.system_b]:
+            result = await evaluate_single_response(
+                response=response,
+                case=case,
+                rubric=rubric,
+                config=config,
+                judge_run=run,
+            )
+            results.append(result)
+
+    return results
+
+
+async def run_full_evaluation(
+    pairs: list[BlindedPair],
+    cases: list[TestCase],
+    rubric: Rubric,
+    config: EvalConfig,
+) -> list[EvaluationResult]:
+    """Run the complete evaluation across all pairs."""
+    case_lookup = {c.case_id: c for c in cases}
+    all_results: list[EvaluationResult] = []
+
+    for pair in pairs:
+        case = case_lookup.get(pair.case_id)
+        if not case:
+            logger.warning("No test case found for %s", pair.case_id)
+            continue
+
+        logger.info("Evaluating case %s...", pair.case_id)
+        results = await evaluate_blinded_pair(pair, case, rubric, config)
+        all_results.extend(results)
+
+        # Save incremental results
+        _save_results(all_results, config)
+
+    return all_results
+
+
+async def _call_judge(
+    client: AsyncAnthropic,
+    user_prompt: str,
+    config: EvalConfig,
+) -> dict:
+    """Call the LLM judge and parse the JSON response."""
+    try:
+        message = await client.messages.create(
+            model=config.judge_model,
+            max_tokens=500,
+            temperature=config.judge_temperature,
+            system=JUDGE_SYSTEM_PROMPT,
+            messages=[{"role": "user", "content": user_prompt}],
+        )
+
+        response_text = message.content[0].text.strip()
+
+        # Try to parse JSON from the response
+        # Handle cases where the model wraps in markdown fences
+        json_text = response_text
+        if "```" in json_text:
+            json_text = json_text.split("```")[1]
+            if json_text.startswith("json"):
+                json_text = json_text[4:]
+
+        return json.loads(json_text)
+
+    except (json.JSONDecodeError, IndexError, KeyError) as exc:
+        logger.warning("Failed to parse judge response: %s", exc)
+        return {"score": 3, "reasoning": "Parse error", "evidence": ""}
+    except Exception as exc:
+        logger.error("Judge API call failed: %s", exc)
+        return {"score": 3, "reasoning": f"API error: {exc}", "evidence": ""}
+
+
+def _save_results(results: list[EvaluationResult], config: EvalConfig) -> None:
+    """Save results incrementally to disk."""
+    output_dir = Path(config.judge_results_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    filepath = output_dir / "judge_results.json"
+    data = [r.model_dump() for r in results]
+    filepath.write_text(json.dumps(data, indent=2, default=str))
