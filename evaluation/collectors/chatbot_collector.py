@@ -3,14 +3,18 @@
 from __future__ import annotations
 
 import json
+import logging
 import time
 import uuid
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
+from pathlib import Path
 
 import httpx
 
 from evaluation.config import EvalConfig
 from evaluation.test_cases.schema import TestCase
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -110,6 +114,8 @@ async def _send_and_collect_sse(
 
             if line.startswith("event:"):
                 current_event = line[6:].strip()
+                if current_event == "done":
+                    break
                 continue
 
             if line.startswith("data:"):
@@ -145,15 +151,84 @@ async def _send_and_collect_sse(
     }
 
 
+def _save_incremental(
+    responses: list[CollectedResponse], config: EvalConfig
+) -> None:
+    """Save responses to disk after each case for crash resilience."""
+    output_dir = Path(config.raw_responses_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    filepath = output_dir / "chatbot_responses.json"
+    data = [asdict(r) for r in responses]
+    filepath.write_text(json.dumps(data, indent=2, default=str))
+
+
+def _load_existing(config: EvalConfig) -> list[CollectedResponse]:
+    """Load previously collected responses for resume support."""
+    filepath = Path(config.raw_responses_dir) / "chatbot_responses.json"
+    if not filepath.exists():
+        return []
+    data = json.loads(filepath.read_text())
+    return [
+        CollectedResponse(
+            case_id=item["case_id"],
+            system_id=item["system_id"],
+            session_id=item["session_id"],
+            turn_number=item["turn_number"],
+            prompt=item["prompt"],
+            response_text=item["response_text"],
+            code_output=item["code_output"],
+            execution_result=item.get("execution_result", ""),
+            phase_transitions=tuple(item.get("phase_transitions", [])),
+            latency_ms=item["latency_ms"],
+            expertise_mode=item["expertise_mode"],
+        )
+        for item in data
+    ]
+
+
 async def collect_all_chatbot_responses(
     cases: list[TestCase], config: EvalConfig
 ) -> list[CollectedResponse]:
-    """Collect responses for all test cases sequentially."""
-    all_responses: list[CollectedResponse] = []
-    for case in cases:
+    """Collect responses for all test cases sequentially.
+
+    Saves after each case for crash resilience. Resumes from where it
+    left off if valid partial results exist on disk.
+    """
+    existing = _load_existing(config)
+    completed_cases = {
+        r.case_id
+        for r in existing
+        if r.response_text and "[ERROR]" not in r.response_text
+    }
+
+    if completed_cases:
+        logger.info(
+            "Resuming: %d cases already collected, skipping them",
+            len(completed_cases),
+        )
+
+    all_responses: list[CollectedResponse] = list(existing) if completed_cases else []
+
+    for i, case in enumerate(cases, 1):
+        if case.case_id in completed_cases:
+            logger.info(
+                "Skipping case %d/%d: %s (already collected)", i, len(cases), case.case_id
+            )
+            continue
+
+        logger.info("Collecting case %d/%d: %s", i, len(cases), case.case_id)
         try:
-            responses = await collect_chatbot_response(case, config)
+            if config.use_simulated_user:
+                from evaluation.collectors.simulated_user import run_conversation_loop
+
+                responses = await run_conversation_loop(case, config)
+            else:
+                responses = await collect_chatbot_response(case, config)
             all_responses.extend(responses)
+            for r in responses:
+                logger.info(
+                    "  Turn %d: %d chars response", r.turn_number, len(r.response_text)
+                )
         except Exception as exc:
             all_responses.append(
                 CollectedResponse(
@@ -170,4 +245,6 @@ async def collect_all_chatbot_responses(
                     expertise_mode=case.expertise_mode,
                 )
             )
+        _save_incremental(all_responses, config)
+
     return all_responses

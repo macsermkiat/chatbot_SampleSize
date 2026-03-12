@@ -15,9 +15,9 @@ def build_methodology_rubric() -> Rubric:
         name="Methodology Agent Evaluation Rubric",
         description=(
             "Evaluates research methodology advice across 8 dimensions: "
-            "PICO formulation, study design, causal inference, bias identification, "
-            "ethical considerations, reporting standards, explanation quality, "
-            "and actionability."
+            "research question structuring, study design, causal inference, "
+            "bias identification, ethical considerations, reporting standards, "
+            "explanation quality, and actionability."
         ),
         dimensions=[
             _pico_dimension(),
@@ -35,10 +35,11 @@ def build_methodology_rubric() -> Rubric:
 def _pico_dimension() -> RubricDimension:
     return RubricDimension(
         dimension_id="M1",
-        name="PICO/PICOTS Formulation",
+        name="Research Question Structuring",
         description=(
-            "Does the response translate the clinical question into a structured "
-            "PICO or PICOTS framework with specific, operationalizable elements?"
+            "Does the response translate the clinical question into a clearly "
+            "structured, operationalizable research question? Any recognized "
+            "framework (PICO, PICOTS, GRADE, FINER, or equivalent) is acceptable."
         ),
         weight=1.0,
         anchors=[
@@ -46,16 +47,16 @@ def _pico_dimension() -> RubricDimension:
                 score=1,
                 label="Poor",
                 description=(
-                    "No PICO elements identified. The research question remains "
-                    "vague and unstructured. No attempt to define population, "
-                    "intervention, comparator, or outcome."
+                    "No structuring of the research question. It remains "
+                    "vague and unactionable. No attempt to define population, "
+                    "intervention/exposure, comparator, or outcome."
                 ),
             ),
             ScoreAnchor(
                 score=2,
                 label="Below Average",
                 description=(
-                    "1-2 PICO elements mentioned but incomplete or imprecise. "
+                    "1-2 key elements mentioned but incomplete or imprecise. "
                     "For example, population is vague ('patients with diabetes') "
                     "without age, setting, or severity criteria."
                 ),
@@ -64,30 +65,32 @@ def _pico_dimension() -> RubricDimension:
                 score=3,
                 label="Adequate",
                 description=(
-                    "P, I, C, O identified with reasonable specificity but lacks "
-                    "Timeframe and/or Setting. Minor imprecisions in element "
-                    "definitions that would need refinement."
+                    "Core elements (population, intervention/exposure, comparator, "
+                    "outcome) identified with reasonable specificity. Minor "
+                    "imprecisions or missing context (timeframe, setting) that "
+                    "would need refinement."
                 ),
             ),
             ScoreAnchor(
                 score=4,
                 label="Good",
                 description=(
-                    "Full PICOTS framework with specific operationalization. "
+                    "Fully structured question with specific operationalization. "
                     "Population has inclusion/exclusion criteria. Intervention "
-                    "and comparator are clearly defined. Outcomes include both "
-                    "primary and secondary. Minor gaps in timeframe or setting."
+                    "and comparator clearly defined. Outcomes include both "
+                    "primary and secondary. Context (timeframe, setting) addressed."
                 ),
             ),
             ScoreAnchor(
                 score=5,
                 label="Excellent",
                 description=(
-                    "Complete PICOTS with precise population descriptors "
+                    "Precisely operationalized question with population descriptors "
                     "(demographics, comorbidities, severity), specific "
                     "intervention details (dose, duration, route), explicit "
                     "counterfactual comparator, hard clinical outcomes with "
-                    "measurement method, clear timeframe, and defined setting."
+                    "measurement method, clear timeframe, and defined setting. "
+                    "Question is directly translatable to a study protocol."
                 ),
             ),
         ],
@@ -159,9 +162,11 @@ def _causal_inference_dimension() -> RubricDimension:
         dimension_id="M3",
         name="Causal Inference Rigor",
         description=(
-            "Does the response apply appropriate causal inference frameworks? "
-            "This includes Target Trial Emulation, DAGs, confounder identification, "
-            "and distinction between association and causation."
+            "Does the response apply appropriate causal reasoning? "
+            "This includes confounder identification, distinction between "
+            "association and causation, and use of any valid causal framework "
+            "(e.g., DAGs, Target Trial Emulation, multivariable adjustment, "
+            "propensity scores, instrumental variables)."
         ),
         weight=1.5,
         anchors=[
@@ -170,7 +175,7 @@ def _causal_inference_dimension() -> RubricDimension:
                 label="Poor",
                 description=(
                     "No mention of causal reasoning. Confuses association with "
-                    "causation. No discussion of confounding or causal frameworks."
+                    "causation. No discussion of confounding."
                 ),
             ),
             ScoreAnchor(
@@ -186,29 +191,33 @@ def _causal_inference_dimension() -> RubricDimension:
                 score=3,
                 label="Adequate",
                 description=(
-                    "Identifies key confounders. Mentions DAGs or statistical "
-                    "adjustment but without full specification. Distinguishes "
-                    "association from causation."
+                    "Identifies key confounders with a plan for adjustment "
+                    "(e.g., multivariable regression, stratification, matching). "
+                    "Distinguishes association from causation."
                 ),
             ),
             ScoreAnchor(
                 score=4,
                 label="Good",
                 description=(
-                    "Target Trial Emulation framework referenced for observational "
-                    "studies. DAG-based adjustment set identified. Time zero "
-                    "defined. Confounders vs mediators distinguished."
+                    "Systematic confounding control using any valid framework: "
+                    "DAG-based adjustment, propensity scores, Target Trial "
+                    "Emulation, or equivalent. Confounders vs mediators "
+                    "distinguished. Time zero or index date considerations "
+                    "addressed for longitudinal designs."
                 ),
             ),
             ScoreAnchor(
                 score=5,
                 label="Excellent",
                 description=(
-                    "Full TTE specification with grace periods for treatment "
-                    "initiation. Explicit collider vs confounder vs mediator "
-                    "distinction. Sensitivity analysis plan for unmeasured "
-                    "confounding (e.g., E-value). Instrumental variable or "
-                    "regression discontinuity considered where applicable."
+                    "Rigorous causal framework with explicit variable "
+                    "classification (confounder, mediator, collider). "
+                    "Sensitivity analysis for unmeasured confounding planned "
+                    "(e.g., E-value, quantitative bias analysis). Advanced "
+                    "techniques considered where applicable (instrumental "
+                    "variables, regression discontinuity, difference-in-"
+                    "differences). Assumptions of the chosen method stated."
                 ),
             ),
         ],
@@ -375,10 +384,10 @@ def _reporting_standards_dimension() -> RubricDimension:
                 label="Excellent",
                 description=(
                     "Correct guideline with specific checklist items highlighted "
-                    "as critical for this study. Mentions extensions if applicable "
-                    "(STROBE-ME for molecular epidemiology, CONSORT-PRO for "
-                    "patient-reported outcomes). Sensitivity analyses and "
-                    "flow diagram guidance included."
+                    "as critical for this study. Awareness of relevant extensions "
+                    "or specialized guidelines where applicable. Directs user to "
+                    "authoritative sources for the full checklist. Sensitivity "
+                    "analyses and flow diagram guidance included."
                 ),
             ),
         ],
@@ -434,10 +443,11 @@ def _explanation_quality_dimension() -> RubricDimension:
                 label="Excellent",
                 description=(
                     "Outstanding pedagogical quality. Uses analogies for complex "
-                    "concepts. Progressive disclosure of detail. Perfectly "
-                    "calibrated to expertise level (simple mode: no jargon, "
-                    "practical analogies; advanced mode: precise terminology "
-                    "with nuance). Concise without sacrificing completeness."
+                    "concepts. Layered explanation with progressive detail. "
+                    "Perfectly calibrated to expertise level (simple mode: no "
+                    "jargon, practical analogies; advanced mode: precise "
+                    "terminology with nuance). Concise without sacrificing "
+                    "completeness."
                 ),
             ),
         ],

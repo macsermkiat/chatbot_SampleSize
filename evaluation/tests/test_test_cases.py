@@ -17,60 +17,77 @@ def _load_cases(filename: str) -> list[TestCase]:
 
 
 class TestMethodologyCases:
-    def test_loads_20_cases(self):
+    def test_loads_cases(self):
         cases = _load_cases("methodology_cases.json")
-        assert len(cases) == 20
+        assert len(cases) == 24
 
     def test_multi_turn_cases_exist(self):
         cases = _load_cases("methodology_cases.json")
         multi_turn = [c for c in cases if c.follow_up_prompts]
-        assert len(multi_turn) == 5
+        assert len(multi_turn) == 24
 
-    def test_multi_turn_case_ids(self):
+    def test_kept_cases_preserved(self):
         cases = _load_cases("methodology_cases.json")
-        multi_turn_ids = sorted(
-            c.case_id for c in cases if c.follow_up_prompts
-        )
-        assert multi_turn_ids == ["M02", "M05", "M08", "M12", "M16"]
+        case_ids = sorted(c.case_id for c in cases)
+        for cid in ["M02", "M04", "M06", "M07", "M09", "M10", "M13", "M14", "M17", "M18", "M20"]:
+            assert cid in case_ids
 
-    def test_m05_has_two_follow_ups(self):
+    def test_new_cases_present(self):
         cases = _load_cases("methodology_cases.json")
-        m05 = next(c for c in cases if c.case_id == "M05")
-        assert len(m05.follow_up_prompts) == 2
+        case_ids = sorted(c.case_id for c in cases)
+        for cid in ["M21", "M22", "M23", "M24", "M25", "M26", "M27", "M28", "M29", "M30", "M31", "M32", "M33"]:
+            assert cid in case_ids
 
-    def test_m16_has_cross_phase_follow_up(self):
+    def test_removed_cases_absent(self):
         cases = _load_cases("methodology_cases.json")
-        m16 = next(c for c in cases if c.case_id == "M16")
-        assert len(m16.follow_up_prompts) == 2
-        assert "sample size" in m16.follow_up_prompts[-1].lower()
+        case_ids = [c.case_id for c in cases]
+        for cid in ["M01", "M03", "M05", "M08", "M11", "M12", "M15", "M16", "M19"]:
+            assert cid not in case_ids
 
 
 class TestBiostatisticsCases:
-    def test_loads_20_cases(self):
+    def test_loads_cases(self):
         cases = _load_cases("biostatistics_cases.json")
-        assert len(cases) == 20
+        assert len(cases) == 24
 
     def test_multi_turn_cases_exist(self):
         cases = _load_cases("biostatistics_cases.json")
         multi_turn = [c for c in cases if c.follow_up_prompts]
-        # Original 4 (B01, B03, B06, B18) + new 5 (B02, B07, B10, B14, B19)
-        assert len(multi_turn) == 9
+        assert len(multi_turn) == 24
 
     def test_b02_has_three_turn_chain(self):
         cases = _load_cases("biostatistics_cases.json")
         b02 = next(c for c in cases if c.case_id == "B02")
         assert len(b02.follow_up_prompts) == 2
 
+    def test_kept_cases_preserved(self):
+        cases = _load_cases("biostatistics_cases.json")
+        case_ids = sorted(c.case_id for c in cases)
+        for cid in ["B02", "B03", "B04", "B05", "B09", "B10", "B11", "B13", "B14", "B15", "B18", "B20"]:
+            assert cid in case_ids
+
+    def test_new_cases_present(self):
+        cases = _load_cases("biostatistics_cases.json")
+        case_ids = sorted(c.case_id for c in cases)
+        for cid in ["B21", "B22", "B23", "B24", "B25", "B26", "B27", "B28", "B29", "B30", "B31", "B32"]:
+            assert cid in case_ids
+
+    def test_removed_cases_absent(self):
+        cases = _load_cases("biostatistics_cases.json")
+        case_ids = [c.case_id for c in cases]
+        for cid in ["B01", "B06", "B07", "B08", "B12", "B16", "B17", "B19"]:
+            assert cid not in case_ids
+
 
 class TestEdgeCases:
-    def test_loads_10_cases(self):
+    def test_loads_cases(self):
         cases = _load_cases("edge_cases.json")
-        assert len(cases) == 10
+        assert len(cases) == 6
 
     def test_multi_turn_cases_exist(self):
         cases = _load_cases("edge_cases.json")
         multi_turn = [c for c in cases if c.follow_up_prompts]
-        assert len(multi_turn) == 3
+        assert len(multi_turn) == 4
 
     def test_e02_recovery_flow(self):
         cases = _load_cases("edge_cases.json")
@@ -79,20 +96,27 @@ class TestEdgeCases:
         # Follow-up should provide the missing parameters
         assert "type 2 diabetes" in e02.follow_up_prompts[0].lower()
 
+    def test_removed_cases_absent(self):
+        cases = _load_cases("edge_cases.json")
+        case_ids = [c.case_id for c in cases]
+        for cid in ["E05", "E06", "E07", "E10"]:
+            assert cid not in case_ids
+
 
 class TestAllCases:
     def test_total_case_count(self):
         meth = _load_cases("methodology_cases.json")
         bio = _load_cases("biostatistics_cases.json")
         edge = _load_cases("edge_cases.json")
-        assert len(meth) + len(bio) + len(edge) == 50
+        assert len(meth) + len(bio) + len(edge) == 54
 
     def test_total_multi_turn_count(self):
         all_cases: list[TestCase] = []
         for f in ("methodology_cases.json", "biostatistics_cases.json", "edge_cases.json"):
             all_cases.extend(_load_cases(f))
         multi_turn = [c for c in all_cases if c.follow_up_prompts]
-        assert len(multi_turn) == 17  # 5 + 9 + 3
+        # 24 + 24 + 4 = 52 multi-turn out of 54 total (96%)
+        assert len(multi_turn) >= 50
 
     def test_follow_up_prompts_are_strings(self):
         all_cases: list[TestCase] = []

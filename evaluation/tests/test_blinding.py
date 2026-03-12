@@ -112,6 +112,87 @@ class TestCreateBlindedPairs:
         assert pairs1[0].label_to_identity == pairs2[0].label_to_identity
 
 
+class TestRoutingLanguageBlinding:
+    """Phase 9.1: Verify routing language from SIMPLE_ORCHESTRATOR_ADDENDUM is stripped."""
+
+    def test_strips_connect_with_specialist(self):
+        response = _make_response(
+            text="Let me connect you with our numbers specialist to help."
+        )
+        blinded = blind_response(response, "system_a")
+        assert "connect you with our" not in blinded.text
+        assert "specialist" not in blinded.text
+
+    def test_strips_hand_off_to_expert(self):
+        response = _make_response(
+            text="I'll hand you off to our study design expert now."
+        )
+        blinded = blind_response(response, "system_a")
+        assert "hand you off" not in blinded.text
+
+    def test_strips_literature_search_specialist(self):
+        response = _make_response(
+            text="Our literature search specialist will find relevant papers."
+        )
+        blinded = blind_response(response, "system_a")
+        assert "literature search specialist" not in blinded.text
+
+    def test_strips_study_design_expert(self):
+        response = _make_response(text="The study design expert recommends an RCT.")
+        blinded = blind_response(response, "system_a")
+        assert "study design expert" not in blinded.text
+
+    def test_strips_numbers_specialist(self):
+        response = _make_response(text="Our numbers specialist can calculate that.")
+        blinded = blind_response(response, "system_a")
+        assert "numbers specialist" not in blinded.text
+
+    def test_strips_our_specialist_generic(self):
+        response = _make_response(text="Our specialist will take over from here.")
+        blinded = blind_response(response, "system_a")
+        assert "our specialist" not in blinded.text.lower()
+
+    def test_strips_our_expert_generic(self):
+        response = _make_response(text="Our expert will handle the methodology.")
+        blinded = blind_response(response, "system_a")
+        assert "our expert" not in blinded.text.lower()
+
+    def test_strips_senior_biostatistician(self):
+        response = _make_response(text="As a Senior Biostatistician, I recommend...")
+        blinded = blind_response(response, "system_a")
+        assert "Senior Biostatistician" not in blinded.text
+
+    def test_strips_expert_methodologist(self):
+        response = _make_response(text="The Expert Methodologist suggests...")
+        blinded = blind_response(response, "system_a")
+        assert "Expert Methodologist" not in blinded.text
+
+    def test_strips_clinical_data_scientist(self):
+        response = _make_response(text="As a Clinical Data Scientist, I'll code this.")
+        blinded = blind_response(response, "system_a")
+        assert "Clinical Data Scientist" not in blinded.text
+
+    def test_strips_front_desk(self):
+        response = _make_response(text="Think of me as the front desk.")
+        blinded = blind_response(response, "system_a")
+        assert "front desk" not in blinded.text.lower()
+
+    def test_strips_colleague(self):
+        response = _make_response(text="My colleague will help with the stats.")
+        blinded = blind_response(response, "system_a")
+        assert "colleague" not in blinded.text.lower()
+
+    def test_strips_im_going_to_hand(self):
+        response = _make_response(text="I'm going to hand this over to statistics.")
+        blinded = blind_response(response, "system_a")
+        assert "I'm going to hand" not in blinded.text
+
+    def test_strips_ill_connect_you(self):
+        response = _make_response(text="I'll connect you with the right team.")
+        blinded = blind_response(response, "system_a")
+        assert "I'll connect you" not in blinded.text
+
+
 class TestNormalizeMarkdown:
     def test_caps_heading_levels(self):
         text = "##### Deep heading\n###### Deeper"

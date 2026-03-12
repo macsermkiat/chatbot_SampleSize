@@ -83,10 +83,11 @@ def _test_selection_dimension() -> RubricDimension:
                 score=5,
                 label="Excellent",
                 description=(
-                    "Optimal test with full decision tree: variable types "
+                    "Optimal test with full decision reasoning: variable types "
                     "identified, distribution assessed, dependency structure "
-                    "analyzed. Primary and sensitivity test recommendations. "
-                    "Matches the diagnostic tool selection map exactly."
+                    "analyzed. Primary and sensitivity test recommendations "
+                    "with clear justification. Acknowledges valid alternatives "
+                    "and explains why the chosen test is preferred."
                 ),
             ),
         ],
@@ -144,9 +145,11 @@ def _sample_size_dimension() -> RubricDimension:
                 score=5,
                 label="Excellent",
                 description=(
-                    "Correct calculation with sensitivity analysis across "
-                    "effect sizes (small/medium/large). All parameters justified. "
-                    "Adjustments for dropout, clustering, multiplicity. "
+                    "Correct calculation with all parameters well-justified "
+                    "(from pilot data, literature, or clinical reasoning). "
+                    "Appropriate adjustments (dropout, clustering, multiplicity). "
+                    "Either a sensitivity analysis across plausible effect sizes "
+                    "OR a single well-justified effect size with rationale. "
                     "Clinically meaningful interpretation of the required "
                     "sample size in terms of feasibility."
                 ),
@@ -393,7 +396,7 @@ def _clinical_significance_dimension() -> RubricDimension:
 def _explanation_quality_dimension() -> RubricDimension:
     return RubricDimension(
         dimension_id="B7",
-        name="Explanation Quality (EL12)",
+        name="Explanation Quality",
         description=(
             "Is the statistical explanation clear and accessible? "
             "In simple mode, does it use plain language? In advanced mode, "
@@ -442,11 +445,11 @@ def _explanation_quality_dimension() -> RubricDimension:
                 score=5,
                 label="Excellent",
                 description=(
-                    "Outstanding EL12 quality. In simple mode: uses everyday "
-                    "analogies, no jargon, 3-5 bullet points. In advanced "
-                    "mode: precise terminology with nuance. All statistical "
-                    "concepts accurately explained. Layered explanation that "
-                    "the reader can follow progressively."
+                    "Outstanding pedagogical quality. In simple mode: uses "
+                    "everyday analogies, no jargon, concise bullet points. "
+                    "In advanced mode: precise terminology with nuance. All "
+                    "statistical concepts accurately explained. Layered "
+                    "explanation that the reader can follow progressively."
                 ),
             ),
         ],

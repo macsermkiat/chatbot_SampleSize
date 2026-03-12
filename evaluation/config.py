@@ -38,6 +38,11 @@ class EvalConfig(BaseSettings):
     analysis_dir: str = "evaluation/output/analysis"
     reports_dir: str = "evaluation/output/reports"
 
+    # -- Simulated User --
+    use_simulated_user: bool = True
+    simulated_user_model: str = "gpt5-nano"
+    max_conversation_turns: int = 10
+
     # -- Timeouts --
     chatbot_timeout_seconds: int = 120
     gpt5_timeout_seconds: int = 60

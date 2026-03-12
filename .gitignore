@@ -28,6 +28,10 @@ Thumbs.db
 .coverage
 htmlcov/
 .pytest_cache/
+test_results/
+
+# Evaluation output
+evaluation/output/
 
 # Claude Code
 .claude/

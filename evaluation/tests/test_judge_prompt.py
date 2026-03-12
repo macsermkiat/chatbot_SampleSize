@@ -138,3 +138,50 @@ class TestMultiTurnAddendum:
         assert "Completeness Across Turns" in MULTI_TURN_JUDGE_ADDENDUM
         assert "Clarification Quality" in MULTI_TURN_JUDGE_ADDENDUM
         assert "Progressive Depth" in MULTI_TURN_JUDGE_ADDENDUM
+
+    def test_clarification_quality_values_good_questions(self):
+        """Phase 9.3: Clarification Quality should value domain expertise neutrally."""
+        assert "domain expertise" in MULTI_TURN_JUDGE_ADDENDUM.lower()
+        assert "equally valid" in MULTI_TURN_JUDGE_ADDENDUM.lower() or \
+               "substantive quality" in MULTI_TURN_JUDGE_ADDENDUM.lower()
+
+
+class TestJudgeFairness:
+    """Phase 9.3: Verify judge prompt fairness toward clarification-first systems."""
+
+    def test_system_prompt_has_clarification_rule(self):
+        from evaluation.llm_judge.judge_prompt import JUDGE_SYSTEM_PROMPT
+        assert "clarifying questions" in JUDGE_SYSTEM_PROMPT.lower()
+        assert "equally valid" in JUDGE_SYSTEM_PROMPT.lower() or \
+               "neither approach" in JUDGE_SYSTEM_PROMPT.lower()
+
+    def test_system_prompt_has_multi_turn_evaluation_rule(self):
+        from evaluation.llm_judge.judge_prompt import JUDGE_SYSTEM_PROMPT
+        assert "final state" in JUDGE_SYSTEM_PROMPT.lower() or \
+               "complete conversation" in JUDGE_SYSTEM_PROMPT.lower()
+
+    def test_overall_quality_anchor_5_not_immediately_actionable(self):
+        """Anchor 5 should say 'actionable' not 'immediately actionable'."""
+        prompt = build_overall_quality_prompt(
+            case_context="Ctx",
+            user_prompt="Q",
+            response_text="A",
+            expertise_mode="simple",
+            agent_type="biostatistics",
+        )
+        # Should NOT require "immediately actionable"
+        assert "immediately actionable" not in prompt
+
+    def test_overall_quality_multi_turn_note(self):
+        """Multi-turn overall quality should have a note about complete conversation."""
+        prompt = build_overall_quality_prompt(
+            case_context="Ctx",
+            user_prompt="Q",
+            response_text="A",
+            expertise_mode="simple",
+            agent_type="biostatistics",
+            follow_up_prompts=["Q2"],
+            follow_up_responses=["A2"],
+        )
+        assert "complete" in prompt.lower()
+        assert "conversation" in prompt.lower()

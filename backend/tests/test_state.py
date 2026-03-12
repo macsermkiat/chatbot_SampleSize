@@ -56,7 +56,6 @@ class TestBiostatisticsOutput:
         assert out.need_info is False
         assert out.diagnostic_query == ""
         assert out.forwarded_message == ""
-        assert out.session_id == ""
 
 
 class TestCodingOutput:
@@ -65,7 +64,6 @@ class TestCodingOutput:
         assert out.python_script == ""
         assert out.agent_to_route_to == ""
         assert out.forwarded_message == ""
-        assert out.session_id == ""
 
     def test_with_script(self):
         out = CodingOutput(

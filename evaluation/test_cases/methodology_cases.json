@@ -2,33 +2,6 @@
   "version": "1.0.0",
   "cases": [
     {
-      "case_id": "M01",
-      "agent_target": "methodology",
-      "specialty": "cardiology",
-      "complexity": "basic",
-      "expertise_mode": "simple",
-      "prompt": "I want to study if aspirin prevents heart attacks. How should I design my study?",
-      "follow_up_prompts": [],
-      "methodology_ground_truth": {
-        "study_design": "randomized controlled trial",
-        "pico_elements": {
-          "P": "Adults at risk of cardiovascular events",
-          "I": "Aspirin (dose, frequency)",
-          "C": "Placebo",
-          "O": "Myocardial infarction incidence",
-          "T": "Follow-up period (years)",
-          "S": "Primary care or cardiology clinic"
-        },
-        "biases_to_identify": ["selection bias", "compliance bias", "attrition bias"],
-        "equator_guideline": "CONSORT",
-        "causal_framework": "",
-        "ethical_considerations": ["clinical equipoise", "informed consent"],
-        "key_confounders": ["age", "smoking status", "hypertension", "diabetes"]
-      },
-      "clinical_context": "Classic cardiovascular prevention question. Well-studied but tests fundamental ability to recommend RCT design for an interventional question.",
-      "rationale": "Basic interventional question. Tests PICO formulation and correct identification of RCT as the design of choice."
-    },
-    {
       "case_id": "M02",
       "agent_target": "methodology",
       "specialty": "cardiology",
@@ -58,40 +31,13 @@
       "rationale": "Tests TTE framework, immortal time bias awareness, time-varying confounding handling, and appropriate EHR study design."
     },
     {
-      "case_id": "M03",
-      "agent_target": "methodology",
-      "specialty": "oncology",
-      "complexity": "intermediate",
-      "expertise_mode": "simple",
-      "prompt": "I want to compare two chemotherapy regimens for stage III breast cancer. One is the standard treatment and the other is a new combination. What kind of study should I do?",
-      "follow_up_prompts": [],
-      "methodology_ground_truth": {
-        "study_design": "randomized controlled trial (phase III)",
-        "pico_elements": {
-          "P": "Women with stage III breast cancer",
-          "I": "New chemotherapy combination",
-          "C": "Standard chemotherapy regimen",
-          "O": "Overall survival, progression-free survival",
-          "T": "Until progression or death",
-          "S": "Oncology center(s)"
-        },
-        "biases_to_identify": ["performance bias", "detection bias", "attrition bias"],
-        "equator_guideline": "CONSORT",
-        "causal_framework": "",
-        "ethical_considerations": ["clinical equipoise", "informed consent", "data safety monitoring board", "interim analysis stopping rules"],
-        "key_confounders": ["tumor receptor status", "age", "performance status", "comorbidities"]
-      },
-      "clinical_context": "Standard oncology comparative effectiveness question requiring RCT with survival endpoints.",
-      "rationale": "Tests ability to recommend RCT for therapeutic comparison, mention DSMB, and appropriate oncology endpoints."
-    },
-    {
       "case_id": "M04",
       "agent_target": "methodology",
       "specialty": "infectious_disease",
       "complexity": "advanced",
       "expertise_mode": "advanced",
       "prompt": "Design a cluster-randomized stepped-wedge trial of an antimicrobial stewardship program across 12 ICUs in our hospital network. We want to measure the impact on antibiotic-resistant infection rates.",
-      "follow_up_prompts": [],
+      "follow_up_prompts": ["What reporting guidelines should I follow?"],
       "methodology_ground_truth": {
         "study_design": "cluster-randomized stepped-wedge trial",
         "pico_elements": {
@@ -112,43 +58,13 @@
       "rationale": "Tests knowledge of stepped-wedge design, cluster randomization, ICC considerations, and CONSORT cluster extension."
     },
     {
-      "case_id": "M05",
-      "agent_target": "methodology",
-      "specialty": "pediatrics",
-      "complexity": "basic",
-      "expertise_mode": "simple",
-      "prompt": "Does screen time cause ADHD in children? I want to study this.",
-      "follow_up_prompts": [
-        "Can you draw out what the DAG would look like for this, including the confounders you mentioned?",
-        "How would I test for unmeasured confounding in my results?"
-      ],
-      "methodology_ground_truth": {
-        "study_design": "prospective cohort study",
-        "pico_elements": {
-          "P": "Children (age range to be defined)",
-          "I": "High screen time exposure",
-          "C": "Low/no screen time",
-          "O": "ADHD diagnosis or symptom scores",
-          "T": "Follow-up period through development",
-          "S": "Community/school-based"
-        },
-        "biases_to_identify": ["reverse causation", "recall bias", "confounding by parenting style"],
-        "equator_guideline": "STROBE",
-        "causal_framework": "",
-        "ethical_considerations": ["parental consent", "child assent", "cannot ethically randomize screen time exposure"],
-        "key_confounders": ["parenting style", "socioeconomic status", "genetics/family history", "physical activity", "sleep duration"]
-      },
-      "clinical_context": "Common pediatric epidemiology question. Cannot randomize so must use observational design. Key issue is reverse causation (ADHD leads to more screen time).",
-      "rationale": "Tests ability to explain why RCT is not feasible, identify reverse causation, and recommend observational design."
-    },
-    {
       "case_id": "M06",
       "agent_target": "methodology",
       "specialty": "surgery",
       "complexity": "intermediate",
       "expertise_mode": "advanced",
       "prompt": "I want to compare outcomes of robotic-assisted versus laparoscopic cholecystectomy at our institution. We have 5 years of operative data.",
-      "follow_up_prompts": [],
+      "follow_up_prompts": ["Can you suggest specific DAG confounders I should adjust for?"],
       "methodology_ground_truth": {
         "study_design": "retrospective cohort study",
         "pico_elements": {
@@ -175,7 +91,7 @@
       "complexity": "advanced",
       "expertise_mode": "advanced",
       "prompt": "I want to design an N-of-1 trial series for optimizing SSRI dosing in treatment-resistant depression. Each patient would cycle through different doses with washout periods.",
-      "follow_up_prompts": [],
+      "follow_up_prompts": ["What are the key assumptions I need to verify?"],
       "methodology_ground_truth": {
         "study_design": "N-of-1 randomized crossover trial series",
         "pico_elements": {
@@ -196,42 +112,13 @@
       "rationale": "Tests knowledge of N-of-1 trial design, crossover methodology, carryover effects, and psychiatric research ethics."
     },
     {
-      "case_id": "M08",
-      "agent_target": "methodology",
-      "specialty": "emergency_medicine",
-      "complexity": "basic",
-      "expertise_mode": "simple",
-      "prompt": "I want to see if a new triage system in our ER reduces patient wait times compared to the old one. We already switched to the new system last month.",
-      "follow_up_prompts": [
-        "Which EQUATOR reporting guideline should I follow, and what are the key checklist items I need to address?"
-      ],
-      "methodology_ground_truth": {
-        "study_design": "interrupted time series or before-after study",
-        "pico_elements": {
-          "P": "ER patients",
-          "I": "New triage system",
-          "C": "Old triage system (historical control)",
-          "O": "Wait time to physician, door-to-disposition time",
-          "T": "Pre- and post-implementation periods",
-          "S": "Single emergency department"
-        },
-        "biases_to_identify": ["secular trends", "Hawthorne effect", "seasonal variation", "regression to the mean"],
-        "equator_guideline": "STROBE",
-        "causal_framework": "",
-        "ethical_considerations": ["quality improvement vs research distinction", "IRB exemption for QI"],
-        "key_confounders": ["patient volume", "acuity mix", "staffing levels", "time of day", "seasonal variation"]
-      },
-      "clinical_context": "QI-style question with historical comparison. Already implemented so cannot randomize. Tests ability to recommend quasi-experimental design.",
-      "rationale": "Tests handling of post-hoc evaluation design, interrupted time series recommendation, and QI vs research distinction."
-    },
-    {
       "case_id": "M09",
       "agent_target": "methodology",
       "specialty": "nephrology",
       "complexity": "intermediate",
       "expertise_mode": "advanced",
       "prompt": "We want to evaluate the association between AKI staging (KDIGO stages 1-3) and long-term CKD progression using data from 5 hospitals over 10 years.",
-      "follow_up_prompts": [],
+      "follow_up_prompts": ["What sample size considerations apply for this design?"],
       "methodology_ground_truth": {
         "study_design": "multicenter retrospective cohort study",
         "pico_elements": {
@@ -258,7 +145,7 @@
       "complexity": "advanced",
       "expertise_mode": "advanced",
       "prompt": "A state just implemented a policy restricting opioid prescriptions to 7 days for acute pain. I want to estimate the causal effect of this policy on overdose mortality rates. What design would capture this most rigorously?",
-      "follow_up_prompts": [],
+      "follow_up_prompts": ["How do I handle the multiple testing problem?"],
       "methodology_ground_truth": {
         "study_design": "difference-in-differences or regression discontinuity",
         "pico_elements": {
@@ -279,69 +166,13 @@
       "rationale": "Tests knowledge of quasi-experimental designs (DiD, RDD), parallel trends assumption, and policy evaluation methodology."
     },
     {
-      "case_id": "M11",
-      "agent_target": "methodology",
-      "specialty": "internal_medicine",
-      "complexity": "basic",
-      "expertise_mode": "simple",
-      "prompt": "What's the best way to study the relationship between coffee drinking and type 2 diabetes?",
-      "follow_up_prompts": [],
-      "methodology_ground_truth": {
-        "study_design": "prospective cohort study",
-        "pico_elements": {
-          "P": "Adults without diabetes at baseline",
-          "I": "Coffee consumption (dose categories)",
-          "C": "Non-coffee drinkers",
-          "O": "Type 2 diabetes incidence",
-          "T": "Long-term follow-up",
-          "S": "Community-based"
-        },
-        "biases_to_identify": ["recall bias", "residual confounding", "healthy user bias"],
-        "equator_guideline": "STROBE",
-        "causal_framework": "",
-        "ethical_considerations": ["cannot randomize lifestyle exposure long-term"],
-        "key_confounders": ["BMI", "physical activity", "diet", "smoking", "family history", "socioeconomic status"]
-      },
-      "clinical_context": "Nutritional epidemiology question. Cannot ethically randomize coffee consumption long-term.",
-      "rationale": "Basic exposure-outcome question testing ability to recommend observational design and identify confounders."
-    },
-    {
-      "case_id": "M12",
-      "agent_target": "methodology",
-      "specialty": "obstetrics",
-      "complexity": "intermediate",
-      "expertise_mode": "simple",
-      "prompt": "We want to know if a new prenatal vitamin formulation reduces the risk of neural tube defects compared to standard prenatal vitamins.",
-      "follow_up_prompts": [
-        "My IRB is concerned about equipoise since folate is already known to prevent NTDs. How do I address this in my ethics application?"
-      ],
-      "methodology_ground_truth": {
-        "study_design": "randomized controlled trial",
-        "pico_elements": {
-          "P": "Pregnant women in first trimester",
-          "I": "New prenatal vitamin formulation",
-          "C": "Standard prenatal vitamins",
-          "O": "Neural tube defect incidence",
-          "T": "Through delivery",
-          "S": "Prenatal care clinics"
-        },
-        "biases_to_identify": ["compliance bias", "detection bias", "attrition bias"],
-        "equator_guideline": "CONSORT",
-        "causal_framework": "",
-        "ethical_considerations": ["pregnant population vulnerability", "known benefit of folate", "equipoise requirement", "DSMB"],
-        "key_confounders": ["baseline folate levels", "dietary folate intake", "medication compliance", "genetic factors (MTHFR)"]
-      },
-      "clinical_context": "Prenatal intervention trial. Special ethical considerations for pregnant populations.",
-      "rationale": "Tests understanding of trials in vulnerable populations and ethical considerations for pregnancy research."
-    },
-    {
       "case_id": "M13",
       "agent_target": "methodology",
       "specialty": "radiology",
       "complexity": "intermediate",
       "expertise_mode": "advanced",
       "prompt": "We developed an AI algorithm to detect pneumothorax on chest X-rays. How should we design a study to validate its diagnostic accuracy compared to radiologist reading?",
-      "follow_up_prompts": [],
+      "follow_up_prompts": ["What sample size do I need for adequate precision of my sensitivity estimate?"],
       "methodology_ground_truth": {
         "study_design": "diagnostic accuracy study (cross-sectional)",
         "pico_elements": {
@@ -368,7 +199,7 @@
       "complexity": "basic",
       "expertise_mode": "advanced",
       "prompt": "I want to determine if metformin reduces cancer incidence in diabetic patients. We have a large claims database available.",
-      "follow_up_prompts": [],
+      "follow_up_prompts": ["How do I handle immortal time bias in my analysis plan?"],
       "methodology_ground_truth": {
         "study_design": "retrospective cohort study with active comparator",
         "pico_elements": {
@@ -389,70 +220,13 @@
       "rationale": "Tests ability to identify immortal time bias (historically problematic in metformin-cancer literature) and recommend active comparator design."
     },
     {
-      "case_id": "M15",
-      "agent_target": "methodology",
-      "specialty": "public_health",
-      "complexity": "basic",
-      "expertise_mode": "simple",
-      "prompt": "I want to do a systematic review on the effectiveness of hand hygiene programs in reducing hospital-acquired infections.",
-      "follow_up_prompts": [],
-      "methodology_ground_truth": {
-        "study_design": "systematic review and meta-analysis",
-        "pico_elements": {
-          "P": "Healthcare facilities",
-          "I": "Hand hygiene improvement programs",
-          "C": "Standard practice or no intervention",
-          "O": "Hospital-acquired infection rates",
-          "T": "Variable across studies",
-          "S": "Hospitals and healthcare facilities"
-        },
-        "biases_to_identify": ["publication bias", "heterogeneity across studies", "quality variation"],
-        "equator_guideline": "PRISMA",
-        "causal_framework": "",
-        "ethical_considerations": ["comprehensive search obligation", "registration with PROSPERO"],
-        "key_confounders": []
-      },
-      "clinical_context": "Basic systematic review question. Tests knowledge of PRISMA and meta-analysis methodology.",
-      "rationale": "Tests ability to guide systematic review design, PRISMA compliance, and PROSPERO registration."
-    },
-    {
-      "case_id": "M16",
-      "agent_target": "methodology",
-      "specialty": "orthopedics",
-      "complexity": "intermediate",
-      "expertise_mode": "simple",
-      "prompt": "We want to know if physical therapy is as good as surgery for rotator cuff tears. We can't randomize because patients choose their treatment.",
-      "follow_up_prompts": [
-        "The PI wants to add a third arm with combined therapy. How does this change the study design?",
-        "What about the sample size implications of adding this third group?"
-      ],
-      "methodology_ground_truth": {
-        "study_design": "prospective cohort with propensity score matching",
-        "pico_elements": {
-          "P": "Patients with rotator cuff tears",
-          "I": "Physical therapy",
-          "C": "Surgical repair",
-          "O": "Shoulder function scores, pain, return to activity",
-          "T": "12-24 months follow-up",
-          "S": "Orthopedic practice"
-        },
-        "biases_to_identify": ["confounding by indication", "selection bias", "attrition bias", "measurement bias"],
-        "equator_guideline": "STROBE",
-        "causal_framework": "Target Trial Emulation",
-        "ethical_considerations": ["patient preference design", "no true randomization possible"],
-        "key_confounders": ["tear size", "age", "activity level", "comorbidities", "patient expectations"]
-      },
-      "clinical_context": "Non-inferiority/equivalence design challenge when randomization is not feasible due to patient preference.",
-      "rationale": "Tests handling of non-randomizable comparison, propensity score methodology explanation, and patient preference research."
-    },
-    {
       "case_id": "M17",
       "agent_target": "methodology",
       "specialty": "dermatology",
       "complexity": "basic",
       "expertise_mode": "advanced",
       "prompt": "I want to assess the prevalence of atopic dermatitis in schoolchildren in our district and identify risk factors.",
-      "follow_up_prompts": [],
+      "follow_up_prompts": ["What sampling strategy should I use to get a representative sample?"],
       "methodology_ground_truth": {
         "study_design": "cross-sectional study",
         "pico_elements": {
@@ -479,7 +253,7 @@
       "complexity": "advanced",
       "expertise_mode": "advanced",
       "prompt": "Design a pragmatic trial comparing proton pump inhibitors vs H2 blockers for GERD management in primary care, using a Zelen randomization design to minimize crossover.",
-      "follow_up_prompts": [],
+      "follow_up_prompts": ["What are the key ethical considerations for the Zelen design?"],
       "methodology_ground_truth": {
         "study_design": "pragmatic RCT with Zelen randomization",
         "pico_elements": {
@@ -500,40 +274,13 @@
       "rationale": "Tests understanding of Zelen randomization, pragmatic vs explanatory trial spectrum, PRECIS-2 framework."
     },
     {
-      "case_id": "M19",
-      "agent_target": "methodology",
-      "specialty": "geriatrics",
-      "complexity": "intermediate",
-      "expertise_mode": "simple",
-      "prompt": "We want to study if a falls prevention program reduces hip fractures in nursing home residents. Multiple nursing homes would participate.",
-      "follow_up_prompts": [],
-      "methodology_ground_truth": {
-        "study_design": "cluster-randomized controlled trial",
-        "pico_elements": {
-          "P": "Nursing home residents",
-          "I": "Falls prevention program",
-          "C": "Usual care",
-          "O": "Hip fracture incidence, fall rate",
-          "T": "12-24 months",
-          "S": "Multiple nursing homes"
-        },
-        "biases_to_identify": ["contamination between clusters", "clustering effect", "differential attrition (death)", "competing risks"],
-        "equator_guideline": "CONSORT (cluster extension)",
-        "causal_framework": "",
-        "ethical_considerations": ["capacity to consent", "surrogate consent", "vulnerable population protections"],
-        "key_confounders": ["baseline fall risk", "nursing home staffing", "patient mix", "osteoporosis prevalence"]
-      },
-      "clinical_context": "Cluster RCT in geriatric population with special consent and clustering considerations.",
-      "rationale": "Tests cluster randomization understanding, vulnerable population ethics, and competing risks awareness."
-    },
-    {
       "case_id": "M20",
       "agent_target": "methodology",
       "specialty": "hematology",
       "complexity": "intermediate",
       "expertise_mode": "advanced",
       "prompt": "We want to investigate whether a specific gene polymorphism is associated with venous thromboembolism risk. We have access to a biobank with stored samples from cases and matched controls.",
-      "follow_up_prompts": [],
+      "follow_up_prompts": ["What are the STREGA reporting requirements for genetic association studies?"],
       "methodology_ground_truth": {
         "study_design": "case-control study (nested or matched)",
         "pico_elements": {
@@ -552,6 +299,388 @@
       },
       "clinical_context": "Genetic association study with biobank data. Special reporting guidelines (STREGA) and population stratification concerns.",
       "rationale": "Tests knowledge of case-control design for rare outcomes, genetic study methodology, and STREGA reporting."
+    },
+    {
+      "case_id": "M21",
+      "agent_target": "methodology",
+      "specialty": "neurology",
+      "complexity": "intermediate",
+      "expertise_mode": "advanced",
+      "prompt": "We are planning a multicenter RCT to evaluate whether early intensive blood pressure lowering (target SBP <120 mmHg) reduces disability at 90 days compared to standard management (target SBP <180 mmHg) in acute intracerebral hemorrhage patients presenting within 6 hours of symptom onset.",
+      "follow_up_prompts": [
+        "What interim analysis strategy should we use given the potential for harm in the intensive arm?",
+        "How should we handle the ordinal mRS outcome in the primary analysis?"
+      ],
+      "methodology_ground_truth": {
+        "study_design": "multicenter randomized controlled trial with adaptive interim monitoring",
+        "pico_elements": {
+          "P": "Adults with acute intracerebral hemorrhage within 6 hours of onset",
+          "I": "Intensive blood pressure lowering (target SBP <120 mmHg)",
+          "C": "Standard blood pressure management (target SBP <180 mmHg)",
+          "O": "Modified Rankin Scale (mRS) at 90 days",
+          "T": "90 days primary endpoint; 12-month secondary",
+          "S": "Multicenter stroke units/ICUs"
+        },
+        "biases_to_identify": ["performance bias from unblinded intervention", "attrition bias from early mortality", "protocol non-adherence due to clinical concern", "ascertainment bias in mRS assessment"],
+        "equator_guideline": "CONSORT",
+        "causal_framework": "",
+        "ethical_considerations": ["emergency consent waiver", "surrogate consent for incapacitated patients", "DSMB for safety monitoring", "stopping rules for harm"],
+        "key_confounders": ["hemorrhage volume", "hemorrhage location", "GCS at presentation", "anticoagulant use", "age", "time to treatment"]
+      },
+      "clinical_context": "Critical care RCT in acute stroke with ethical complexities around emergency consent and potential for harm. Builds on INTERACT2 and ATACH-2 trials.",
+      "rationale": "Tests RCT design with adaptive monitoring, emergency consent procedures, ordinal outcome analysis (shift analysis), and safety stopping rules."
+    },
+    {
+      "case_id": "M22",
+      "agent_target": "methodology",
+      "specialty": "anesthesiology",
+      "complexity": "basic",
+      "expertise_mode": "simple",
+      "prompt": "We want to test whether a new nerve block technique provides better pain control after knee replacement surgery compared to the standard technique. We can randomize patients. How should we design this?",
+      "follow_up_prompts": [
+        "Should I blind the anesthesiologist performing the block, or just the outcome assessor?"
+      ],
+      "methodology_ground_truth": {
+        "study_design": "randomized controlled trial (double-blind where feasible)",
+        "pico_elements": {
+          "P": "Adults undergoing primary total knee arthroplasty",
+          "I": "New nerve block technique",
+          "C": "Standard nerve block technique",
+          "O": "Pain scores (NRS) at 24 hours, opioid consumption, time to first walk",
+          "T": "48-72 hours postoperative; 30-day secondary",
+          "S": "Single-center surgical department"
+        },
+        "biases_to_identify": ["performance bias if unblinded operator", "detection bias in pain assessment", "co-intervention bias from rescue analgesia"],
+        "equator_guideline": "CONSORT",
+        "causal_framework": "",
+        "ethical_considerations": ["informed consent preoperatively", "rescue analgesia protocol", "clinical equipoise"],
+        "key_confounders": ["BMI", "preoperative opioid use", "anxiety level", "surgical complexity", "anesthesiologist experience"]
+      },
+      "clinical_context": "Straightforward surgical anesthesia RCT. Tests understanding of blinding challenges when the interventionist performs a procedure.",
+      "rationale": "Tests basic RCT design including blinding feasibility in procedural interventions and appropriate pain outcome selection."
+    },
+    {
+      "case_id": "M23",
+      "agent_target": "methodology",
+      "specialty": "pulmonology",
+      "complexity": "intermediate",
+      "expertise_mode": "advanced",
+      "prompt": "We want to study whether occupational dust exposure in coal miners leads to higher rates of COPD over a 15-year period. We plan to enroll miners at the start of their employment and follow them prospectively.",
+      "follow_up_prompts": [
+        "How should we handle the healthy worker effect?",
+        "What exposure assessment methods would strengthen causal inference?"
+      ],
+      "methodology_ground_truth": {
+        "study_design": "prospective occupational cohort study",
+        "pico_elements": {
+          "P": "Newly employed coal miners",
+          "I": "Cumulative occupational dust exposure (quantified)",
+          "C": "Low-exposure or office-based workers in the same company",
+          "O": "COPD incidence (spirometry-confirmed FEV1/FVC < 0.70)",
+          "T": "15-year follow-up",
+          "S": "Coal mining industry, multiple sites"
+        },
+        "biases_to_identify": ["healthy worker effect", "exposure misclassification", "loss to follow-up", "survivor bias"],
+        "equator_guideline": "STROBE",
+        "causal_framework": "DAG with healthy worker survivor bias structure",
+        "ethical_considerations": ["occupational health regulations", "duty to inform workers of risk", "employer involvement in research"],
+        "key_confounders": ["smoking status", "personal protective equipment use", "pre-existing respiratory disease", "socioeconomic status", "concurrent chemical exposures"]
+      },
+      "clinical_context": "Classic occupational epidemiology cohort. The healthy worker effect is the central bias: workers who become ill leave the workforce, making remaining workers appear healthier.",
+      "rationale": "Tests prospective cohort design with occupational exposure quantification, healthy worker effect awareness, and time-varying exposure analysis."
+    },
+    {
+      "case_id": "M24",
+      "agent_target": "methodology",
+      "specialty": "hepatology",
+      "complexity": "advanced",
+      "expertise_mode": "advanced",
+      "prompt": "We have a national hepatitis C registry with 10 years of follow-up data. We want to assess whether achieving sustained virologic response (SVR) with direct-acting antivirals reduces the risk of hepatocellular carcinoma compared to non-SVR patients. How should we handle the guarantee-time bias inherent in defining SVR?",
+      "follow_up_prompts": [
+        "Should I use a landmark analysis or a time-dependent covariate approach?"
+      ],
+      "methodology_ground_truth": {
+        "study_design": "retrospective cohort with landmark analysis or time-dependent Cox model",
+        "pico_elements": {
+          "P": "Hepatitis C patients treated with direct-acting antivirals in national registry",
+          "I": "Achievement of SVR (defined at 12 weeks post-treatment)",
+          "C": "Non-SVR (treatment failure or relapse)",
+          "O": "Hepatocellular carcinoma incidence",
+          "T": "From landmark time point to HCC diagnosis or censoring",
+          "S": "National hepatitis C registry"
+        },
+        "biases_to_identify": ["guarantee-time bias", "immortal time bias", "confounding by severity", "surveillance bias", "competing risks (liver-related death)"],
+        "equator_guideline": "STROBE",
+        "causal_framework": "Target Trial Emulation with landmark analysis",
+        "ethical_considerations": ["registry data governance", "de-identification of national registry data", "implications for treatment guidelines"],
+        "key_confounders": ["cirrhosis stage (METAVIR/FIB-4)", "alcohol use", "diabetes", "prior HCC surveillance adherence", "genotype", "prior treatment history"]
+      },
+      "clinical_context": "Retrospective cohort from a registry with guarantee-time bias as the central methodological challenge. SVR is only defined 12 weeks after treatment ends, creating immortal time.",
+      "rationale": "Tests advanced cohort analysis techniques for registry data, including landmark analysis, guarantee-time bias, and competing risks."
+    },
+    {
+      "case_id": "M25",
+      "agent_target": "methodology",
+      "specialty": "emergency_medicine",
+      "complexity": "basic",
+      "expertise_mode": "simple",
+      "prompt": "We want to describe the clinical characteristics, presentations, and outcomes of patients diagnosed with heat stroke during a summer heat wave at our emergency department. We treated about 85 cases over 3 months.",
+      "follow_up_prompts": [
+        "Should we include a comparison group or is a descriptive approach sufficient?"
+      ],
+      "methodology_ground_truth": {
+        "study_design": "case series",
+        "pico_elements": {
+          "P": "Patients presenting with heat stroke during summer heat wave",
+          "I": "Not applicable (descriptive study)",
+          "C": "Not applicable",
+          "O": "Clinical presentations, treatments administered, ICU admission rate, mortality",
+          "T": "3-month heat wave period",
+          "S": "Single emergency department"
+        },
+        "biases_to_identify": ["selection bias (only captured at one ED)", "ascertainment bias in diagnosis", "missing data bias"],
+        "equator_guideline": "CARE (for case reports/series)",
+        "causal_framework": "",
+        "ethical_considerations": ["retrospective chart review consent waiver", "patient de-identification"],
+        "key_confounders": []
+      },
+      "clinical_context": "Descriptive case series of a time-limited clinical event. No comparison group; the goal is to characterize the clinical spectrum and outcomes.",
+      "rationale": "Tests understanding of when a case series is the appropriate design and correct identification of CARE reporting guidelines."
+    },
+    {
+      "case_id": "M26",
+      "agent_target": "methodology",
+      "specialty": "public_health",
+      "complexity": "intermediate",
+      "expertise_mode": "advanced",
+      "prompt": "We want to examine whether country-level per capita sugar consumption is associated with national diabetes prevalence rates across 120 countries. We have WHO and FAO data available.",
+      "follow_up_prompts": [
+        "How do I address the ecological fallacy in my discussion?",
+        "What sensitivity analyses would strengthen this study?"
+      ],
+      "methodology_ground_truth": {
+        "study_design": "ecological study (cross-national)",
+        "pico_elements": {
+          "P": "120 countries (unit of analysis)",
+          "I": "Per capita sugar consumption (country-level exposure)",
+          "C": "Countries with lower sugar consumption",
+          "O": "National diabetes prevalence rate",
+          "T": "Cross-sectional (single time point or averaged over period)",
+          "S": "Global, using WHO/FAO aggregate data"
+        },
+        "biases_to_identify": ["ecological fallacy", "aggregation bias", "confounding by national wealth", "measurement heterogeneity across countries"],
+        "equator_guideline": "STROBE",
+        "causal_framework": "",
+        "ethical_considerations": ["responsible use of aggregate data", "avoiding causal language", "equity in data availability across countries"],
+        "key_confounders": ["GDP per capita", "urbanization", "physical activity levels", "healthcare access", "obesity rates", "diagnostic capacity"]
+      },
+      "clinical_context": "Ecological study using aggregate country-level data. The ecological fallacy is the central limitation: country-level associations may not hold at the individual level.",
+      "rationale": "Tests understanding of ecological study design, the ecological fallacy, and appropriate causal language for aggregate data."
+    },
+    {
+      "case_id": "M27",
+      "agent_target": "methodology",
+      "specialty": "rheumatology",
+      "complexity": "intermediate",
+      "expertise_mode": "simple",
+      "prompt": "I want to conduct a systematic review and meta-analysis of all randomized trials comparing biologic DMARDs to conventional DMARDs for rheumatoid arthritis remission rates.",
+      "follow_up_prompts": [
+        "How do I handle the fact that there are 6 different biologic agents in the literature? Should I pool them or analyze separately?",
+        "What if the heterogeneity is very high (I2 > 75%)?"
+      ],
+      "methodology_ground_truth": {
+        "study_design": "systematic review and network meta-analysis",
+        "pico_elements": {
+          "P": "Adults with rheumatoid arthritis",
+          "I": "Biologic DMARDs (multiple agents)",
+          "C": "Conventional DMARDs (methotrexate, sulfasalazine, etc.)",
+          "O": "ACR50 response, DAS28 remission rate",
+          "T": "Variable across included trials",
+          "S": "Published randomized trials"
+        },
+        "biases_to_identify": ["publication bias", "within-study risk of bias", "heterogeneity from different biologics", "outcome reporting bias"],
+        "equator_guideline": "PRISMA (with PRISMA-NMA extension)",
+        "causal_framework": "",
+        "ethical_considerations": ["PROSPERO registration", "comprehensive search obligation", "transparent reporting of included/excluded studies"],
+        "key_confounders": []
+      },
+      "clinical_context": "Systematic review with multiple treatment comparisons suggesting network meta-analysis. I2 assessment and subgroup analysis by biologic class are central methodological issues.",
+      "rationale": "Tests systematic review methodology, understanding of network meta-analysis for multiple treatment comparisons, and heterogeneity assessment."
+    },
+    {
+      "case_id": "M28",
+      "agent_target": "methodology",
+      "specialty": "oncology",
+      "complexity": "advanced",
+      "expertise_mode": "advanced",
+      "prompt": "I want to synthesize the evidence on immune checkpoint inhibitor-related cardiotoxicity. The literature includes RCTs, cohort studies, case series, and pharmacovigilance reports. How should I approach this meta-analysis given the heterogeneous study designs?",
+      "follow_up_prompts": [
+        "How do I grade the certainty of evidence using GRADE when mixing observational and experimental data?"
+      ],
+      "methodology_ground_truth": {
+        "study_design": "systematic review with meta-analysis of proportions (pooled incidence)",
+        "pico_elements": {
+          "P": "Cancer patients receiving immune checkpoint inhibitors",
+          "I": "Exposure to ICIs (anti-PD-1, anti-PD-L1, anti-CTLA-4)",
+          "C": "Non-ICI chemotherapy (where available) or no comparator for incidence",
+          "O": "Cardiotoxicity incidence (myocarditis, heart failure, arrhythmia), case fatality rate",
+          "T": "Variable across study types",
+          "S": "Published literature and pharmacovigilance databases"
+        },
+        "biases_to_identify": ["reporting bias in pharmacovigilance data", "detection bias from variable cardiac monitoring", "publication bias toward severe cases", "heterogeneity from different study designs"],
+        "equator_guideline": "PRISMA; MOOSE for observational studies",
+        "causal_framework": "",
+        "ethical_considerations": ["balanced reporting of rare serious adverse events", "PROSPERO registration", "impact on clinical practice guidelines"],
+        "key_confounders": []
+      },
+      "clinical_context": "Meta-analysis of adverse event data across heterogeneous study designs. Requires meta-analysis of proportions, sensitivity analyses by study design, and GRADE assessment.",
+      "rationale": "Tests advanced systematic review methodology including meta-analysis of proportions, handling design heterogeneity, MOOSE guidelines, and GRADE framework."
+    },
+    {
+      "case_id": "M29",
+      "agent_target": "methodology",
+      "specialty": "health_economics",
+      "complexity": "intermediate",
+      "expertise_mode": "simple",
+      "prompt": "Our hospital is considering adopting a new rapid sepsis diagnostic test that costs $300 per test versus the current blood culture method at $50 per test. The new test gives results in 2 hours instead of 48 hours. How do I design a study to determine if the new test is worth the extra cost?",
+      "follow_up_prompts": [
+        "What perspective should I take -- hospital, payer, or societal?",
+        "How do I handle uncertainty in my cost estimates?"
+      ],
+      "methodology_ground_truth": {
+        "study_design": "cost-effectiveness analysis (decision-analytic model or trial-based)",
+        "pico_elements": {
+          "P": "Patients with suspected sepsis in the emergency department",
+          "I": "Rapid sepsis diagnostic test ($300, 2-hour turnaround)",
+          "C": "Standard blood culture ($50, 48-hour turnaround)",
+          "O": "Incremental cost-effectiveness ratio (ICER), QALYs, costs",
+          "T": "Time horizon covering acute episode through 1-year follow-up",
+          "S": "Hospital emergency department"
+        },
+        "biases_to_identify": ["cost data completeness", "utility value selection bias", "discounting assumptions", "model structure bias"],
+        "equator_guideline": "CHEERS",
+        "causal_framework": "",
+        "ethical_considerations": ["equity of access to expensive diagnostics", "willingness-to-pay threshold selection", "opportunity cost for the hospital"],
+        "key_confounders": ["sepsis severity mix", "antibiotic resistance patterns", "ICU utilization", "mortality rates", "length of stay"]
+      },
+      "clinical_context": "Health economic evaluation of a rapid diagnostic test. Requires decision-analytic modeling with cost and QALY estimation. CHEERS checklist is the appropriate reporting guideline.",
+      "rationale": "Tests understanding of cost-effectiveness analysis design, ICER calculation concept, perspective selection, and CHEERS reporting."
+    },
+    {
+      "case_id": "M30",
+      "agent_target": "methodology",
+      "specialty": "health_economics",
+      "complexity": "advanced",
+      "expertise_mode": "advanced",
+      "prompt": "Design a cost-utility analysis comparing three treatment strategies for newly diagnosed multiple myeloma: standard chemotherapy, autologous stem cell transplant, and CAR-T cell therapy. We need a lifetime horizon Markov model.",
+      "follow_up_prompts": [
+        "How many health states should the Markov model include and what cycle length is appropriate?"
+      ],
+      "methodology_ground_truth": {
+        "study_design": "model-based cost-utility analysis (Markov cohort model)",
+        "pico_elements": {
+          "P": "Newly diagnosed multiple myeloma patients eligible for intensive therapy",
+          "I": "CAR-T cell therapy; autologous stem cell transplant",
+          "C": "Standard chemotherapy (e.g., VRd regimen)",
+          "O": "QALYs, lifetime costs, ICER",
+          "T": "Lifetime horizon (20-30 years or until death)",
+          "S": "Healthcare system (payer perspective)"
+        },
+        "biases_to_identify": ["model structure uncertainty", "parameter uncertainty from immature survival data for CAR-T", "extrapolation bias", "utility value transferability"],
+        "equator_guideline": "CHEERS 2022",
+        "causal_framework": "",
+        "ethical_considerations": ["equity implications of very high-cost therapies", "value-based pricing considerations", "patient access and affordability"],
+        "key_confounders": ["response rates by therapy", "progression-free survival curves", "adverse event costs", "long-term maintenance therapy costs", "discounting rate"]
+      },
+      "clinical_context": "Complex Markov model for comparing three treatment strategies including a novel high-cost therapy. Requires lifetime horizon, probabilistic sensitivity analysis, and value of information analysis.",
+      "rationale": "Tests advanced health economic modeling including Markov model structure, multi-arm comparison, probabilistic sensitivity analysis, and CHEERS 2022 compliance."
+    },
+    {
+      "case_id": "M31",
+      "agent_target": "methodology",
+      "specialty": "cardiology",
+      "complexity": "intermediate",
+      "expertise_mode": "advanced",
+      "prompt": "We have access to a large national cardiovascular registry with data on 200,000 patients who received either drug-eluting stents or coronary artery bypass grafting for multivessel coronary artery disease. We want to estimate the real-world comparative effectiveness on 5-year mortality. How should we emulate a target trial from this registry?",
+      "follow_up_prompts": [
+        "How do we define the time-zero and eligibility criteria to avoid immortal time bias?"
+      ],
+      "methodology_ground_truth": {
+        "study_design": "target trial emulation using registry data",
+        "pico_elements": {
+          "P": "Adults with multivessel CAD in national cardiovascular registry",
+          "I": "Drug-eluting stent (PCI)",
+          "C": "Coronary artery bypass grafting (CABG)",
+          "O": "5-year all-cause mortality, MACE",
+          "T": "5 years from treatment decision (time zero)",
+          "S": "National cardiovascular registry"
+        },
+        "biases_to_identify": ["confounding by indication", "immortal time bias", "selection bias by operator availability", "competing risks", "treatment crossover"],
+        "equator_guideline": "STROBE; TARGET trial emulation reporting framework",
+        "causal_framework": "Target Trial Emulation",
+        "ethical_considerations": ["registry data governance and secondary use", "patient consent for registry participation", "clinical implications of observational evidence for surgical decisions"],
+        "key_confounders": ["SYNTAX score", "left ventricular function", "diabetes", "age", "renal function", "number of diseased vessels", "operator volume"]
+      },
+      "clinical_context": "Real-world evidence study using target trial emulation from a cardiovascular registry. The SYNTAX score and clinical presentation are key confounders for treatment selection.",
+      "rationale": "Tests target trial emulation methodology including time-zero definition, eligibility specification, and handling of confounding by indication in surgical vs percutaneous comparisons."
+    },
+    {
+      "case_id": "M32",
+      "agent_target": "methodology",
+      "specialty": "psychiatry",
+      "complexity": "advanced",
+      "expertise_mode": "advanced",
+      "prompt": "We want to use linked EHR and insurance claims data to evaluate whether long-acting injectable antipsychotics reduce psychiatric hospitalizations compared to oral antipsychotics in patients with schizophrenia. Patients who receive LAIs are often those with poor adherence to oral medication. How do we address this fundamental confounding?",
+      "follow_up_prompts": [
+        "Would an instrumental variable approach using distance to LAI-prescribing clinic work here?"
+      ],
+      "methodology_ground_truth": {
+        "study_design": "retrospective cohort with instrumental variable or marginal structural model",
+        "pico_elements": {
+          "P": "Adults with schizophrenia in linked EHR-claims data",
+          "I": "Initiation of long-acting injectable antipsychotic",
+          "C": "Continuation of oral antipsychotic",
+          "O": "Psychiatric hospitalization within 12 months",
+          "T": "12-month follow-up from treatment initiation",
+          "S": "Linked EHR and insurance claims databases"
+        },
+        "biases_to_identify": ["confounding by indication (adherence-related)", "healthy adherer bias", "time-varying confounding", "informative censoring from insurance loss"],
+        "equator_guideline": "STROBE; RECORD for routinely collected data",
+        "causal_framework": "Instrumental variable analysis or marginal structural models",
+        "ethical_considerations": ["vulnerable population protections", "data linkage privacy", "clinical implications for prescribing policy"],
+        "key_confounders": ["prior hospitalization count", "medication adherence history", "substance use disorders", "housing stability", "insurance continuity", "illness severity (CGI)"]
+      },
+      "clinical_context": "Real-world evidence with fundamental confounding by indication: patients receiving LAIs differ systematically from oral-antipsychotic patients. Instrumental variable (e.g., provider prescribing preference or distance to clinic) may address unmeasured confounding.",
+      "rationale": "Tests advanced causal inference methods for real-world evidence including instrumental variables, marginal structural models, and handling of confounding by indication in psychiatry."
+    },
+    {
+      "case_id": "M33",
+      "agent_target": "methodology",
+      "specialty": "oncology",
+      "complexity": "basic",
+      "expertise_mode": "simple",
+      "prompt": "Our cancer center wants to pragmatically compare the effectiveness of two FDA-approved immunotherapy regimens for advanced non-small cell lung cancer as used in routine clinical practice. We want results generalizable to real-world patients who are often excluded from pivotal trials (elderly, comorbid, poor performance status). How should we design this?",
+      "follow_up_prompts": [
+        "What makes a pragmatic trial different from an explanatory trial?"
+      ],
+      "methodology_ground_truth": {
+        "study_design": "pragmatic randomized controlled trial",
+        "pico_elements": {
+          "P": "Adults with advanced NSCLC eligible for immunotherapy in routine clinical practice (broad eligibility)",
+          "I": "Immunotherapy regimen A (e.g., pembrolizumab-based)",
+          "C": "Immunotherapy regimen B (e.g., nivolumab-based)",
+          "O": "Overall survival, real-world progression-free survival, patient-reported outcomes",
+          "T": "Until death or 24-month follow-up",
+          "S": "Multiple community and academic oncology practices"
+        },
+        "biases_to_identify": ["contamination from crossover at progression", "loss to follow-up", "co-intervention variability", "site-level differences in supportive care"],
+        "equator_guideline": "CONSORT (pragmatic extension); PRECIS-2",
+        "causal_framework": "",
+        "ethical_considerations": ["equipoise between two approved therapies", "broad eligibility inclusion of vulnerable populations", "consent processes in pragmatic design"],
+        "key_confounders": ["PD-L1 expression", "performance status", "comorbidity burden", "prior treatment lines", "histology subtype"]
+      },
+      "clinical_context": "Pragmatic trial comparing two approved treatments in real-world oncology populations. The PRECIS-2 tool helps position the trial on the explanatory-pragmatic spectrum.",
+      "rationale": "Tests understanding of pragmatic trial design, PRECIS-2 framework, and how pragmatic trials complement pivotal RCTs for treatment effect generalizability."
     }
   ]
 }

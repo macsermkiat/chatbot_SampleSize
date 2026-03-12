@@ -44,6 +44,23 @@ CHATBOT_IDENTIFIERS = [
     (r"(?i)\bphase transition\b", "next step"),
     (r"(?i)\brouting to \w+\b", "proceeding"),
     (r"(?i)\bforwarded message\b", "context"),
+    # Phase 9.1: Routing language from SIMPLE_ORCHESTRATOR_ADDENDUM
+    (r"(?i)\blet me connect you with our (?:\w+ ){0,3}specialist\b", "I'll help you with that"),
+    (r"(?i)\bhand you off to our (?:\w+ ){0,3}expert\b", "continue with"),
+    (r"(?i)\bliterature search specialist\b", "the system"),
+    (r"(?i)\bstudy design expert\b", "the system"),
+    (r"(?i)\bnumbers specialist\b", "the system"),
+    (r"(?i)\bour specialist\b", "the system"),
+    (r"(?i)\bour expert\b", "the system"),
+    # Role titles from agent prompts
+    (r"(?i)\bSenior Biostatistician\b", "the system"),
+    (r"(?i)\bExpert Methodologist\b", "the system"),
+    (r"(?i)\bClinical Data Scientist\b", "the system"),
+    # Multi-agent architecture language
+    (r"(?i)\bfront desk\b", "the system"),
+    (r"(?i)\bcolleague\b", "the system"),
+    (r"(?i)\bI'm going to hand\b", "I'll"),
+    (r"(?i)\bI'll connect you\b", "I'll help you"),
 ]
 
 # Patterns to strip from GPT-5 responses

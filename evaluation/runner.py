@@ -201,7 +201,7 @@ async def phase_judge(config: EvalConfig) -> None:
     # Edge cases get evaluated with methodology rubric by default
     edge_cases = [c for c in cases if c.case_id.startswith("E")]
 
-    all_results = []
+    all_results: list = []
 
     # Evaluate methodology cases
     meth_pairs = [p for p in pairs if any(
@@ -215,7 +215,8 @@ async def phase_judge(config: EvalConfig) -> None:
         )
         all_results.extend(meth_results)
 
-    # Evaluate biostatistics cases
+    # Evaluate biostatistics cases (pass existing methodology results
+    # so incremental saves don't overwrite them)
     bio_pairs = [p for p in pairs if any(
         c.case_id == p.case_id for c in biostats_cases
     )]
@@ -223,11 +224,15 @@ async def phase_judge(config: EvalConfig) -> None:
         logger.info("Evaluating %d biostatistics cases...", len(bio_pairs))
         bio_results = await run_full_evaluation(
             bio_pairs, biostats_cases,
-            BIOSTATISTICS_RUBRIC, config
+            BIOSTATISTICS_RUBRIC, config,
+            existing_results=all_results,
         )
         all_results.extend(bio_results)
 
-    logger.info("Judge evaluation complete: %d total results", len(all_results))
+    # Final save of all combined results
+    from evaluation.llm_judge.judge_runner import _save_results
+    _save_results(all_results, config)
+    logger.info("Judge evaluation complete: %d total results saved", len(all_results))
 
 
 async def run_all(config: EvalConfig) -> None:

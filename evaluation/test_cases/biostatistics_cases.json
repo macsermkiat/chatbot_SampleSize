@@ -2,31 +2,6 @@
   "version": "1.0.0",
   "cases": [
     {
-      "case_id": "B01",
-      "agent_target": "biostatistics",
-      "specialty": "general",
-      "complexity": "basic",
-      "expertise_mode": "simple",
-      "prompt": "I want to compare the average blood pressure between two groups of patients - one taking a new drug and one taking placebo. I expect the drug to lower blood pressure by about 10 mmHg. The standard deviation is about 20 mmHg. How many patients do I need?",
-      "follow_up_prompts": ["Can you show me the Python code?"],
-      "biostatistics_ground_truth": {
-        "correct_statistical_test": "independent two-sample t-test",
-        "test_synonyms": ["Student's t-test", "unpaired t-test", "two-sample t-test"],
-        "sample_size_range": [60, 70],
-        "required_parameters": {
-          "alpha": "0.05",
-          "power": "0.80",
-          "effect_size": "d=0.5 (10/20)",
-          "test_type": "two-sided"
-        },
-        "required_assumptions": ["normality", "equal variances", "independence"],
-        "expected_code_output_pattern": "6[3-7].*per group",
-        "formula_name": "Cohen's d power analysis for two independent means"
-      },
-      "clinical_context": "Classic two-group mean comparison. Cohen's d = 10/20 = 0.5 (medium effect). Standard textbook scenario.",
-      "rationale": "Fundamental sample size calculation. Tests correct parameter mapping and standard formula application."
-    },
-    {
       "case_id": "B02",
       "agent_target": "biostatistics",
       "specialty": "general",
@@ -88,7 +63,7 @@
       "complexity": "advanced",
       "expertise_mode": "advanced",
       "prompt": "We're planning a cluster-randomized trial of an antibiotic stewardship intervention across 20 ICUs. The primary outcome is the proportion of patients receiving inappropriate antibiotics, expected to drop from 40% to 25%. The ICC is estimated at 0.05, with average cluster size of 50 patients. What sample size do we need?",
-      "follow_up_prompts": [],
+      "follow_up_prompts": ["We want 80% power. The proportions I mentioned (40% to 25%) are our best estimates from the pilot."],
       "biostatistics_ground_truth": {
         "correct_statistical_test": "GEE or mixed-effects logistic regression",
         "test_synonyms": ["generalized estimating equations", "multilevel logistic regression", "hierarchical model"],
@@ -116,7 +91,7 @@
       "complexity": "intermediate",
       "expertise_mode": "advanced",
       "prompt": "We want to demonstrate that a generic statin is non-inferior to the branded version in reducing LDL cholesterol. The non-inferiority margin is 5 mg/dL. The expected SD is 15 mg/dL. We expect no true difference between treatments. Alpha 0.025 one-sided, power 0.80.",
-      "follow_up_prompts": [],
+      "follow_up_prompts": ["We're planning for 80% power. Can you generate the R code for this?"],
       "biostatistics_ground_truth": {
         "correct_statistical_test": "non-inferiority t-test (TOST)",
         "test_synonyms": ["TOST", "two one-sided tests", "non-inferiority test"],
@@ -136,89 +111,13 @@
       "rationale": "Tests non-inferiority design understanding, TOST procedure, and margin selection."
     },
     {
-      "case_id": "B06",
-      "agent_target": "biostatistics",
-      "specialty": "general",
-      "complexity": "basic",
-      "expertise_mode": "simple",
-      "prompt": "I have paired data - blood pressure measured before and after a 12-week exercise program in the same 30 patients. The mean decrease was 8 mmHg with SD of the differences being 12 mmHg. Was the exercise program effective?",
-      "follow_up_prompts": ["Calculate the power we had with 30 patients"],
-      "biostatistics_ground_truth": {
-        "correct_statistical_test": "paired t-test",
-        "test_synonyms": ["dependent t-test", "matched-pairs t-test", "repeated measures t-test"],
-        "sample_size_range": [0, 0],
-        "required_parameters": {
-          "mean_difference": "8",
-          "sd_difference": "12",
-          "n": "30"
-        },
-        "required_assumptions": ["normality of differences", "paired/dependent observations"],
-        "expected_code_output_pattern": "t.*=.*[34]\\.|p.*=.*0\\.0",
-        "formula_name": "Paired t-test"
-      },
-      "clinical_context": "Pre-post paired data analysis. d = 8/12 = 0.67 (medium-large effect). With n=30, should have good power.",
-      "rationale": "Tests correct identification of paired design and paired t-test application."
-    },
-    {
-      "case_id": "B07",
-      "agent_target": "biostatistics",
-      "specialty": "general",
-      "complexity": "advanced",
-      "expertise_mode": "advanced",
-      "prompt": "I'm designing a clinical trial with 4 treatment arms (3 doses of a new drug + placebo). Primary endpoint is change in HbA1c. Expected SD is 1.2%. I want to detect a dose-response trend and also compare each dose vs placebo. How do I handle the multiple comparisons and what sample size do I need?",
-      "follow_up_prompts": [
-        "We expect a minimum clinically important difference of 0.5% HbA1c. Can you run a sensitivity analysis varying the effect size from 0.3% to 0.7%?"
-      ],
-      "biostatistics_ground_truth": {
-        "correct_statistical_test": "one-way ANOVA with Dunnett's procedure",
-        "test_synonyms": ["ANOVA with Dunnett", "Dunnett's test", "many-to-one comparison"],
-        "sample_size_range": [40, 70],
-        "required_parameters": {
-          "alpha": "0.05 (family-wise)",
-          "power": "0.80",
-          "num_groups": "4",
-          "sd": "1.2%",
-          "multiplicity_adjustment": "Dunnett"
-        },
-        "required_assumptions": ["normality", "homogeneity of variance", "independence"],
-        "expected_code_output_pattern": "",
-        "formula_name": "Multi-arm trial with Dunnett's correction"
-      },
-      "clinical_context": "Multi-arm trial requiring Dunnett's procedure for multiple comparisons against control. Also opportunity for trend test.",
-      "rationale": "Tests multiplicity adjustment knowledge, Dunnett vs Bonferroni choice, and dose-response analysis."
-    },
-    {
-      "case_id": "B08",
-      "agent_target": "biostatistics",
-      "specialty": "general",
-      "complexity": "intermediate",
-      "expertise_mode": "simple",
-      "prompt": "I want to build a prediction model for hospital readmission (yes/no) using 15 predictors. How many patients do I need in my dataset?",
-      "follow_up_prompts": [],
-      "biostatistics_ground_truth": {
-        "correct_statistical_test": "logistic regression",
-        "test_synonyms": ["multivariable logistic regression", "logistic model"],
-        "sample_size_range": [150, 300],
-        "required_parameters": {
-          "num_predictors": "15",
-          "outcome_prevalence": "needed",
-          "events_per_variable": ">= 10"
-        },
-        "required_assumptions": ["linearity in log-odds", "independence", "no multicollinearity", "adequate EPV"],
-        "expected_code_output_pattern": "",
-        "formula_name": "Events per variable rule (EPV >= 10)"
-      },
-      "clinical_context": "Prediction model sample size. Rule of thumb: minimum 10 events per predictor variable. With 15 predictors, need >= 150 events.",
-      "rationale": "Tests EPV rule for prediction models and understanding of model overfitting risk."
-    },
-    {
       "case_id": "B09",
       "agent_target": "biostatistics",
       "specialty": "radiology",
       "complexity": "intermediate",
       "expertise_mode": "advanced",
       "prompt": "I'm validating an AI model for detecting pulmonary nodules on CT scans. Expected sensitivity is 95% and specificity is 90%. I want to estimate each with a 95% CI width of no more than +/- 5%. What sample size do I need for cases and controls?",
-      "follow_up_prompts": [],
+      "follow_up_prompts": ["Those numbers come from our pilot study with 50 scans. Can you show the full calculation?"],
       "biostatistics_ground_truth": {
         "correct_statistical_test": "confidence interval for proportions",
         "test_synonyms": ["binomial proportion CI", "Wilson interval"],
@@ -273,7 +172,7 @@
       "complexity": "basic",
       "expertise_mode": "advanced",
       "prompt": "I have ordinal outcome data (Likert scale 1-5 patient satisfaction) comparing two hospital departments. Groups are independent, data is clearly non-normal. What test should I use?",
-      "follow_up_prompts": [],
+      "follow_up_prompts": ["We have 150 patients per department. Is that enough to detect a meaningful difference?"],
       "biostatistics_ground_truth": {
         "correct_statistical_test": "Mann-Whitney U test",
         "test_synonyms": ["Wilcoxon rank-sum test", "Mann-Whitney-Wilcoxon"],
@@ -287,33 +186,13 @@
       "rationale": "Tests correct identification of non-parametric test for ordinal/non-normal data."
     },
     {
-      "case_id": "B12",
-      "agent_target": "biostatistics",
-      "specialty": "general",
-      "complexity": "basic",
-      "expertise_mode": "simple",
-      "prompt": "I want to see if there's a relationship between BMI and blood pressure. Both are continuous measurements from 200 patients. How do I test this?",
-      "follow_up_prompts": [],
-      "biostatistics_ground_truth": {
-        "correct_statistical_test": "Pearson correlation",
-        "test_synonyms": ["Pearson's r", "linear correlation", "correlation coefficient"],
-        "sample_size_range": [0, 0],
-        "required_parameters": {},
-        "required_assumptions": ["linearity", "bivariate normality", "no outliers"],
-        "expected_code_output_pattern": "",
-        "formula_name": ""
-      },
-      "clinical_context": "Simple bivariate correlation. Tests understanding of when to use correlation vs regression.",
-      "rationale": "Basic correlation analysis. Tests correct test identification and assumption awareness."
-    },
-    {
       "case_id": "B13",
       "agent_target": "biostatistics",
       "specialty": "general",
       "complexity": "intermediate",
       "expertise_mode": "advanced",
       "prompt": "We have 3 independent groups of patients (mild, moderate, severe disease) and want to compare their recovery times. Data is right-skewed. What should we use?",
-      "follow_up_prompts": [],
+      "follow_up_prompts": ["We have about 40 patients per group. Is that sufficient? Can you show me the analysis code?"],
       "biostatistics_ground_truth": {
         "correct_statistical_test": "Kruskal-Wallis test",
         "test_synonyms": ["Kruskal-Wallis H test", "non-parametric one-way ANOVA"],
@@ -359,7 +238,7 @@
       "complexity": "advanced",
       "expertise_mode": "advanced",
       "prompt": "In our AKI study, the primary endpoint is time to dialysis initiation, but many patients die before reaching dialysis. How should we handle this competing risk? What analysis method and how do we calculate sample size?",
-      "follow_up_prompts": [],
+      "follow_up_prompts": ["From the literature, the subdistribution HR for dialysis is about 1.5. We expect 30% cumulative incidence of death. Alpha 0.05, power 80%."],
       "biostatistics_ground_truth": {
         "correct_statistical_test": "Fine-Gray subdistribution hazard model",
         "test_synonyms": ["competing risks regression", "Fine-Gray model", "subdistribution hazard", "cumulative incidence function"],
@@ -375,46 +254,6 @@
       },
       "clinical_context": "Competing risks are common in nephrology (death competes with dialysis). Standard KM/Cox overestimates event probability.",
       "rationale": "Tests competing risks methodology, Fine-Gray vs cause-specific hazard distinction."
-    },
-    {
-      "case_id": "B16",
-      "agent_target": "biostatistics",
-      "specialty": "general",
-      "complexity": "basic",
-      "expertise_mode": "simple",
-      "prompt": "Is there a relationship between smoking status (yes/no) and lung cancer (yes/no) in my dataset of 500 patients?",
-      "follow_up_prompts": [],
-      "biostatistics_ground_truth": {
-        "correct_statistical_test": "chi-square test of independence",
-        "test_synonyms": ["Pearson chi-square", "chi-squared test", "contingency table test"],
-        "sample_size_range": [0, 0],
-        "required_parameters": {},
-        "required_assumptions": ["independence", "expected cell counts >= 5"],
-        "expected_code_output_pattern": "",
-        "formula_name": ""
-      },
-      "clinical_context": "Basic 2x2 categorical association. If any expected cell count < 5, Fisher's exact test instead.",
-      "rationale": "Fundamental categorical analysis. Tests chi-square vs Fisher's exact decision."
-    },
-    {
-      "case_id": "B17",
-      "agent_target": "biostatistics",
-      "specialty": "surgery",
-      "complexity": "intermediate",
-      "expertise_mode": "simple",
-      "prompt": "I measured the same 25 patients' pain scores at 4 time points after surgery (day 1, 3, 7, 14). Pain is measured on an ordinal scale (0-10). I want to know if pain decreases over time. Data is not normally distributed.",
-      "follow_up_prompts": [],
-      "biostatistics_ground_truth": {
-        "correct_statistical_test": "Friedman test",
-        "test_synonyms": ["Friedman's ANOVA by ranks", "non-parametric repeated measures ANOVA"],
-        "sample_size_range": [0, 0],
-        "required_parameters": {},
-        "required_assumptions": ["repeated measures on same subjects", "ordinal or continuous data"],
-        "expected_code_output_pattern": "",
-        "formula_name": ""
-      },
-      "clinical_context": "Non-parametric repeated measures with 3+ time points. Friedman test is the non-parametric alternative to repeated measures ANOVA.",
-      "rationale": "Tests identification of Friedman test for non-parametric repeated measures with 3+ timepoints."
     },
     {
       "case_id": "B18",
@@ -444,35 +283,13 @@
       "rationale": "Tests bioequivalence methodology, TOST procedure, and crossover design sample size."
     },
     {
-      "case_id": "B19",
-      "agent_target": "biostatistics",
-      "specialty": "general",
-      "complexity": "basic",
-      "expertise_mode": "simple",
-      "prompt": "I want to compare the correlation between two continuous variables in my dataset: age and reaction time. The data looks non-normal and there are some outliers. What correlation method should I use?",
-      "follow_up_prompts": [
-        "Can you also show me how to test if this correlation is significantly different from zero, and generate a scatter plot with the correlation line?"
-      ],
-      "biostatistics_ground_truth": {
-        "correct_statistical_test": "Spearman rank correlation",
-        "test_synonyms": ["Spearman's rho", "rank correlation"],
-        "sample_size_range": [0, 0],
-        "required_parameters": {},
-        "required_assumptions": ["monotonic relationship", "ordinal or continuous data"],
-        "expected_code_output_pattern": "",
-        "formula_name": ""
-      },
-      "clinical_context": "Non-normal data with outliers - Spearman rank correlation is robust to both.",
-      "rationale": "Tests Pearson vs Spearman decision based on normality and outlier considerations."
-    },
-    {
       "case_id": "B20",
       "agent_target": "biostatistics",
       "specialty": "general",
       "complexity": "intermediate",
       "expertise_mode": "advanced",
       "prompt": "I have hierarchical data: patients nested within 30 hospitals, and I want to predict length of stay using patient-level and hospital-level predictors. What analysis approach should I use and what are the sample size considerations?",
-      "follow_up_prompts": [],
+      "follow_up_prompts": ["We have about 200 patients per hospital on average. Is 30 hospitals enough for stable random effects estimates?"],
       "biostatistics_ground_truth": {
         "correct_statistical_test": "multilevel/mixed-effects linear model",
         "test_synonyms": ["hierarchical linear model", "HLM", "random effects model", "mixed model"],
@@ -487,6 +304,337 @@
       },
       "clinical_context": "Multilevel modeling for clustered data. Key consideration: number of clusters (30) is more important than cluster size for level-2 estimates.",
       "rationale": "Tests hierarchical data analysis, mixed-effects modeling, and cluster-level sample size considerations."
+    },
+    {
+      "case_id": "B21",
+      "agent_target": "biostatistics",
+      "specialty": "pediatrics",
+      "complexity": "intermediate",
+      "expertise_mode": "simple",
+      "prompt": "We are planning a double-blind RCT of a new oral iron formulation versus standard ferrous sulfate for iron deficiency anemia in children aged 1-5 years. The primary outcome is the change in hemoglobin (g/dL) at 12 weeks. We expect the new formulation to increase hemoglobin by 1.5 g/dL more than standard therapy. The SD from a pilot study is 2.0 g/dL. Alpha 0.05, power 0.80. How many children per group?",
+      "follow_up_prompts": [
+        "What if we want 90% power instead? How does the sample size change?"
+      ],
+      "biostatistics_ground_truth": {
+        "correct_statistical_test": "independent two-sample t-test",
+        "test_synonyms": ["Student's t-test", "unpaired t-test", "two-sample t-test"],
+        "sample_size_range": [28, 32],
+        "required_parameters": {
+          "alpha": "0.05",
+          "power": "0.80",
+          "effect_size": "d=0.75 (1.5/2.0)",
+          "test_type": "two-sided"
+        },
+        "required_assumptions": ["normality", "equal variances", "independence"],
+        "expected_code_output_pattern": "2[8-9]|3[0-2].*per group",
+        "formula_name": "Cohen's d power analysis for two independent means"
+      },
+      "clinical_context": "Pediatric RCT with continuous primary outcome. Cohen's d = 1.5/2.0 = 0.75 (medium-large effect). Straightforward two-sample comparison.",
+      "rationale": "Tests basic sample size calculation for a two-group RCT with continuous outcome in a pediatric population."
+    },
+    {
+      "case_id": "B22",
+      "agent_target": "biostatistics",
+      "specialty": "cardiology",
+      "complexity": "advanced",
+      "expertise_mode": "advanced",
+      "prompt": "We are designing an adaptive platform trial with 3 experimental arms and a shared control for acute heart failure. The primary endpoint is 180-day all-cause mortality. We plan response-adaptive randomization with interim analyses every 100 patients. Expected control mortality is 15%. We want to detect an absolute risk reduction of 5% (to 10%) per arm. Alpha spending with O'Brien-Fleming boundaries. How should I calculate the maximum sample size and what are the statistical considerations?",
+      "follow_up_prompts": [
+        "How does the adaptive randomization affect the type I error rate across the three experimental arms?"
+      ],
+      "biostatistics_ground_truth": {
+        "correct_statistical_test": "group sequential design with multiplicity adjustment",
+        "test_synonyms": ["adaptive platform trial", "multi-arm multi-stage (MAMS)", "response-adaptive randomization"],
+        "sample_size_range": [1800, 2800],
+        "required_parameters": {
+          "alpha": "0.05 (family-wise, alpha-spending)",
+          "power": "0.80",
+          "p_control": "0.15",
+          "p_treatment": "0.10",
+          "num_arms": "3 experimental + 1 control",
+          "interim_frequency": "every 100 patients",
+          "spending_function": "O'Brien-Fleming"
+        },
+        "required_assumptions": ["proportional event rates across interim looks", "adequate enrollment rate", "no differential dropout by arm"],
+        "expected_code_output_pattern": "",
+        "formula_name": "Group sequential multi-arm trial with alpha spending"
+      },
+      "clinical_context": "Adaptive platform trial with shared control, response-adaptive randomization, and group sequential monitoring. Maximum sample size must account for multiple arms and interim analyses.",
+      "rationale": "Tests advanced trial design including adaptive randomization, alpha spending, multiplicity across arms, and platform trial methodology."
+    },
+    {
+      "case_id": "B23",
+      "agent_target": "biostatistics",
+      "specialty": "epidemiology",
+      "complexity": "basic",
+      "expertise_mode": "simple",
+      "prompt": "We are following 5,000 adults for 10 years to study whether high cholesterol (total cholesterol > 240 mg/dL) increases the risk of coronary heart disease. At baseline, 1,500 have high cholesterol. We expect a CHD incidence of 8% in the high cholesterol group versus 3% in the normal cholesterol group over 10 years. Do we have enough participants?",
+      "follow_up_prompts": [
+        "What if we lose 20% to follow-up? Does that change the answer?"
+      ],
+      "biostatistics_ground_truth": {
+        "correct_statistical_test": "two-proportion z-test or Cox proportional hazards",
+        "test_synonyms": ["log-rank test", "chi-square for proportions", "cohort study power"],
+        "sample_size_range": [400, 600],
+        "required_parameters": {
+          "alpha": "0.05",
+          "power": "0.80",
+          "p_exposed": "0.08",
+          "p_unexposed": "0.03",
+          "n_exposed": "1500",
+          "n_unexposed": "3500"
+        },
+        "required_assumptions": ["independent observations", "stable exposure over follow-up", "complete follow-up or non-informative censoring"],
+        "expected_code_output_pattern": "",
+        "formula_name": "Power for prospective cohort comparing incidence rates"
+      },
+      "clinical_context": "Prospective cohort study power assessment with fixed sample. The study is well-powered given the large sample relative to the expected incidence difference.",
+      "rationale": "Tests ability to assess power for a prospective cohort study with a binary exposure and binary outcome."
+    },
+    {
+      "case_id": "B24",
+      "agent_target": "biostatistics",
+      "specialty": "gastroenterology",
+      "complexity": "intermediate",
+      "expertise_mode": "advanced",
+      "prompt": "We have a retrospective cohort of 12,000 patients with inflammatory bowel disease from a hospital network. We want to compare the risk of colorectal cancer between patients with Crohn's disease and those with ulcerative colitis, adjusting for disease duration, extent of disease, and medication use. Time to event is our primary analysis. What sample size considerations apply and what is the appropriate analysis?",
+      "follow_up_prompts": [
+        "The expected event rate is only about 2% over 10 years. How many events do we need for stable Cox model estimates with 5 covariates?"
+      ],
+      "biostatistics_ground_truth": {
+        "correct_statistical_test": "multivariable Cox proportional hazards regression",
+        "test_synonyms": ["Cox regression", "Cox PH model", "survival analysis"],
+        "sample_size_range": [0, 0],
+        "required_parameters": {
+          "total_n": "12000",
+          "expected_event_rate": "0.02",
+          "expected_events": "~240",
+          "num_covariates": "5",
+          "epv_survival": ">= 10 events per covariate"
+        },
+        "required_assumptions": ["proportional hazards", "non-informative censoring", "adequate events per variable"],
+        "expected_code_output_pattern": "",
+        "formula_name": "Events per variable rule for Cox regression (EPV >= 10)"
+      },
+      "clinical_context": "Retrospective cohort with rare outcome (2% event rate). With 12,000 patients, expect ~240 events over 10 years, yielding EPV of 48 for 5 covariates -- adequate for stable estimates.",
+      "rationale": "Tests sample size reasoning for Cox regression in a retrospective cohort with rare outcomes, including the events-per-variable rule for survival analysis."
+    },
+    {
+      "case_id": "B25",
+      "agent_target": "biostatistics",
+      "specialty": "epidemiology",
+      "complexity": "basic",
+      "expertise_mode": "simple",
+      "prompt": "We want to estimate the prevalence of hypertension in our city's adult population. From prior surveys, we think the prevalence is around 30%. We want to estimate this with a margin of error of plus or minus 3 percentage points with 95% confidence. How many people should we survey?",
+      "follow_up_prompts": [
+        "We plan to use stratified random sampling by age group. Does this change the sample size?"
+      ],
+      "biostatistics_ground_truth": {
+        "correct_statistical_test": "sample size for single proportion (confidence interval approach)",
+        "test_synonyms": ["proportion estimation", "prevalence survey sample size"],
+        "sample_size_range": [896, 910],
+        "required_parameters": {
+          "expected_proportion": "0.30",
+          "margin_of_error": "0.03",
+          "confidence_level": "0.95",
+          "z_value": "1.96"
+        },
+        "required_assumptions": ["simple random sampling", "binary outcome", "adequate population size"],
+        "expected_code_output_pattern": "89[6-9]|90[0-9]",
+        "formula_name": "Sample size for estimating a single proportion (n = z^2 * p*(1-p) / E^2)"
+      },
+      "clinical_context": "Cross-sectional prevalence survey. Standard sample size formula for estimating a proportion with specified precision.",
+      "rationale": "Tests basic sample size calculation for prevalence estimation in a descriptive cross-sectional study."
+    },
+    {
+      "case_id": "B26",
+      "agent_target": "biostatistics",
+      "specialty": "public_health",
+      "complexity": "intermediate",
+      "expertise_mode": "advanced",
+      "prompt": "We have case series data from 45 patients who underwent a novel minimally invasive cardiac procedure at our center. We want to report the 30-day complication rate and its confidence interval. There were 6 complications. What is the appropriate statistical method and how do we report this?",
+      "follow_up_prompts": [
+        "Should we use a Wilson interval or an exact Clopper-Pearson interval given the small number of events?"
+      ],
+      "biostatistics_ground_truth": {
+        "correct_statistical_test": "exact binomial confidence interval (Clopper-Pearson)",
+        "test_synonyms": ["Wilson score interval", "binomial proportion CI", "exact CI for proportion"],
+        "sample_size_range": [0, 0],
+        "required_parameters": {
+          "n": "45",
+          "events": "6",
+          "proportion": "0.133",
+          "confidence_level": "0.95"
+        },
+        "required_assumptions": ["independent observations", "binary outcome"],
+        "expected_code_output_pattern": "",
+        "formula_name": "Clopper-Pearson exact binomial confidence interval"
+      },
+      "clinical_context": "Descriptive case series with small sample and few events. The exact Clopper-Pearson interval is conservative and appropriate for small samples; Wilson interval has better coverage properties.",
+      "rationale": "Tests understanding of confidence interval methods for proportions in small descriptive studies, including the choice between exact and approximate methods."
+    },
+    {
+      "case_id": "B27",
+      "agent_target": "biostatistics",
+      "specialty": "general",
+      "complexity": "intermediate",
+      "expertise_mode": "simple",
+      "prompt": "I'm planning a meta-analysis of 12 RCTs comparing a new antihypertensive to placebo. Each trial reports the mean difference in systolic blood pressure reduction with its standard error. How do I combine them and how many studies do I need for a reliable pooled estimate?",
+      "follow_up_prompts": [
+        "Three of the 12 studies are much larger than the rest. Should I worry about one study dominating the pooled estimate?"
+      ],
+      "biostatistics_ground_truth": {
+        "correct_statistical_test": "inverse-variance weighted random-effects meta-analysis",
+        "test_synonyms": ["DerSimonian-Laird", "random effects meta-analysis", "REML meta-analysis"],
+        "sample_size_range": [0, 0],
+        "required_parameters": {
+          "num_studies": "12",
+          "outcome_type": "continuous (mean difference)",
+          "heterogeneity_assessment": "I-squared, tau-squared, Q statistic"
+        },
+        "required_assumptions": ["studies estimate the same underlying parameter (exchangeability)", "random effects distribution is normal", "no publication bias"],
+        "expected_code_output_pattern": "",
+        "formula_name": "Random-effects meta-analysis (DerSimonian-Laird or REML)"
+      },
+      "clinical_context": "Standard pairwise meta-analysis of continuous outcomes from RCTs. With 12 studies, heterogeneity estimation (tau-squared) is reasonably stable.",
+      "rationale": "Tests understanding of random-effects meta-analysis methodology, heterogeneity assessment, and influence analysis for dominant studies."
+    },
+    {
+      "case_id": "B28",
+      "agent_target": "biostatistics",
+      "specialty": "oncology",
+      "complexity": "advanced",
+      "expertise_mode": "advanced",
+      "prompt": "I want to perform an individual patient data (IPD) meta-analysis of 8 trials comparing adjuvant chemotherapy to observation in stage II colon cancer. The primary outcome is disease-free survival. Some trials have different follow-up durations and definitions of recurrence. How should I analyze this and what are the sample size/power considerations?",
+      "follow_up_prompts": [
+        "How do I handle trials that cannot provide IPD -- can I combine aggregate data with the IPD in a two-stage approach?"
+      ],
+      "biostatistics_ground_truth": {
+        "correct_statistical_test": "one-stage IPD meta-analysis with stratified Cox model or two-stage approach",
+        "test_synonyms": ["IPD meta-analysis", "individual participant data meta-analysis", "stratified Cox regression"],
+        "sample_size_range": [0, 0],
+        "required_parameters": {
+          "num_trials": "8",
+          "total_patients_approximate": "needed",
+          "outcome": "disease-free survival (time-to-event)",
+          "stratification": "by trial"
+        },
+        "required_assumptions": ["proportional hazards within and across trials", "outcome harmonization possible", "representative subset of existing trials"],
+        "expected_code_output_pattern": "",
+        "formula_name": "IPD meta-analysis power depends on total events across trials"
+      },
+      "clinical_context": "IPD meta-analysis offers advantages over aggregate data: can harmonize outcome definitions, explore patient-level effect modifiers, and account for within-trial clustering.",
+      "rationale": "Tests advanced meta-analysis methodology including IPD approaches, outcome harmonization, one-stage vs two-stage analysis, and handling of trials without IPD."
+    },
+    {
+      "case_id": "B29",
+      "agent_target": "biostatistics",
+      "specialty": "health_economics",
+      "complexity": "basic",
+      "expertise_mode": "simple",
+      "prompt": "We are conducting a cost-effectiveness analysis of a new diabetes prevention program. The program costs $1,200 per person per year and reduces diabetes incidence from 8% to 5% over 3 years. Each prevented diabetes case saves an estimated $15,000 in lifetime healthcare costs. How do we calculate the ICER and what statistical analysis is needed?",
+      "follow_up_prompts": [
+        "How do I construct a cost-effectiveness acceptability curve from our data?"
+      ],
+      "biostatistics_ground_truth": {
+        "correct_statistical_test": "incremental cost-effectiveness ratio (ICER) with bootstrap confidence interval",
+        "test_synonyms": ["cost-effectiveness analysis", "bootstrap ICER", "net monetary benefit"],
+        "sample_size_range": [0, 0],
+        "required_parameters": {
+          "program_cost": "$1,200/person/year",
+          "incidence_intervention": "0.05",
+          "incidence_control": "0.08",
+          "cost_per_case_prevented": "$15,000",
+          "time_horizon": "3 years"
+        },
+        "required_assumptions": ["costs and effects jointly distributed", "willingness-to-pay threshold defined", "discounting applied for multi-year horizon"],
+        "expected_code_output_pattern": "",
+        "formula_name": "ICER = (Cost_intervention - Cost_control) / (Effect_intervention - Effect_control)"
+      },
+      "clinical_context": "Basic health economic evaluation. ICER calculation with bootstrap for uncertainty and cost-effectiveness acceptability curves for decision-making.",
+      "rationale": "Tests understanding of ICER calculation, bootstrap methods for cost-effectiveness, and acceptability curves."
+    },
+    {
+      "case_id": "B30",
+      "agent_target": "biostatistics",
+      "specialty": "health_economics",
+      "complexity": "advanced",
+      "expertise_mode": "advanced",
+      "prompt": "We need to conduct a probabilistic sensitivity analysis for our Markov model comparing three treatments for chronic heart failure. We have 15 input parameters with different distributional assumptions (beta for probabilities, gamma for costs, log-normal for relative risks). How many Monte Carlo simulations should we run and how do we determine convergence?",
+      "follow_up_prompts": [
+        "How do we present the results -- cost-effectiveness plane, CEAC, or expected value of perfect information (EVPI)?"
+      ],
+      "biostatistics_ground_truth": {
+        "correct_statistical_test": "probabilistic sensitivity analysis (PSA) with Monte Carlo simulation",
+        "test_synonyms": ["Monte Carlo simulation", "probabilistic analysis", "second-order Monte Carlo"],
+        "sample_size_range": [0, 0],
+        "required_parameters": {
+          "num_parameters": "15",
+          "distribution_types": "beta, gamma, log-normal",
+          "num_simulations": "typically 5,000-10,000",
+          "convergence_criterion": "stability of ICER and probability of cost-effectiveness"
+        },
+        "required_assumptions": ["distributional assumptions match data generating process", "parameter independence or defined correlation structure", "model structure is valid"],
+        "expected_code_output_pattern": "",
+        "formula_name": "Monte Carlo PSA with convergence diagnostics"
+      },
+      "clinical_context": "Advanced health economic analysis requiring PSA for a multi-comparator Markov model. Standard practice: 5,000-10,000 iterations with convergence monitoring via running mean of NMB.",
+      "rationale": "Tests understanding of probabilistic sensitivity analysis, parameter distributional assumptions, convergence diagnostics, and value of information analysis."
+    },
+    {
+      "case_id": "B31",
+      "agent_target": "biostatistics",
+      "specialty": "pharmacoepidemiology",
+      "complexity": "intermediate",
+      "expertise_mode": "advanced",
+      "prompt": "We are using a large insurance claims database (2 million enrollees) to compare cardiovascular outcomes between two oral anticoagulants for atrial fibrillation. We plan propensity score matching. How do we determine if our matched cohort is large enough and what balance diagnostics should we check?",
+      "follow_up_prompts": [
+        "After matching, we have 15,000 matched pairs. The primary outcome (stroke) occurs in about 1.5% per year. Is this sufficient for a Cox model with 8 covariates?"
+      ],
+      "biostatistics_ground_truth": {
+        "correct_statistical_test": "propensity score matched Cox proportional hazards",
+        "test_synonyms": ["PS-matched survival analysis", "propensity score analysis", "matched cohort Cox regression"],
+        "sample_size_range": [0, 0],
+        "required_parameters": {
+          "total_database": "2,000,000",
+          "matched_pairs": "15,000",
+          "annual_event_rate": "0.015",
+          "num_covariates": "8",
+          "balance_metric": "standardized mean difference < 0.1"
+        },
+        "required_assumptions": ["no unmeasured confounding (conditional on propensity score)", "positivity (overlap in PS distributions)", "correct PS model specification", "proportional hazards"],
+        "expected_code_output_pattern": "",
+        "formula_name": "Propensity score matched analysis with balance diagnostics (SMD)"
+      },
+      "clinical_context": "Real-world evidence from claims data with propensity score matching. Balance diagnostics (SMD < 0.1) are preferred over p-values for assessing covariate balance.",
+      "rationale": "Tests understanding of propensity score methodology in real-world data including balance diagnostics, positivity assessment, and sample size adequacy for matched cohort survival analysis."
+    },
+    {
+      "case_id": "B32",
+      "agent_target": "biostatistics",
+      "specialty": "pharmacoepidemiology",
+      "complexity": "advanced",
+      "expertise_mode": "advanced",
+      "prompt": "We want to estimate the real-world treatment effect of a new biologic for psoriasis using a multi-database study across 4 healthcare systems. Each database has different coding systems and variable completeness. How do we design the analysis to maximize validity while preserving patient privacy (no individual data sharing)?",
+      "follow_up_prompts": [
+        "Should we use a distributed regression approach or a meta-analytic combination of site-specific estimates?"
+      ],
+      "biostatistics_ground_truth": {
+        "correct_statistical_test": "distributed/federated analysis or meta-analysis of site-specific estimates",
+        "test_synonyms": ["federated analysis", "distributed regression", "multi-database pharmacoepidemiology"],
+        "sample_size_range": [0, 0],
+        "required_parameters": {
+          "num_databases": "4",
+          "analysis_approach": "common protocol with site-specific execution",
+          "privacy_constraint": "no individual-level data sharing",
+          "harmonization": "common data model"
+        },
+        "required_assumptions": ["common data model mapping is valid", "exchangeability across databases (or heterogeneity modeled)", "no residual confounding from coding differences"],
+        "expected_code_output_pattern": "",
+        "formula_name": "Meta-analysis of site-specific estimates or distributed regression"
+      },
+      "clinical_context": "Multi-database real-world evidence study with privacy constraints. Common data models (OMOP, Sentinel) enable distributed analysis without patient-level data sharing.",
+      "rationale": "Tests understanding of federated/distributed analysis approaches for multi-database pharmacoepidemiology, common data models, and privacy-preserving analytics."
     }
   ]
 }

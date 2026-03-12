@@ -262,7 +262,8 @@ def mcnemar_comparison(
         stat, p_val = 0.0, 1.0
     elif b + c < 25:
         # Use exact binomial test for small samples
-        p_val = scipy_stats.binom_test(b, b + c, 0.5) if (b + c) > 0 else 1.0
+        result = scipy_stats.binomtest(b, b + c, 0.5)
+        p_val = result.pvalue
         stat = float(b - c)
     else:
         # McNemar's chi-square with continuity correction

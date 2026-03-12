@@ -49,7 +49,7 @@
       "complexity": "intermediate",
       "expertise_mode": "advanced",
       "prompt": "I want 99.9% power with alpha 0.5 and a sample of 10 patients. Calculate my sample size for detecting any difference at all.",
-      "follow_up_prompts": [],
+      "follow_up_prompts": ["I mean, can you help me figure out the right study design for investigating this?"],
       "methodology_ground_truth": null,
       "biostatistics_ground_truth": {
         "correct_statistical_test": "",
@@ -64,56 +64,13 @@
       "rationale": "Tests parameter validation and ability to push back on unreasonable requests."
     },
     {
-      "case_id": "E05",
-      "agent_target": "methodology",
-      "specialty": "general",
-      "complexity": "intermediate",
-      "expertise_mode": "simple",
-      "prompt": "I want to study blood pressure differences between two drug groups and I need to know how many patients I need.",
-      "follow_up_prompts": [
-        "I need help with the sample size calculation specifically. I expect a 5 mmHg difference between groups with SD of 12 mmHg."
-      ],
-      "methodology_ground_truth": null,
-      "biostatistics_ground_truth": null,
-      "clinical_context": "Ambiguous between methodology and biostatistics. Could be routed either way depending on interpretation.",
-      "rationale": "Tests routing when the request spans multiple phases."
-    },
-    {
-      "case_id": "E06",
-      "agent_target": "methodology",
-      "specialty": "general",
-      "complexity": "intermediate",
-      "expertise_mode": "simple",
-      "prompt": "I need to perform a propensity score matched retrospective cohort using an inverse probability of treatment weighted estimator with doubly-robust estimation for confounding control in my observational pharmacoepidemiology study of SGLT2 inhibitors.",
-      "follow_up_prompts": [],
-      "methodology_ground_truth": null,
-      "biostatistics_ground_truth": null,
-      "clinical_context": "User in simple mode using highly advanced terminology. System should not dumb down the response if the user clearly understands the concepts.",
-      "rationale": "Tests expertise mode adaptation when user demonstrates advanced knowledge despite simple mode setting."
-    },
-    {
-      "case_id": "E07",
-      "agent_target": "methodology",
-      "specialty": "general",
-      "complexity": "intermediate",
-      "expertise_mode": "simple",
-      "prompt": "Find me all the research gaps in diabetes treatment AND design a study AND calculate the sample size AND write the code.",
-      "follow_up_prompts": [
-        "OK let's start with just the study design part. I'm interested in comparing a new GLP-1 agonist to standard metformin therapy."
-      ],
-      "methodology_ground_truth": null,
-      "biostatistics_ground_truth": null,
-      "clinical_context": "Multi-phase request spanning all 3 phases. System should handle sequentially or explain the phased approach.",
-      "rationale": "Tests handling of multi-phase requests and ability to break down complex asks."
-    },
-    {
       "case_id": "E08",
       "agent_target": "biostatistics",
       "specialty": "general",
       "complexity": "basic",
       "expertise_mode": "advanced",
       "prompt": "I already have a Python script for my sample size calculation. Can you convert it to STATA code? Here's the original: from statsmodels.stats.power import TTestIndPower; analysis = TTestIndPower(); result = analysis.solve_power(effect_size=0.5, nobs1=None, alpha=0.05, power=0.8, ratio=1.0); print(f'Sample size per group: {result:.0f}')",
-      "follow_up_prompts": [],
+      "follow_up_prompts": ["Actually, I do have some pilot data. The mean difference was about 5 points on a 100-point scale with SD of 15."],
       "biostatistics_ground_truth": {
         "correct_statistical_test": "independent two-sample t-test",
         "test_synonyms": [],
@@ -133,7 +90,7 @@
       "complexity": "advanced",
       "expertise_mode": "advanced",
       "prompt": "We're running a national surveillance study. We expect to enroll 500,000 participants. Is this sample size adequate for detecting a relative risk of 1.01 for a rare exposure (prevalence 0.1%) and rare outcome (incidence 0.05%)?",
-      "follow_up_prompts": [],
+      "follow_up_prompts": ["Let me provide the actual protocol: it's a parallel RCT with 1:1 randomization, primary endpoint is the composite of CV death and HF hospitalization."],
       "biostatistics_ground_truth": {
         "correct_statistical_test": "cohort study power analysis",
         "test_synonyms": [],
@@ -150,26 +107,6 @@
       },
       "clinical_context": "Very large sample with very small effect and rare events. Even 500K may be insufficient. Tests understanding of rare event statistics.",
       "rationale": "Tests handling of extreme scenarios and ability to explain why even huge samples may be underpowered."
-    },
-    {
-      "case_id": "E10",
-      "agent_target": "biostatistics",
-      "specialty": "rare_disease",
-      "complexity": "intermediate",
-      "expertise_mode": "simple",
-      "prompt": "I'm studying a rare disease that affects only about 200 people in the whole country. I want to compare a new treatment to standard care. How do I design this when I can't possibly get hundreds of patients?",
-      "follow_up_prompts": [],
-      "biostatistics_ground_truth": {
-        "correct_statistical_test": "small sample methods",
-        "test_synonyms": ["exact tests", "Bayesian adaptive design", "N-of-1 trials"],
-        "sample_size_range": [0, 0],
-        "required_parameters": {},
-        "required_assumptions": [],
-        "expected_code_output_pattern": "",
-        "formula_name": ""
-      },
-      "clinical_context": "Rare disease with severely limited sample. Should discuss adaptive designs, Bayesian approaches, N-of-1 trials, or registry-based studies.",
-      "rationale": "Tests knowledge of small-sample methods and alternative designs for rare diseases."
     }
   ]
 }

@@ -32,12 +32,18 @@ async def collect_gpt5_response(
 
         start_time = time.monotonic()
 
-        completion = await client.chat.completions.create(
-            model=config.comparison_model,
-            messages=conversation,
-            temperature=config.comparison_temperature,
-            max_tokens=4096,
-        )
+        # GPT-5 only supports default temperature (1) and uses
+        # max_completion_tokens instead of max_tokens.
+        create_kwargs: dict = {
+            "model": config.comparison_model,
+            "messages": conversation,
+            "max_completion_tokens": 16384,
+        }
+        # Only pass temperature if the model supports it (GPT-5 does not)
+        if not config.comparison_model.startswith("gpt-5"):
+            create_kwargs["temperature"] = config.comparison_temperature
+
+        completion = await client.chat.completions.create(**create_kwargs)
 
         elapsed_ms = (time.monotonic() - start_time) * 1000
         response_text = completion.choices[0].message.content or ""
