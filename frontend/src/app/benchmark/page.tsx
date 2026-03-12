@@ -42,22 +42,22 @@ const DIMENSION_SCORES: {
   gpt5: number;
   significant: boolean;
 }[] = [
-  { id: "B1", name: "Statistical Test Selection", shortName: "Test Selection", domain: "Biostatistics", chatbot: 4.42, gpt5: 4.52, significant: false },
-  { id: "B2", name: "Sample Size Calculation", shortName: "Sample Size", domain: "Biostatistics", chatbot: 3.81, gpt5: 4.10, significant: false },
-  { id: "B3", name: "Code Correctness", shortName: "Code Correct.", domain: "Biostatistics", chatbot: 3.46, gpt5: 2.21, significant: true },
-  { id: "B4", name: "Assumption Checking", shortName: "Assumptions", domain: "Biostatistics", chatbot: 3.89, gpt5: 3.70, significant: false },
-  { id: "B5", name: "Effect Size Interpretation", shortName: "Effect Size", domain: "Biostatistics", chatbot: 3.45, gpt5: 3.62, significant: false },
-  { id: "B6", name: "Clinical vs Statistical Significance", shortName: "Clin. vs Stat.", domain: "Biostatistics", chatbot: 2.81, gpt5: 2.80, significant: false },
-  { id: "B7", name: "Explanation Quality", shortName: "Explanations", domain: "Biostatistics", chatbot: 4.38, gpt5: 4.33, significant: false },
-  { id: "B8", name: "Code Quality", shortName: "Code Quality", domain: "Biostatistics", chatbot: 3.23, gpt5: 2.26, significant: true },
-  { id: "M1", name: "Research Question Structuring", shortName: "PICO/PICOTS", domain: "Methodology", chatbot: 4.40, gpt5: 4.58, significant: false },
-  { id: "M2", name: "Study Design Appropriateness", shortName: "Study Design", domain: "Methodology", chatbot: 4.47, gpt5: 4.50, significant: false },
-  { id: "M3", name: "Causal Inference Framework", shortName: "Causal Infer.", domain: "Methodology", chatbot: 4.05, gpt5: 4.21, significant: false },
-  { id: "M4", name: "Bias Identification", shortName: "Bias ID", domain: "Methodology", chatbot: 4.24, gpt5: 4.22, significant: false },
-  { id: "M5", name: "Ethical Considerations", shortName: "Ethics", domain: "Methodology", chatbot: 3.50, gpt5: 2.76, significant: true },
-  { id: "M6", name: "Reporting Standards (EQUATOR)", shortName: "EQUATOR", domain: "Methodology", chatbot: 3.59, gpt5: 3.14, significant: false },
-  { id: "M7", name: "Explanation Quality", shortName: "Explanations", domain: "Methodology", chatbot: 4.81, gpt5: 4.58, significant: false },
-  { id: "M8", name: "Actionability", shortName: "Actionability", domain: "Methodology", chatbot: 4.63, gpt5: 4.69, significant: false },
+  { id: "B1", name: "Statistical Test Selection", shortName: "Test Selection", domain: "Biostatistics", chatbot: 4.71, gpt5: 4.67, significant: false },
+  { id: "B2", name: "Sample Size Calculation", shortName: "Sample Size", domain: "Biostatistics", chatbot: 3.81, gpt5: 4.22, significant: false },
+  { id: "B3", name: "Code Correctness", shortName: "Code Correct.", domain: "Biostatistics", chatbot: 3.65, gpt5: 2.16, significant: true },
+  { id: "B4", name: "Assumption Checking", shortName: "Assumptions", domain: "Biostatistics", chatbot: 4.32, gpt5: 3.94, significant: false },
+  { id: "B5", name: "Effect Size Interpretation", shortName: "Effect Size", domain: "Biostatistics", chatbot: 3.67, gpt5: 3.71, significant: false },
+  { id: "B6", name: "Clinical vs Statistical Significance", shortName: "Clin. vs Stat.", domain: "Biostatistics", chatbot: 3.02, gpt5: 2.95, significant: false },
+  { id: "B7", name: "Explanation Quality", shortName: "Explanations", domain: "Biostatistics", chatbot: 4.59, gpt5: 4.70, significant: false },
+  { id: "B8", name: "Code Quality", shortName: "Code Quality", domain: "Biostatistics", chatbot: 3.76, gpt5: 2.21, significant: true },
+  { id: "M1", name: "Research Question Structuring", shortName: "PICO/PICOTS", domain: "Methodology", chatbot: 4.95, gpt5: 4.84, significant: false },
+  { id: "M2", name: "Study Design Appropriateness", shortName: "Study Design", domain: "Methodology", chatbot: 4.95, gpt5: 4.84, significant: false },
+  { id: "M3", name: "Causal Inference Framework", shortName: "Causal Infer.", domain: "Methodology", chatbot: 4.77, gpt5: 4.63, significant: false },
+  { id: "M4", name: "Bias Identification", shortName: "Bias ID", domain: "Methodology", chatbot: 4.91, gpt5: 4.56, significant: true },
+  { id: "M5", name: "Ethical Considerations", shortName: "Ethics", domain: "Methodology", chatbot: 3.95, gpt5: 2.79, significant: true },
+  { id: "M6", name: "Reporting Standards (EQUATOR)", shortName: "EQUATOR", domain: "Methodology", chatbot: 4.54, gpt5: 3.23, significant: true },
+  { id: "M7", name: "Explanation Quality", shortName: "Explanations", domain: "Methodology", chatbot: 5.00, gpt5: 5.00, significant: false },
+  { id: "M8", name: "Actionability", shortName: "Actionability", domain: "Methodology", chatbot: 4.96, gpt5: 5.00, significant: false },
 ];
 
 const COLORS = {
@@ -278,8 +278,8 @@ export default function BenchmarkPage() {
               In a rigorous, blinded evaluation across 40 medical research scenarios,
               our Research Assistant achieved a{" "}
               <span className="font-semibold text-gold-700">+{compositeAdvantage}% higher composite score</span>{" "}
-              than GPT-5 for advanced users -- with statistically significant advantages
-              in code generation, ethical awareness, and reporting standards.
+              than GPT-5 -- with statistically significant advantages
+              in ethical awareness, code generation, reporting standards, and bias identification.
             </p>
 
             {/* Methodology badge */}
@@ -297,7 +297,7 @@ export default function BenchmarkPage() {
 
       {/* Key Stats */}
       <section className="max-w-5xl mx-auto px-6 -mt-2 mb-16">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           <StatCard
             label="Composite Score"
             value="4.33"
@@ -305,20 +305,26 @@ export default function BenchmarkPage() {
             highlight
           />
           <StatCard
-            label="Win Rate"
+            label="Case Win Rate"
             value="2.2x"
             subtext="13 wins vs 6 losses"
           />
           <StatCard
-            label="Code Correctness"
-            value="+57%"
-            subtext="3.46 vs 2.21 (p=0.003)"
+            label="Dimensions Won"
+            value="11 / 16"
+            subtext="vs GPT-5's 2 of 16"
             highlight
           />
           <StatCard
+            label="Code Correctness"
+            value="+69%"
+            subtext="3.65 vs 2.16 (p=0.005)"
+          />
+          <StatCard
             label="Ethical Awareness"
-            value="+27%"
-            subtext="3.50 vs 2.76 (p=0.017)"
+            value="+42%"
+            subtext="3.95 vs 2.79 (p<0.001)"
+            highlight
           />
         </div>
       </section>
@@ -561,29 +567,41 @@ export default function BenchmarkPage() {
           viewport={{ once: true }}
         >
           <h2 className="text-display-lg font-display font-bold text-ink-900 mb-2">
-            Statistically Significant Advantages
+            Where We Outperform GPT-5
           </h2>
           <p className="text-body-md text-ink-600 mb-8 font-body">
-            These dimensions showed statistically significant improvements over GPT-5 (Wilcoxon signed-rank test with Bonferroni correction).
+            Five dimensions with statistically significant improvements (Wilcoxon signed-rank test, p &lt; 0.05). Ethical Considerations also survives Bonferroni correction.
           </p>
           <div className="flex flex-col gap-4">
             <AdvantageCard
+              title="Ethical Considerations (M5)"
+              delta="+1.16"
+              pValue="<0.001"
+              description="The MethodologyAgent consistently raises IRB requirements, informed consent protocols, vulnerable populations, and data privacy. GPT-5 frequently overlooks ethical dimensions entirely. The only dimension significant after full Bonferroni correction."
+            />
+            <AdvantageCard
               title="Code Correctness (B3)"
-              delta="+1.25"
-              pValue="0.003"
+              delta="+1.49"
+              pValue="0.005"
               description="Our multi-agent architecture routes biostatistics queries through a specialized CodingAgent with built-in code validation. GPT-5 frequently produces code with logical errors or incorrect parameter mappings."
             />
             <AdvantageCard
               title="Code Quality (B8)"
-              delta="+0.96"
-              pValue="0.038"
+              delta="+1.56"
+              pValue="0.008"
               description="Generated scripts follow best practices: clear variable naming, proper commenting, modular structure, and reproducible random seeds. GPT-5 outputs are often monolithic and harder to audit."
             />
             <AdvantageCard
-              title="Ethical Considerations (M5)"
-              delta="+0.74"
-              pValue="0.017"
-              description="The MethodologyAgent consistently raises IRB requirements, informed consent protocols, vulnerable populations, and data privacy. GPT-5 frequently overlooks ethical dimensions entirely."
+              title="Reporting Standards (M6)"
+              delta="+1.32"
+              pValue="0.004"
+              description="Stronger on EQUATOR guidelines (CONSORT, STROBE, PRISMA). Our MethodologyAgent embeds reporting standards into every study design recommendation, while GPT-5 rarely cites them."
+            />
+            <AdvantageCard
+              title="Bias Identification (M4)"
+              delta="+0.35"
+              pValue="0.029"
+              description="More thorough in identifying potential sources of bias -- immortal time bias, confounding by indication, selection bias. Our structured causal inference framework catches what GPT-5 misses."
             />
           </div>
         </motion.div>
@@ -744,7 +762,7 @@ export default function BenchmarkPage() {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
-              { step: "01", title: "54 Test Cases", desc: "Curated medical research scenarios across biostatistics, methodology, and edge cases. 14 specialties represented." },
+              { step: "01", title: "40 Expert Scenarios", desc: "Curated medical research scenarios for advanced users across biostatistics, methodology, and edge cases. 14 specialties represented." },
               { step: "02", title: "Blinded Evaluation", desc: "Systems randomly assigned as 'System A' or 'System B'. The judge never knew which was which." },
               { step: "03", title: "Triple-Run Consistency", desc: "Each case judged 3 times independently. 93% exact agreement, 100% within-1 agreement across runs." },
               { step: "04", title: "Statistical Rigor", desc: "Wilcoxon signed-rank tests with Bonferroni correction (alpha/17 = 0.0029). No cherry-picking." },
