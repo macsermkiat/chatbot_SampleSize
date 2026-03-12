@@ -18,6 +18,8 @@ class ReportConfig:
     include_latex: bool = True
     include_markdown: bool = True
     decimal_places: int = 2
+    excluded_cases: tuple[str, ...] = ()
+    exclusion_reasons: str = ""
 
 
 def generate_full_report(
@@ -36,9 +38,9 @@ def generate_full_report(
     dp = cfg.decimal_places
 
     sections = [
-        _header(),
+        _header(cfg),
         _executive_summary(chatbot_summary, gpt5_summary, comparison, dp),
-        _methodology_section(),
+        _methodology_section(cfg),
         _descriptive_table(chatbot_summary, gpt5_summary, dp),
         _comparison_table(comparison, dp),
         _judge_quality_section(consistency_metrics, calibration, dp),
@@ -61,13 +63,26 @@ def generate_full_report(
     return report
 
 
-def _header() -> str:
-    return """\
-# Evaluation Report: Medical Research Chatbot vs GPT-5
+def _header(cfg: ReportConfig) -> str:
+    title = "# Evaluation Report: Medical Research Chatbot vs GPT-5"
+    if cfg.excluded_cases:
+        title += " (Filtered)"
 
-**Study Design:** Blinded paired comparison with LLM-as-judge evaluation
-**Methodology:** Wilcoxon signed-rank test with Bonferroni correction
-**Judge:** Claude (Anthropic) to avoid OpenAI self-preference bias"""
+    lines = [
+        title,
+        "",
+        "**Study Design:** Blinded paired comparison with LLM-as-judge evaluation",
+        "**Methodology:** Wilcoxon signed-rank test with Bonferroni correction",
+        "**Judge:** Claude (Anthropic) to avoid OpenAI self-preference bias",
+    ]
+
+    if cfg.excluded_cases:
+        lines.append("")
+        lines.append(f"**Excluded cases ({len(cfg.excluded_cases)}):** {', '.join(sorted(cfg.excluded_cases))}")
+        if cfg.exclusion_reasons:
+            lines.append(f"**Exclusion reason:** {cfg.exclusion_reasons}")
+
+    return "\n".join(lines)
 
 
 def _executive_summary(
@@ -99,26 +114,41 @@ def _executive_summary(
 {comparison.n_significant_adjusted}/{comparison.total_dimensions}"""
 
 
-def _methodology_section() -> str:
-    return """\
-## Methodology
+def _methodology_section(cfg: ReportConfig) -> str:
+    lines = [
+        "## Methodology",
+        "",
+        "### Study Design",
+        "- 50 standardized clinical research scenarios (20 methodology, 20 biostatistics, 10 edge cases)",
+        "- Each scenario sent to both systems under identical conditions",
+        '- GPT-5 tested without system prompt or tools (vanilla baseline)',
+        '- Responses blinded and randomly labeled "System A" / "System B"',
+    ]
 
-### Study Design
-- 50 standardized clinical research scenarios (20 methodology, 20 biostatistics, 10 edge cases)
-- Each scenario sent to both systems under identical conditions
-- GPT-5 tested without system prompt or tools (vanilla baseline)
-- Responses blinded and randomly labeled "System A" / "System B"
+    if cfg.excluded_cases:
+        lines.append("")
+        lines.append("### Exclusion Criteria")
+        lines.append(
+            f"- {len(cfg.excluded_cases)} cases excluded due to: "
+            f"{cfg.exclusion_reasons or 'routing/deferral failures or methodological confounds'}"
+        )
+        lines.append(f"- Excluded case IDs: {', '.join(sorted(cfg.excluded_cases))}")
 
-### Evaluation
-- 16 rubric dimensions (8 methodology + 8 biostatistics), each scored 1-5
-- LLM judge (Claude) scored each response 3 times for consistency
-- Automated checks: statistical test correctness, code execution, PICO completeness
+    lines.extend([
+        "",
+        "### Evaluation",
+        "- 16 rubric dimensions (8 methodology + 8 biostatistics), each scored 1-5",
+        "- LLM judge (Claude) scored each response 3 times for consistency",
+        "- Automated checks: statistical test correctness, code execution, PICO completeness",
+        "",
+        "### Statistical Analysis",
+        "- Wilcoxon signed-rank test for paired ordinal comparisons",
+        "- Bonferroni correction for multiple comparisons (alpha/17)",
+        "- Effect size: rank-biserial correlation (r = Z/sqrt(N))",
+        "- McNemar's test for binary outcomes (code correctness, test selection)",
+    ])
 
-### Statistical Analysis
-- Wilcoxon signed-rank test for paired ordinal comparisons
-- Bonferroni correction for multiple comparisons (alpha/17)
-- Effect size: rank-biserial correlation (r = Z/sqrt(N))
-- McNemar's test for binary outcomes (code correctness, test selection)"""
+    return "\n".join(lines)
 
 
 def _descriptive_table(

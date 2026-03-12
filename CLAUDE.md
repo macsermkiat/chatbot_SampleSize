@@ -60,7 +60,7 @@ Medical research assistant chatbot -- ported from n8n workflow (`Research Handof
 `Research Handoff agent.json` is the reference spec. Do not modify it.
 
 ## Tech Stack
-
+This project uses uv (not conda/anaconda) for Python package management. Backend is FastAPI/uvicorn. Frontend is Next.js on Vercel. Backend deploys to Render.
 - **Backend:** Python, FastAPI, LangGraph (multi-agent orchestration)
 - **Frontend:** Next.js (React)
 - **LLM:** OpenAI (primary), Google Gemini (fallback)
@@ -117,6 +117,12 @@ cd backend && .venv/bin/pytest
 
 - Plans: `tasks/todo.md`
 - Lessons: `tasks/lessons.md` (update after corrections)
+
+## OpenAI Model Reference
+
+Always check `../../Context-hub/openai.md` for correct OpenAI model names before using or changing them. Current models used in this project:
+- **Comparison model:** `gpt-5`
+- **Simulated user:** `gpt-5-nano`
 
 ## Architecture Details
 

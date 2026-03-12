@@ -1,10 +1,11 @@
-"""Main orchestrator CLI for the evaluation pipeline (Phases 3-5).
+"""Main orchestrator CLI for the evaluation pipeline (Phases 3-6).
 
 Usage:
     python -m evaluation.runner collect --system chatbot
     python -m evaluation.runner collect --system gpt5
     python -m evaluation.runner collect --system both
     python -m evaluation.runner evaluate
+    python -m evaluation.runner analyze
     python -m evaluation.runner run-all
 """
 
@@ -33,6 +34,10 @@ from evaluation.auto_eval.completeness_checker import check_completeness
 from evaluation.auto_eval.code_validator import validate_code
 from evaluation.llm_judge.blinding import create_blinded_pairs
 from evaluation.llm_judge.judge_runner import run_full_evaluation
+from evaluation.llm_judge.calibration import compute_self_consistency
+from evaluation.analysis.descriptive import compute_all_summaries
+from evaluation.analysis.comparison import run_full_comparison
+from evaluation.analysis.report_generator import generate_full_report, ReportConfig
 
 logging.basicConfig(
     level=logging.INFO,
@@ -235,6 +240,143 @@ async def phase_judge(config: EvalConfig) -> None:
     logger.info("Judge evaluation complete: %d total results saved", len(all_results))
 
 
+def phase_analyze(
+    config: EvalConfig,
+    exclude_cases: set[str] | None = None,
+    report_suffix: str = "",
+) -> str:
+    """Phase 6: Generate statistical comparison and final report.
+
+    Args:
+        config: Evaluation configuration.
+        exclude_cases: Case IDs to exclude from analysis (e.g., routing failures).
+        report_suffix: Suffix for output filenames (e.g., "_filtered").
+    """
+    exclude = exclude_cases or set()
+
+    # Load judge results
+    judge_path = Path(config.judge_results_dir) / "judge_results.json"
+    if not judge_path.exists():
+        logger.error("No judge results found. Run 'evaluate' first.")
+        return ""
+    raw_results = json.loads(judge_path.read_text())
+
+    from evaluation.rubrics.schema import EvaluationResult, DimensionScore
+    results = [EvaluationResult.model_validate(r) for r in raw_results]
+    logger.info("Loaded %d judge results", len(results))
+
+    # Deduplicate results: keep latest per (case_id, system_id, judge_run, rubric_id)
+    seen: dict[tuple, EvaluationResult] = {}
+    for r in results:
+        key = (r.case_id, r.system_id, r.judge_run, r.rubric_id)
+        seen[key] = r  # last one wins
+    results = list(seen.values())
+    logger.info("After dedup: %d results", len(results))
+
+    # Apply exclusions
+    if exclude:
+        before = len(results)
+        results = [r for r in results if r.case_id not in exclude]
+        logger.info(
+            "Excluded %d cases (%s): %d -> %d results",
+            len(exclude), sorted(exclude), before, len(results),
+        )
+
+    # Recreate blinded pairs for identity mapping
+    chatbot_responses = load_responses("chatbot", config)
+    gpt5_responses = load_responses("gpt5", config)
+    chatbot_by_case = get_responses_by_case(chatbot_responses)
+    gpt5_by_case = get_responses_by_case(gpt5_responses)
+    pairs = create_blinded_pairs(chatbot_by_case, gpt5_by_case, seed=config.random_seed)
+
+    # Filter pairs to match excluded cases
+    if exclude:
+        pairs = [p for p in pairs if p.case_id not in exclude]
+
+    # Compute descriptive summaries
+    summaries = compute_all_summaries(results, pairs)
+    chatbot_summary = summaries["chatbot"]
+    gpt5_summary = summaries["gpt5"]
+
+    logger.info(
+        "Chatbot: %d cases, mean overall=%.2f, composite=%.2f",
+        chatbot_summary.n_cases, chatbot_summary.mean_overall_quality,
+        chatbot_summary.mean_composite,
+    )
+    logger.info(
+        "GPT-5: %d cases, mean overall=%.2f, composite=%.2f",
+        gpt5_summary.n_cases, gpt5_summary.mean_overall_quality,
+        gpt5_summary.mean_composite,
+    )
+
+    # Collect all dimension IDs from results
+    all_dim_ids = sorted({
+        ds.dimension_id for r in results for ds in r.dimension_scores
+    })
+    logger.info("Dimensions found: %s", all_dim_ids)
+
+    # Run statistical comparison
+    comparison = run_full_comparison(results, pairs, all_dim_ids)
+
+    # Self-consistency metrics
+    consistency = compute_self_consistency(results)
+
+    # Use suffixed output directory for filtered reports
+    report_dir = config.reports_dir
+    if report_suffix:
+        report_dir = str(Path(config.reports_dir) / f"filtered{report_suffix}")
+
+    # Generate report
+    report_config = ReportConfig(
+        output_dir=report_dir,
+        excluded_cases=tuple(sorted(exclude)) if exclude else (),
+        exclusion_reasons=(
+            "routing/deferral failures and asymmetric follow-up methodology confounds"
+            if exclude else ""
+        ),
+    )
+    report = generate_full_report(
+        chatbot_summary=chatbot_summary,
+        gpt5_summary=gpt5_summary,
+        comparison=comparison,
+        consistency_metrics=consistency,
+        calibration=None,
+        config=report_config,
+    )
+
+    logger.info("Report saved to %s/evaluation_report.md", report_dir)
+
+    # Print summary to stdout
+    oc = comparison.overall_comparison
+    print("\n" + "=" * 70)
+    title = "EVALUATION RESULTS SUMMARY"
+    if exclude:
+        title += f" (excluded {len(exclude)} cases)"
+    print(title)
+    print("=" * 70)
+    if exclude:
+        print(f"Excluded cases: {sorted(exclude)}")
+    print(f"\nCases evaluated: {chatbot_summary.n_cases}")
+    print(f"\n{'Metric':<30} {'Chatbot':>10} {'GPT-5':>10}")
+    print("-" * 50)
+    print(f"{'Mean Overall Quality':<30} {chatbot_summary.mean_overall_quality:>10.2f} {gpt5_summary.mean_overall_quality:>10.2f}")
+    print(f"{'Mean Composite Score':<30} {chatbot_summary.mean_composite:>10.2f} {gpt5_summary.mean_composite:>10.2f}")
+
+    print(f"\nOverall: favors {oc.favors} (p={oc.p_value:.4f}, r={oc.effect_size_r:.2f} [{oc.effect_size_label}])")
+    print(f"Significant dimensions (Bonferroni): {comparison.n_significant_adjusted}/{comparison.total_dimensions}")
+
+    print(f"\n{'Dimension':<12} {'Chatbot':>10} {'GPT-5':>10} {'Diff':>8} {'p-adj':>10} {'Effect':>10} {'Favors':>8}")
+    print("-" * 70)
+    for c in comparison.dimension_comparisons:
+        sig = "***" if c.significant_adjusted else ("*" if c.significant_raw else "")
+        print(f"{c.dimension_id:<12} {c.chatbot_mean:>10.2f} {c.gpt5_mean:>10.2f} {c.mean_difference:>+8.2f} {c.p_value_adjusted:>10.4f} {c.effect_size_label:>10} {c.favors:>8} {sig}")
+
+    print(f"\n{'overall':<12} {oc.chatbot_mean:>10.2f} {oc.gpt5_mean:>10.2f} {oc.mean_difference:>+8.2f} {oc.p_value_adjusted:>10.4f} {oc.effect_size_label:>10} {oc.favors:>8}")
+    print("=" * 70)
+
+    return report
+
+
 async def run_all(config: EvalConfig) -> None:
     """Run the complete pipeline: collect -> auto-eval -> judge."""
     logger.info("=== Starting full evaluation pipeline ===")
@@ -270,6 +412,13 @@ def main() -> None:
     # evaluate subcommand
     subparsers.add_parser("evaluate", help="Run LLM judge evaluation")
 
+    # analyze subcommand
+    analyze_parser = subparsers.add_parser("analyze", help="Generate statistical comparison and report")
+    analyze_parser.add_argument(
+        "--exclude-cases", nargs="*", default=[],
+        help="Case IDs to exclude from analysis (e.g., B10 B11 E02)",
+    )
+
     # run-all subcommand
     subparsers.add_parser("run-all", help="Run complete pipeline (collect + eval + judge)")
 
@@ -282,6 +431,10 @@ def main() -> None:
         phase_auto_eval(config)
     elif args.command == "evaluate":
         asyncio.run(phase_judge(config))
+    elif args.command == "analyze":
+        excluded = set(args.exclude_cases) if args.exclude_cases else set()
+        suffix = "_excluded" if excluded else ""
+        phase_analyze(config, exclude_cases=excluded, report_suffix=suffix)
     elif args.command == "run-all":
         asyncio.run(run_all(config))
 

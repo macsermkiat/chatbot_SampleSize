@@ -2,7 +2,7 @@
 
 The chatbot often asks clarification questions before giving substantive
 answers. This module classifies chatbot responses (routing / clarification /
-substantive) and generates contextual user replies using gpt5-nano, drawing
+substantive) and generates contextual user replies using gpt-5-nano, drawing
 on the test case ground truth to provide realistic answers.
 """
 
@@ -59,7 +59,7 @@ _CLARIFICATION_PATTERNS: tuple[re.Pattern[str], ...] = tuple(
     )
 )
 
-_SIMULATED_USER_MODEL = "gpt5-nano"
+_SIMULATED_USER_MODEL = "gpt-5-nano"
 _MAX_CONVERSATION_TURNS = 10
 
 
@@ -78,6 +78,11 @@ def classify_response(text: str) -> ResponseType:
     routing_hits = sum(1 for p in _ROUTING_PATTERNS if p.search(stripped))
     if routing_hits >= 1 and len(stripped) < 300:
         return "routing"
+
+    # Long responses (>1000 chars) are almost always substantive even if
+    # they contain clarification questions at the end.
+    if len(stripped) > 1000:
+        return "substantive"
 
     # Check clarification patterns
     clarification_hits = sum(
@@ -172,7 +177,7 @@ async def generate_user_response(
 ) -> str:
     """Generate a simulated user reply to a chatbot clarification question.
 
-    Uses gpt5-nano to produce a brief, natural response that answers the
+    Uses gpt-5-nano to produce a brief, natural response that answers the
     chatbot's question using information from the test case ground truth.
     """
     ground_truth_context = _build_ground_truth_context(case)
@@ -205,7 +210,7 @@ async def generate_user_response(
 
     try:
         completion = await client.chat.completions.create(
-            model=_SIMULATED_USER_MODEL,
+            model=config.simulated_user_model,
             messages=messages,
             max_completion_tokens=256,
         )
@@ -243,7 +248,13 @@ async def run_conversation_loop(
     conversation_history: list[dict[str, str]] = []
     current_prompt = case.prompt
 
-    async with httpx.AsyncClient(timeout=config.chatbot_timeout_seconds) as client:
+    client_timeout = httpx.Timeout(
+        connect=10.0,
+        read=float(config.chatbot_timeout_seconds),
+        write=10.0,
+        pool=10.0,
+    )
+    async with httpx.AsyncClient(timeout=client_timeout) as client:
         # Create session
         try:
             await client.post(

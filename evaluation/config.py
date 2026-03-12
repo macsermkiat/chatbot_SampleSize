@@ -23,7 +23,7 @@ class EvalConfig(BaseSettings):
 
     # -- LLM Judge --
     judge_provider: Literal["anthropic", "openai"] = "anthropic"
-    judge_model: str = "claude-sonnet-4-20250514"
+    judge_model: str = "claude-sonnet-4-6"
     judge_temperature: float = 0.3
     judge_runs_per_case: int = 3
     judge_consistency_threshold: float = 0.85
@@ -40,7 +40,7 @@ class EvalConfig(BaseSettings):
 
     # -- Simulated User --
     use_simulated_user: bool = True
-    simulated_user_model: str = "gpt5-nano"
+    simulated_user_model: str = "gpt-5-nano"
     max_conversation_turns: int = 10
 
     # -- Timeouts --

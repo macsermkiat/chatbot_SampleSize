@@ -98,11 +98,20 @@ async def _send_and_collect_sse(
     execution_result = ""
     phases: list[str] = []
 
+    # Use explicit timeout: generous read timeout for SSE (server sends
+    # keep-alive pings), but tighter connect/write/pool timeouts.
+    stream_timeout = httpx.Timeout(
+        connect=10.0,
+        read=float(timeout),
+        write=10.0,
+        pool=10.0,
+    )
+
     async with client.stream(
         "POST",
         url,
         json=payload,
-        timeout=timeout,
+        timeout=stream_timeout,
         headers={"Accept": "text/event-stream"},
     ) as stream:
         current_event = ""
