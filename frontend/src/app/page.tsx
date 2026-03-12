@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import CodeBlock from "@/components/CodeBlock";
 import ExpertisePicker, {
@@ -319,6 +320,17 @@ export default function Home() {
               {WELCOME_HEADING}
             </h1>
             <div className="flex items-center gap-3">
+              <Link
+                href="/benchmark"
+                className="
+                  text-caption font-display px-2.5 py-1 rounded-full
+                  border border-gold-300 bg-gold-50
+                  text-gold-700 hover:bg-gold-100
+                  transition-all duration-200
+                "
+              >
+                vs GPT-5
+              </Link>
               {expertiseLevel && (
                 <button
                   onClick={() =>
