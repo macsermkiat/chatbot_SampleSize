@@ -5,7 +5,6 @@ from __future__ import annotations
 import json
 import logging
 import uuid
-from datetime import datetime, timezone
 from typing import AsyncGenerator
 
 from fastapi import APIRouter, HTTPException, Request
@@ -45,12 +44,11 @@ async def _ensure_session_exists(session_id: str) -> None:
         async with pool.acquire(timeout=5) as conn:
             await conn.execute(
                 """
-                INSERT INTO sessions (session_id, created_at, current_phase)
-                VALUES ($1, $2, $3)
+                INSERT INTO sessions (session_id, current_phase)
+                VALUES ($1, $2)
                 ON CONFLICT (session_id) DO NOTHING
                 """,
                 session_id,
-                datetime.now(tz=timezone.utc),
                 "orchestrator",
             )
     except Exception:

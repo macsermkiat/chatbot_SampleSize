@@ -1,6 +1,7 @@
 -- Human-readable message log for reviewing conversation history
 -- in the Supabase dashboard.  LangGraph checkpoints are opaque;
 -- this table stores the actual user/assistant text.
+-- All timestamps stored as Asia/Bangkok local time (UTC+7).
 
 CREATE TABLE IF NOT EXISTS message_logs (
     id          BIGSERIAL PRIMARY KEY,
@@ -9,7 +10,7 @@ CREATE TABLE IF NOT EXISTS message_logs (
     content     TEXT NOT NULL,
     node        TEXT,          -- LangGraph node name (e.g. 'orchestrator', 'gap_summarize')
     phase       TEXT,          -- current_phase at time of message
-    created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+    created_at  TIMESTAMP NOT NULL DEFAULT (now() AT TIME ZONE 'Asia/Bangkok')
 );
 
 CREATE INDEX IF NOT EXISTS idx_message_logs_session

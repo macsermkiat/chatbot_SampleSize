@@ -36,6 +36,11 @@ def _pool_kwargs() -> dict:
     return kwargs
 
 
+async def _init_connection(conn: asyncpg.Connection) -> None:
+    """Set session timezone to Asia/Bangkok (UTC+7) on every new connection."""
+    await conn.execute("SET timezone = 'Asia/Bangkok'")
+
+
 async def get_pool() -> asyncpg.Pool:
     global _pool
     if _pool is None:
@@ -47,6 +52,7 @@ async def get_pool() -> asyncpg.Pool:
             dsn=settings.database_dsn,
             min_size=2,
             max_size=10,
+            init=_init_connection,
             **extra,
         )
     return _pool

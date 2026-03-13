@@ -20,8 +20,6 @@ router = APIRouter(prefix="/api", tags=["sessions"])
 async def create_session():
     """Create a new chat session."""
     session_id = str(uuid.uuid4())
-    now = datetime.now(tz=timezone.utc)
-
     try:
         pool = await get_pool()
     except RuntimeError as exc:
@@ -33,14 +31,14 @@ async def create_session():
 
     try:
         async with pool.acquire(timeout=5) as conn:
-            await conn.execute(
+            row = await conn.fetchrow(
                 """
-                INSERT INTO sessions (session_id, created_at, current_phase)
-                VALUES ($1, $2, $3)
+                INSERT INTO sessions (session_id, current_phase)
+                VALUES ($1, $2)
                 ON CONFLICT (session_id) DO NOTHING
+                RETURNING session_id, created_at, current_phase
                 """,
                 session_id,
-                now,
                 "orchestrator",
             )
     except Exception as exc:
@@ -48,9 +46,9 @@ async def create_session():
         raise HTTPException(status_code=503, detail="Database operation failed.") from exc
 
     return SessionResponse(
-        session_id=session_id,
-        created_at=now,
-        current_phase="orchestrator",
+        session_id=row["session_id"] if row else session_id,
+        created_at=row["created_at"] if row else datetime.now(tz=timezone.utc),
+        current_phase=row["current_phase"] if row else "orchestrator",
     )
 
 

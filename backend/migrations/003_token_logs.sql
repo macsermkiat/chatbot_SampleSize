@@ -1,4 +1,5 @@
 -- Token usage logs for tracking LLM costs per session/node.
+-- All timestamps stored as Asia/Bangkok local time (UTC+7).
 
 CREATE TABLE IF NOT EXISTS token_logs (
     id                BIGSERIAL PRIMARY KEY,
@@ -8,7 +9,7 @@ CREATE TABLE IF NOT EXISTS token_logs (
     prompt_tokens     INTEGER NOT NULL DEFAULT 0,
     completion_tokens INTEGER NOT NULL DEFAULT 0,
     total_tokens      INTEGER NOT NULL DEFAULT 0,
-    created_at        TIMESTAMPTZ NOT NULL DEFAULT now()
+    created_at        TIMESTAMP NOT NULL DEFAULT (now() AT TIME ZONE 'Asia/Bangkok')
 );
 
 CREATE INDEX IF NOT EXISTS idx_token_logs_session

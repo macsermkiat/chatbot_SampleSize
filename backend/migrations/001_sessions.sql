@@ -1,9 +1,10 @@
 -- Sessions table for chat session tracking.
+-- All timestamps stored as Asia/Bangkok local time (UTC+7).
 -- LangGraph checkpoint tables are auto-created by AsyncPostgresSaver.setup().
 
 CREATE TABLE IF NOT EXISTS sessions (
-    session_id  TEXT PRIMARY KEY,
-    created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+    session_id    TEXT PRIMARY KEY,
+    created_at    TIMESTAMP NOT NULL DEFAULT (now() AT TIME ZONE 'Asia/Bangkok'),
     current_phase TEXT NOT NULL DEFAULT 'orchestrator'
 );
 
