@@ -145,12 +145,15 @@ def extract_token_usage(response) -> dict:
         "model": None,
     }
 
-    # Try usage_metadata first (LangChain standard)
+    # Try usage_metadata first (LangChain standard).
+    # In newer LangChain versions, usage_metadata is a UsageMetadata object
+    # (not a plain dict), so we accept any mapping-like object with .get().
     um = getattr(response, "usage_metadata", None)
-    if um and isinstance(um, dict):
-        usage["prompt_tokens"] = um.get("input_tokens", 0) or um.get("prompt_tokens", 0)
-        usage["completion_tokens"] = um.get("output_tokens", 0) or um.get("completion_tokens", 0)
-        usage["total_tokens"] = um.get("total_tokens", 0)
+    if um is not None:
+        _get = getattr(um, "get", None) or (lambda k, d=0: getattr(um, k, d))
+        usage["prompt_tokens"] = _get("input_tokens", 0) or _get("prompt_tokens", 0)
+        usage["completion_tokens"] = _get("output_tokens", 0) or _get("completion_tokens", 0)
+        usage["total_tokens"] = _get("total_tokens", 0)
 
     # Fallback to response_metadata
     if usage["total_tokens"] == 0:
@@ -164,7 +167,19 @@ def extract_token_usage(response) -> dict:
         if model_name:
             usage["model"] = model_name
 
+    # Always try to get model name from response_metadata even if usage_metadata worked
+    if usage["model"] is None:
+        rm = getattr(response, "response_metadata", {}) or {}
+        usage["model"] = rm.get("model_name") or rm.get("model")
+
     if usage["total_tokens"] == 0 and (usage["prompt_tokens"] or usage["completion_tokens"]):
         usage["total_tokens"] = usage["prompt_tokens"] + usage["completion_tokens"]
+
+    if usage["total_tokens"] == 0:
+        _logger.debug(
+            "Token extraction returned zeros for response type=%s, attrs=%s",
+            type(response).__name__,
+            [a for a in dir(response) if not a.startswith("_")],
+        )
 
     return usage

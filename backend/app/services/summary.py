@@ -11,19 +11,9 @@ from app.config import settings
 _logger = logging.getLogger(__name__)
 
 SUMMARY_SYSTEM_PROMPT = """\
-You are a medical research consultation summarizer. Given a conversation between \
-a researcher and an AI research assistant, produce a concise summary (2-3 paragraphs, \
-under 1 page) suitable for a human biostatistician or epidemiologist to review \
-before a consultation.
-
-Include:
-- The research question or topic discussed
-- Key methodology decisions or recommendations made
-- Statistical considerations (study design, sample size, tests discussed)
-- Any unresolved questions or areas needing human expert input
-
-Write in a professional, clinical tone. Do not include greetings or pleasantries. \
-Focus on actionable information the reviewing expert needs to know."""
+Summarize this medical research consultation in 2-3 paragraphs for a biostatistician \
+or epidemiologist to review. Include: research question, methodology discussed, \
+statistical considerations, and unresolved questions. Professional tone, no greetings."""
 
 
 async def generate_summary(messages: list[dict]) -> str:
@@ -45,12 +35,12 @@ async def generate_summary(messages: list[dict]) -> str:
         transcript_parts.append(f"{role_label}: {msg['content']}")
     transcript = "\n\n".join(transcript_parts)
 
-    # Use GPT-5-nano for cost-effective summarization
+    # Use GPT-5-mini for summarization (nano is too constrained for this task)
     client = AsyncOpenAI(api_key=settings.openai_api_key)
 
     try:
         response = await client.chat.completions.create(
-            model="gpt-5-nano",
+            model="gpt-5-mini",
             messages=[
                 {"role": "system", "content": SUMMARY_SYSTEM_PROMPT},
                 {
@@ -58,10 +48,16 @@ async def generate_summary(messages: list[dict]) -> str:
                     "content": f"Summarize this research consultation:\n\n{transcript}",
                 },
             ],
-            max_tokens=1000,
-            temperature=0.3,
+            max_completion_tokens=4000,
         )
-        return response.choices[0].message.content or "Summary generation failed."
+        content = (response.choices[0].message.content or "").strip()
+        if not content:
+            _logger.warning(
+                "Summary returned empty content, finish_reason=%s",
+                response.choices[0].finish_reason,
+            )
+            raise RuntimeError("Summary generation returned empty response")
+        return content
     except Exception as exc:
         _logger.exception("Failed to generate summary")
         raise RuntimeError(f"Summary generation failed: {exc}") from exc

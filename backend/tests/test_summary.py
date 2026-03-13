@@ -34,11 +34,10 @@ class TestGenerateSummary:
 
         assert result == "Summary of consultation."
 
-        # Verify the call used gpt-5-nano
+        # Verify the call used gpt-5-mini
         call_kwargs = mock_client.chat.completions.create.call_args
-        assert call_kwargs.kwargs["model"] == "gpt-5-nano"
-        assert call_kwargs.kwargs["temperature"] == 0.3
-        assert call_kwargs.kwargs["max_tokens"] == 1000
+        assert call_kwargs.kwargs["model"] == "gpt-5-mini"
+        assert call_kwargs.kwargs["max_completion_tokens"] == 4000
 
     async def test_includes_all_messages_in_transcript(self):
         messages = [
@@ -93,17 +92,17 @@ class TestGenerateSummary:
             with pytest.raises(RuntimeError, match="Summary generation failed"):
                 await generate_summary(messages)
 
-    async def test_handles_none_content_response(self):
+    async def test_raises_on_empty_content_response(self):
         messages = [{"role": "user", "content": "Test"}]
 
         mock_response = MagicMock()
         mock_response.choices = [MagicMock()]
         mock_response.choices[0].message.content = None
+        mock_response.choices[0].finish_reason = "length"
 
         mock_client = MagicMock()
         mock_client.chat.completions.create = AsyncMock(return_value=mock_response)
 
         with patch("app.services.summary.AsyncOpenAI", return_value=mock_client):
-            result = await generate_summary(messages)
-
-        assert result == "Summary generation failed."
+            with pytest.raises(RuntimeError, match="Summary generation failed"):
+                await generate_summary(messages)
