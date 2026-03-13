@@ -8,6 +8,8 @@ from __future__ import annotations
 
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
+import logging
+
 from app.agents.helpers import build_input_text
 from app.agents.progress import emit_progress
 from app.agents.prompt_composer import get_prompt
@@ -15,6 +17,8 @@ from app.agents.prompts import METHODOLOGY_PROMPT
 from app.agents.state import MethodologyOutput, ResearchState
 from app.services.llm import get_structured_model
 from app.services.memory import trim_messages
+
+_logger = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
@@ -38,7 +42,17 @@ async def methodology_node(state: ResearchState) -> dict:
     ]
 
     await emit_progress("Designing study methodology...")
-    result: MethodologyOutput = await llm.ainvoke(messages)
+    try:
+        result: MethodologyOutput = await llm.ainvoke(messages)
+    except Exception as exc:
+        _logger.exception("LLM call failed in methodology node")
+        return {
+            "messages": [AIMessage(content="I'm sorry, I encountered a temporary issue while designing the methodology. Please try again.")],
+            "needs_clarification": False,
+            "agent_to_route_to": "",
+            "current_phase": "methodology",
+            "forwarded_message": "",
+        }
 
     return {
         "messages": [AIMessage(content=result.direct_response_to_user)],

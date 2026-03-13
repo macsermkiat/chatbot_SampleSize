@@ -10,6 +10,8 @@ from urllib.parse import urlparse
 
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
+import logging
+
 from app.agents.helpers import build_input_text
 from app.agents.progress import emit_progress
 from app.agents.prompt_composer import get_prompt
@@ -18,6 +20,8 @@ from app.agents.state import GapSearchOutput, GapSummarizeOutput, ResearchState
 from app.services.llm import get_chat_model, get_structured_model
 from app.services.memory import trim_messages
 from app.services.tavily import SearchResult, search
+
+_logger = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
@@ -38,7 +42,15 @@ async def gap_search_node(state: ResearchState) -> dict:
     ]
 
     await emit_progress("Generating search terms...")
-    result: GapSearchOutput = await llm.ainvoke(messages)
+    try:
+        result: GapSearchOutput = await llm.ainvoke(messages)
+    except Exception as exc:
+        _logger.exception("LLM call failed in gap_search node")
+        return {
+            "messages": [AIMessage(content="I'm sorry, I encountered a temporary issue while generating search terms. Please try again.")],
+            "agent_to_route_to": "",
+            "forwarded_message": "",
+        }
 
     queries = list(result.terms)
     await emit_progress(f"Searching {len(queries)} medical databases...")
@@ -101,7 +113,17 @@ async def gap_summarize_node(state: ResearchState) -> dict:
     ]
 
     await emit_progress("Appraising evidence and classifying research gaps...")
-    result: GapSummarizeOutput = await llm.ainvoke(messages)
+    try:
+        result: GapSummarizeOutput = await llm.ainvoke(messages)
+    except Exception as exc:
+        _logger.exception("LLM call failed in gap_summarize node")
+        return {
+            "messages": [AIMessage(content="I'm sorry, I encountered a temporary issue while analyzing the research. Please try again.")],
+            "needs_clarification": False,
+            "agent_to_route_to": "",
+            "current_phase": "research_gap",
+            "forwarded_message": "",
+        }
 
     return {
         "messages": [AIMessage(content=result.direct_response_to_user)],

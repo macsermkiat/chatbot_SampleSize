@@ -24,9 +24,26 @@ const jetbrains = JetBrains_Mono({
   display: "swap",
 });
 
+// Note: poweredByHeader: false is configured in next.config.js
 export const metadata: Metadata = {
+  metadataBase: new URL("https://research-assistant.app"),
   title: "Research Assistant",
-  description: "Medical research planning: gap analysis, methodology design, biostatistics",
+  description:
+    "Medical research planning: gap analysis, methodology design, biostatistics",
+  openGraph: {
+    title: "Research Assistant",
+    description:
+      "AI-powered medical research planning: gap analysis, study methodology design, and biostatistical analysis.",
+    url: "https://research-assistant.app",
+    siteName: "Research Assistant",
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "Research Assistant",
+    description:
+      "AI-powered medical research planning: gap analysis, study methodology design, and biostatistical analysis.",
+  },
 };
 
 export default function RootLayout({

@@ -109,6 +109,26 @@ export async function* streamChat(
   if (remaining) {
     buffer += remaining;
   }
+
+  // Parse any remaining buffer content (final SSE lines without trailing newline)
+  if (buffer.trim()) {
+    const finalLines = buffer.split("\n");
+    for (const line of finalLines) {
+      if (line.startsWith("event: ")) {
+        currentEvent = line.slice(7).trim();
+      } else if (line.startsWith("data: ")) {
+        const raw = line.slice(6).trim();
+        if (!raw) continue;
+        try {
+          const data = JSON.parse(raw) as ChatEventData;
+          yield { event: currentEvent, data };
+          currentEvent = "message";
+        } catch {
+          // Skip malformed final chunk
+        }
+      }
+    }
+  }
 }
 
 /**
@@ -141,7 +161,12 @@ export async function createSession(): Promise<{
   current_phase: string;
 }> {
   const response = await fetchWithRetry(`${API_BASE}/sessions`, { method: "POST" });
-  if (!response.ok) throw new Error("Failed to create session");
+  if (!response.ok) {
+    const body = await response.text().catch(() => "");
+    throw new Error(
+      `Failed to create session (${response.status}): ${body || response.statusText}`,
+    );
+  }
   return response.json();
 }
 

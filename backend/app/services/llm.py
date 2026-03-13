@@ -87,6 +87,11 @@ _PROVIDER_BUILDERS = {
 @lru_cache(maxsize=32)
 def _get_base_model(agent_name: str) -> BaseChatModel:
     """Return the base ChatModel (no fallback) for the agent."""
+    if agent_name not in AGENT_MODEL_MAP:
+        raise ValueError(
+            f"Unknown agent '{agent_name}'. "
+            f"Valid agents: {list(AGENT_MODEL_MAP.keys())}"
+        )
     provider, model_id = AGENT_MODEL_MAP[agent_name]
     builder = _PROVIDER_BUILDERS[provider]
     return builder(model_id)
@@ -125,3 +130,41 @@ def get_structured_model(agent_name: str, schema: type) -> BaseChatModel:
         fallback = _get_fallback_model().with_structured_output(schema)
         _structured_cache[key] = primary.with_fallbacks([fallback])
     return _structured_cache[key]
+
+
+def extract_token_usage(response) -> dict:
+    """Extract token usage from a LangChain response object.
+
+    Returns a dict with prompt_tokens, completion_tokens, total_tokens, and model.
+    All values default to 0 / None if unavailable.
+    """
+    usage: dict = {
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "model": None,
+    }
+
+    # Try usage_metadata first (LangChain standard)
+    um = getattr(response, "usage_metadata", None)
+    if um and isinstance(um, dict):
+        usage["prompt_tokens"] = um.get("input_tokens", 0) or um.get("prompt_tokens", 0)
+        usage["completion_tokens"] = um.get("output_tokens", 0) or um.get("completion_tokens", 0)
+        usage["total_tokens"] = um.get("total_tokens", 0)
+
+    # Fallback to response_metadata
+    if usage["total_tokens"] == 0:
+        rm = getattr(response, "response_metadata", {}) or {}
+        token_usage = rm.get("token_usage") or rm.get("usage") or {}
+        if token_usage:
+            usage["prompt_tokens"] = token_usage.get("prompt_tokens", 0) or token_usage.get("input_tokens", 0)
+            usage["completion_tokens"] = token_usage.get("completion_tokens", 0) or token_usage.get("output_tokens", 0)
+            usage["total_tokens"] = token_usage.get("total_tokens", 0)
+        model_name = rm.get("model_name") or rm.get("model")
+        if model_name:
+            usage["model"] = model_name
+
+    if usage["total_tokens"] == 0 and (usage["prompt_tokens"] or usage["completion_tokens"]):
+        usage["total_tokens"] = usage["prompt_tokens"] + usage["completion_tokens"]
+
+    return usage

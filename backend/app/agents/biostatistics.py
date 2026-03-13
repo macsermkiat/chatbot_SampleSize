@@ -46,7 +46,16 @@ async def biostatistics_node(state: ResearchState) -> dict:
     ]
 
     await emit_progress("Running biostatistical analysis...")
-    result: BiostatisticsOutput = await llm.ainvoke(messages)
+    try:
+        result: BiostatisticsOutput = await llm.ainvoke(messages)
+    except Exception as exc:
+        _logger.exception("LLM call failed in biostatistics node")
+        return {
+            "messages": [AIMessage(content="I'm sorry, I encountered a temporary issue during the biostatistical analysis. Please try again.")],
+            "need_info": False,
+            "agent_to_route_to": "",
+            "forwarded_message": "",
+        }
 
     response_text = result.direct_response_to_user
 
@@ -87,7 +96,11 @@ async def run_diagnostic(query: str, expertise_level: str = "advanced") -> str:
         HumanMessage(content=query),
     ]
 
-    response = await llm.ainvoke(messages)
+    try:
+        response = await llm.ainvoke(messages)
+    except Exception as exc:
+        _logger.exception("LLM call failed in diagnostic tool")
+        return "Unable to complete diagnostic analysis at this time. Please try again."
     return response.content
 
 
@@ -233,7 +246,20 @@ async def coding_node(state: ResearchState) -> dict:
     ]
 
     await emit_progress("Generating computation code...")
-    result: CodingOutput = await llm.ainvoke(messages)
+    try:
+        result: CodingOutput = await llm.ainvoke(messages)
+    except Exception as exc:
+        _logger.exception("LLM call failed in coding node")
+        return {
+            "messages": [AIMessage(content="I'm sorry, I encountered a temporary issue generating the code. Please try again.")],
+            "code_output": {},
+            "execution_result": {},
+            "stored_python_script": "",
+            "has_pending_code": False,
+            "agent_to_route_to": "",
+            "current_phase": "biostatistics",
+            "forwarded_message": "",
+        }
 
     response_text = result.direct_response_to_user
     exec_result: dict = {}

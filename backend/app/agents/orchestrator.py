@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import logging
+
 from langchain_core.messages import AIMessage, SystemMessage
 
 from app.agents.progress import emit_progress
@@ -10,6 +12,8 @@ from app.agents.prompts import ORCHESTRATOR_PROMPT
 from app.agents.state import OrchestratorOutput, ResearchState
 from app.services.llm import get_structured_model
 from app.services.memory import trim_messages
+
+_logger = logging.getLogger(__name__)
 
 
 def _sanitize_filename(name: str) -> str:
@@ -52,7 +56,17 @@ async def orchestrator_node(state: ResearchState) -> dict:
     prompt_messages = [SystemMessage(content=system_prompt), *messages]
 
     await emit_progress("Analyzing your request...")
-    result: OrchestratorOutput = await llm.ainvoke(prompt_messages)
+    try:
+        result: OrchestratorOutput = await llm.ainvoke(prompt_messages)
+    except Exception as exc:
+        _logger.exception("LLM call failed in orchestrator node")
+        return {
+            "messages": [AIMessage(content="I'm sorry, I encountered a temporary issue processing your request. Please try again.")],
+            "current_phase": "orchestrator",
+            "agent_to_route_to": "",
+            "forwarded_message": "",
+            "needs_clarification": False,
+        }
 
     # When the orchestrator asks a clarification question, stay in orchestrator
     # so the user's reply routes back here instead of skipping to a specialist.

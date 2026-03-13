@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import json
+import logging
 import uuid
+from datetime import datetime, timezone
 from typing import AsyncGenerator
 
 from fastapi import APIRouter, HTTPException, Request
@@ -12,9 +14,13 @@ from sse_starlette.sse import EventSourceResponse
 
 from app.agents.graph import build_graph
 from app.agents.state import ResearchState
+from app.db import get_pool
 from app.models import ChatRequest
+from app.services.llm import extract_token_usage
 from app.services.memory import get_checkpointer
-from app.services.message_logger import log_message
+from app.services.message_logger import log_message, log_tokens
+
+_logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api", tags=["chat"])
 
@@ -32,6 +38,25 @@ def _get_compiled_graph():
     return _compiled_graph
 
 
+async def _ensure_session_exists(session_id: str) -> None:
+    """Upsert session row so FK constraints on message_logs/token_logs won't fail."""
+    try:
+        pool = await get_pool()
+        async with pool.acquire(timeout=5) as conn:
+            await conn.execute(
+                """
+                INSERT INTO sessions (session_id, created_at, current_phase)
+                VALUES ($1, $2, $3)
+                ON CONFLICT (session_id) DO NOTHING
+                """,
+                session_id,
+                datetime.now(tz=timezone.utc),
+                "orchestrator",
+            )
+    except Exception:
+        _logger.warning("Failed to upsert session %s", session_id, exc_info=True)
+
+
 async def _stream_graph(
     message: str,
     session_id: str,
@@ -41,7 +66,18 @@ async def _stream_graph(
 ) -> AsyncGenerator[dict, None]:
     """Run the graph and yield SSE events for each node output."""
 
-    compiled = _get_compiled_graph()
+    try:
+        compiled = _get_compiled_graph()
+    except Exception as exc:
+        _logger.exception("Failed to compile graph")
+        yield {
+            "event": "error",
+            "data": json.dumps({"error": "Service temporarily unavailable. Please try again later."}),
+        }
+        return
+
+    # Ensure the session row exists before any FK-dependent writes
+    await _ensure_session_exists(session_id)
 
     config = {"configurable": {"thread_id": session_id}}
     last_emitted_phase = ""
@@ -93,6 +129,22 @@ async def _stream_graph(
                 "data": json.dumps(event.get("data", {})),
             }
             continue
+
+        # Capture token usage from LLM call completions
+        if kind == "on_llm_end":
+            llm_output = event.get("data", {}).get("output", None)
+            if llm_output is not None:
+                usage = extract_token_usage(llm_output)
+                if usage["total_tokens"] > 0:
+                    parent_node = (event.get("tags") or ["unknown"])[0] if event.get("tags") else None
+                    log_tokens(
+                        session_id,
+                        node=parent_node,
+                        model=usage["model"],
+                        prompt_tokens=usage["prompt_tokens"],
+                        completion_tokens=usage["completion_tokens"],
+                        total_tokens=usage["total_tokens"],
+                    )
 
         # Stream node completions as SSE events
         if kind == "on_chain_end" and event.get("name") in _graph.nodes:
