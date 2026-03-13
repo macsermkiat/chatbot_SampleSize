@@ -161,3 +161,39 @@ export async function mockSessions(page: Page): Promise<void> {
     });
   });
 }
+
+/**
+ * Mock the end session endpoint.
+ */
+export async function mockEndSession(page: Page): Promise<void> {
+  await page.route("**/api/sessions/*/end", async (route: Route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        session_id: "test-session-id",
+        ended_at: new Date().toISOString(),
+      }),
+    });
+  });
+}
+
+/**
+ * Mock the session summary endpoint.
+ */
+export async function mockSessionSummary(
+  page: Page,
+  summaryText: string = "This consultation covered sample size calculation for a two-arm RCT. The researcher needs approximately 200 participants per arm.",
+): Promise<void> {
+  await page.route("**/api/sessions/*/summary", async (route: Route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        session_id: "test-session-id",
+        summary_text: summaryText,
+        generated_at: new Date().toISOString(),
+      }),
+    });
+  });
+}

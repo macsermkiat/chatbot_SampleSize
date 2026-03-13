@@ -61,6 +61,17 @@ class FileUploadResponse(BaseModel):
     warning: str | None = None
 
 
+class SessionEndResponse(BaseModel):
+    session_id: str
+    ended_at: datetime
+
+
+class SummaryResponse(BaseModel):
+    session_id: str
+    summary_text: str
+    generated_at: datetime
+
+
 class HealthResponse(BaseModel):
     status: str  # "ok" | "degraded"
     db: bool

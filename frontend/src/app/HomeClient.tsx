@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import CodeBlock from "@/components/CodeBlock";
+import EndSessionDialog from "@/components/EndSessionDialog";
 import ExpertisePicker, {
   type ExpertiseLevel,
 } from "@/components/ExpertisePicker";
@@ -81,8 +82,17 @@ export default function HomeClient() {
   // Dedup guard: track the message ID currently being streamed
   const activeMessageIdRef = useRef<string | null>(null);
 
+  const [endDialogOpen, setEndDialogOpen] = useState(false);
+
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  const handleSessionEnded = useCallback(() => {
+    setEndDialogOpen(false);
+    // Generate new session ID and reload to reset all state
+    sessionStorage.setItem("research_session_id", uid());
+    window.location.reload();
+  }, []);
 
   // Warm up the backend on page load (fire-and-forget)
   useEffect(() => {
@@ -373,6 +383,21 @@ export default function HomeClient() {
                   title="Click to switch expertise level"
                 >
                   {expertiseLevel === "simple" ? "Simple" : "Advanced"}
+                </button>
+              )}
+              {!isEmpty && !streaming && (
+                <button
+                  onClick={() => setEndDialogOpen(true)}
+                  aria-label="End conversation"
+                  className="
+                    text-caption font-display px-2.5 py-1 rounded-full
+                    border border-parchment-300 hover:border-red-300
+                    text-ink-500 hover:text-red-600 hover:bg-red-50
+                    transition-all duration-200
+                    cursor-pointer
+                  "
+                >
+                  End
                 </button>
               )}
               <span className="block w-2 h-2 rounded-full bg-gold-500 animate-pulse-warm" />
@@ -685,6 +710,13 @@ export default function HomeClient() {
           </p>
         </form>
       </footer>
+
+      <EndSessionDialog
+        sessionId={sessionId}
+        open={endDialogOpen}
+        onClose={() => setEndDialogOpen(false)}
+        onSessionEnded={handleSessionEnded}
+      />
     </div>
   );
 }
