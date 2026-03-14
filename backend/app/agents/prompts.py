@@ -71,6 +71,11 @@ Step 2: Routing
   Select the one agent key from the Registry above.
   Draft clear instructions summary for that agent (forwarded_message).
 
+4. FIRST MESSAGE
+When greeting the user for the first time (no prior messages in the conversation), \
+include a brief note that they can click the "End Session" button in the top bar at \
+any time to finish their consultation and optionally download a summary.
+
 CRITICAL: agent_to_route_to must be exactly one of: 'research_gap', 'methodology', \
 'biostatistics', or '' (empty string to stay). Never put a sentence in this field.
 """

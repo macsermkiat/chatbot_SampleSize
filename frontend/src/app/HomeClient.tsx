@@ -5,6 +5,7 @@ import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import CodeBlock from "@/components/CodeBlock";
 import EndSessionDialog from "@/components/EndSessionDialog";
+import EvaluationDialog from "@/components/EvaluationDialog";
 import ExpertisePicker, {
   type ExpertiseLevel,
 } from "@/components/ExpertisePicker";
@@ -83,12 +84,19 @@ export default function HomeClient() {
   const activeMessageIdRef = useRef<string | null>(null);
 
   const [endDialogOpen, setEndDialogOpen] = useState(false);
+  const [evalDialogOpen, setEvalDialogOpen] = useState(false);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   const handleSessionEnded = useCallback(() => {
     setEndDialogOpen(false);
+    // Show evaluation dialog after session ends
+    setEvalDialogOpen(true);
+  }, []);
+
+  const handleEvaluationComplete = useCallback(() => {
+    setEvalDialogOpen(false);
     // Generate new session ID and reload to reset all state
     sessionStorage.setItem("research_session_id", uid());
     window.location.reload();
@@ -388,16 +396,16 @@ export default function HomeClient() {
               {!isEmpty && !streaming && (
                 <button
                   onClick={() => setEndDialogOpen(true)}
-                  aria-label="End conversation"
+                  aria-label="End session"
                   className="
-                    text-caption font-display px-2.5 py-1 rounded-full
-                    border border-parchment-300 hover:border-red-300
-                    text-ink-500 hover:text-red-600 hover:bg-red-50
+                    text-caption font-display font-medium px-3 py-1.5 rounded-full
+                    border border-red-200 bg-red-50
+                    text-red-600 hover:text-white hover:bg-red-500 hover:border-red-500
                     transition-all duration-200
                     cursor-pointer
                   "
                 >
-                  End
+                  End Session
                 </button>
               )}
               <span className="block w-2 h-2 rounded-full bg-gold-500 animate-pulse-warm" />
@@ -716,6 +724,11 @@ export default function HomeClient() {
         open={endDialogOpen}
         onClose={() => setEndDialogOpen(false)}
         onSessionEnded={handleSessionEnded}
+      />
+      <EvaluationDialog
+        sessionId={sessionId}
+        open={evalDialogOpen}
+        onComplete={handleEvaluationComplete}
       />
     </div>
   );

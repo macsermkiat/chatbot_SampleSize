@@ -240,6 +240,26 @@ export async function downloadSummary(sessionId: string): Promise<void> {
 }
 
 /**
+ * Submit a session evaluation (star rating + optional comment).
+ */
+export async function submitEvaluation(
+  sessionId: string,
+  rating: number,
+  comment: string,
+): Promise<{ session_id: string; rating: number; comment: string; created_at: string }> {
+  const response = await fetchWithRetry(`${API_BASE}/sessions/${sessionId}/evaluate`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ rating, comment }),
+  });
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({ detail: "Failed to submit evaluation" }));
+    throw new Error(err.detail || "Failed to submit evaluation");
+  }
+  return response.json();
+}
+
+/**
  * Generate a client-side unique ID.
  */
 export function uid(): string {

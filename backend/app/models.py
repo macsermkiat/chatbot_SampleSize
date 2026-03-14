@@ -72,6 +72,18 @@ class SummaryResponse(BaseModel):
     generated_at: datetime
 
 
+class EvaluationRequest(BaseModel):
+    rating: int = Field(..., ge=1, le=5, description="Star rating from 1 to 5")
+    comment: str = Field(default="", max_length=2000, description="Optional feedback comment")
+
+
+class EvaluationResponse(BaseModel):
+    session_id: str
+    rating: int
+    comment: str
+    created_at: datetime
+
+
 class HealthResponse(BaseModel):
     status: str  # "ok" | "degraded"
     db: bool

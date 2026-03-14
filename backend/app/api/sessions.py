@@ -10,7 +10,13 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, HTTPException, Path
 
 from app.db import get_pool
-from app.models import SessionEndResponse, SessionResponse, SummaryResponse
+from app.models import (
+    EvaluationRequest,
+    EvaluationResponse,
+    SessionEndResponse,
+    SessionResponse,
+    SummaryResponse,
+)
 from app.services.summary import generate_summary
 
 _logger = logging.getLogger(__name__)
@@ -197,4 +203,49 @@ async def get_session_summary(session_id: str):
         session_id=session_id,
         summary_text=summary_text,
         generated_at=datetime.now(tz=timezone.utc),
+    )
+
+
+@router.post(
+    "/sessions/{session_id}/evaluate",
+    response_model=EvaluationResponse,
+    status_code=201,
+)
+async def evaluate_session(session_id: str, body: EvaluationRequest):
+    """Store a user evaluation (star rating + comment) for a session."""
+    _validate_session_id(session_id)
+    try:
+        pool = await get_pool()
+    except RuntimeError as exc:
+        _logger.error("Database not configured: %s", exc)
+        raise HTTPException(status_code=503, detail="Database unavailable.") from exc
+    except Exception as exc:
+        _logger.exception("Failed to get database pool")
+        raise HTTPException(status_code=503, detail="Database unavailable.") from exc
+
+    try:
+        async with pool.acquire(timeout=5) as conn:
+            row = await conn.fetchrow(
+                """
+                INSERT INTO session_evaluations (session_id, rating, comment)
+                VALUES ($1, $2, $3)
+                ON CONFLICT (session_id) DO UPDATE
+                  SET rating = EXCLUDED.rating,
+                      comment = EXCLUDED.comment,
+                      created_at = (now() AT TIME ZONE 'Asia/Bangkok')
+                RETURNING session_id, rating, comment, created_at
+                """,
+                session_id,
+                body.rating,
+                body.comment,
+            )
+    except Exception as exc:
+        _logger.exception("Failed to store evaluation for session %s", session_id)
+        raise HTTPException(status_code=503, detail="Database operation failed.") from exc
+
+    return EvaluationResponse(
+        session_id=row["session_id"],
+        rating=row["rating"],
+        comment=row["comment"],
+        created_at=row["created_at"],
     )

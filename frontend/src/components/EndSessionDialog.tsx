@@ -94,7 +94,7 @@ export default function EndSessionDialog({
             {state === "confirm" && (
               <>
                 <h2 className="font-display text-display-sm font-semibold text-ink-900 mb-2">
-                  End Conversation
+                  End Session
                 </h2>
                 <p className="text-body-md text-ink-600 font-body mb-6">
                   Would you like to download a summary of this consultation?
