@@ -1,4 +1,4 @@
-"""Session API -- CRUD for chat sessions."""
+"""Session API -- CRUD for chat sessions + protocol export."""
 
 from __future__ import annotations
 
@@ -6,8 +6,10 @@ import logging
 import re
 import uuid
 from datetime import datetime, timezone
+from typing import Literal
 
-from fastapi import APIRouter, HTTPException, Path
+from fastapi import APIRouter, HTTPException, Path, Query
+from fastapi.responses import Response
 
 from app.db import get_pool
 from app.models import (
@@ -17,6 +19,7 @@ from app.models import (
     SessionResponse,
     SummaryResponse,
 )
+from app.services.protocol_export import generate_protocol
 from app.services.summary import generate_summary
 
 _logger = logging.getLogger(__name__)
@@ -248,4 +251,67 @@ async def evaluate_session(session_id: str, body: EvaluationRequest):
         rating=row["rating"],
         comment=row["comment"],
         created_at=row["created_at"],
+    )
+
+
+@router.get("/sessions/{session_id}/export")
+async def export_session_protocol(
+    session_id: str,
+    format: Literal["docx", "pdf"] = Query("docx", description="Export format: docx or pdf"),
+):
+    """Export session as a formatted research protocol document (DOCX or PDF)."""
+    _validate_session_id(session_id)
+
+    try:
+        pool = await get_pool()
+    except (RuntimeError, Exception) as exc:
+        _logger.error("Database unavailable for export: %s", exc)
+        raise HTTPException(status_code=503, detail="Database unavailable.") from exc
+
+    try:
+        async with pool.acquire(timeout=5) as conn:
+            session = await conn.fetchrow(
+                "SELECT session_id FROM sessions WHERE session_id = $1",
+                session_id,
+            )
+            if not session:
+                raise HTTPException(status_code=404, detail="Session not found.")
+
+            rows = await conn.fetch(
+                """
+                SELECT role, content, phase
+                FROM message_logs
+                WHERE session_id = $1
+                ORDER BY created_at ASC
+                """,
+                session_id,
+            )
+    except HTTPException:
+        raise
+    except Exception as exc:
+        _logger.exception("Failed to fetch data for export: session %s", session_id)
+        raise HTTPException(status_code=503, detail="Database operation failed.") from exc
+
+    messages = [
+        {"role": r["role"], "content": r["content"], "phase": r.get("phase", "")}
+        for r in rows
+    ]
+
+    # Generate summary for the protocol header
+    try:
+        summary_text = await generate_summary(messages)
+    except RuntimeError:
+        summary_text = "(Summary generation unavailable)"
+
+    try:
+        file_bytes, content_type, filename = generate_protocol(
+            summary_text, messages, session_id, format=format,
+        )
+    except RuntimeError as exc:
+        raise HTTPException(status_code=501, detail=str(exc)) from exc
+
+    return Response(
+        content=file_bytes,
+        media_type=content_type,
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )

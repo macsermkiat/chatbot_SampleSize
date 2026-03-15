@@ -1,6 +1,34 @@
 import { fetchWithRetry } from "./retry";
+import { createClient } from "./supabase/client";
 
 const API_BASE = "/api";
+
+/**
+ * Get the current Supabase session access token, or null if unauthenticated.
+ */
+async function getAccessToken(): Promise<string | null> {
+  try {
+    const supabase = createClient();
+    const { data } = await supabase.auth.getSession();
+    return data.session?.access_token ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Build headers with auth token if available.
+ */
+async function authHeaders(
+  extra?: Record<string, string>,
+): Promise<Record<string, string>> {
+  const headers: Record<string, string> = { ...extra };
+  const token = await getAccessToken();
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+  return headers;
+}
 
 export interface ChatMessage {
   id: string;
@@ -8,6 +36,7 @@ export interface ChatMessage {
   content: string;
   node?: string;
   phase?: string;
+  confidence?: "high" | "medium" | "low";
   timestamp: number;
 }
 
@@ -15,6 +44,7 @@ export interface ChatEventData {
   node?: string;
   content?: string;
   phase?: string;
+  confidence?: "high" | "medium" | "low";
   status?: string;
   error?: string;
   language?: string;
@@ -54,9 +84,10 @@ export async function* streamChat(
     body.uploaded_files = uploadedFiles;
   }
 
+  const headers = await authHeaders({ "Content-Type": "application/json" });
   const response = await fetchWithRetry(`${API_BASE}/chat`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers,
     body: JSON.stringify(body),
     signal,
   });
@@ -138,8 +169,10 @@ export async function uploadFile(file: File, signal?: AbortSignal): Promise<File
   const form = new FormData();
   form.append("file", file);
 
+  const headers = await authHeaders();
   const response = await fetchWithRetry(`${API_BASE}/upload`, {
     method: "POST",
+    headers,
     body: form,
     signal,
   });
@@ -176,8 +209,10 @@ export async function createSession(): Promise<{
 export async function endSession(
   sessionId: string,
 ): Promise<{ session_id: string; ended_at: string }> {
+  const headers = await authHeaders();
   const response = await fetchWithRetry(`${API_BASE}/sessions/${sessionId}/end`, {
     method: "POST",
+    headers,
   });
   if (!response.ok) {
     const err = await response.json().catch(() => ({ detail: "Failed to end session" }));
@@ -192,7 +227,10 @@ export async function endSession(
 export async function getSessionSummary(
   sessionId: string,
 ): Promise<{ session_id: string; summary_text: string; generated_at: string }> {
-  const response = await fetchWithRetry(`${API_BASE}/sessions/${sessionId}/summary`);
+  const headers = await authHeaders();
+  const response = await fetchWithRetry(`${API_BASE}/sessions/${sessionId}/summary`, {
+    headers,
+  });
   if (!response.ok) {
     const err = await response
       .json()
@@ -247,14 +285,103 @@ export async function submitEvaluation(
   rating: number,
   comment: string,
 ): Promise<{ session_id: string; rating: number; comment: string; created_at: string }> {
+  const headers = await authHeaders({ "Content-Type": "application/json" });
   const response = await fetchWithRetry(`${API_BASE}/sessions/${sessionId}/evaluate`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers,
     body: JSON.stringify({ rating, comment }),
   });
   if (!response.ok) {
     const err = await response.json().catch(() => ({ detail: "Failed to submit evaluation" }));
     throw new Error(err.detail || "Failed to submit evaluation");
+  }
+  return response.json();
+}
+
+/**
+ * Export session as a formatted protocol document (DOCX or PDF).
+ */
+export async function exportProtocol(
+  sessionId: string,
+  format: "docx" | "pdf" = "docx",
+): Promise<void> {
+  const headers = await authHeaders();
+  const response = await fetchWithRetry(
+    `${API_BASE}/sessions/${sessionId}/export?format=${format}`,
+    { headers },
+  );
+
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({ detail: "Export failed" }));
+    throw new Error(err.detail || "Export failed");
+  }
+
+  const blob = await response.blob();
+  const ext = format === "pdf" ? "pdf" : "docx";
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `protocol-${sessionId.slice(0, 8)}.${ext}`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+/**
+ * Get the current user's subscription info.
+ */
+export async function getSubscription(): Promise<{
+  tier: string;
+  status?: string;
+  urls?: { customer_portal?: string; update_payment_method?: string };
+}> {
+  const headers = await authHeaders();
+  const response = await fetchWithRetry(`${API_BASE}/billing/subscription`, {
+    headers,
+  });
+  if (!response.ok) {
+    return { tier: "free" };
+  }
+  return response.json();
+}
+
+/**
+ * Get the current user's query usage for this billing period.
+ */
+export async function getUsage(): Promise<{
+  tier: string;
+  query_count: number;
+  query_limit: number | null;
+  is_allowed: boolean;
+}> {
+  const headers = await authHeaders();
+  const response = await fetchWithRetry(`${API_BASE}/billing/usage`, {
+    headers,
+  });
+  if (!response.ok) {
+    return { tier: "free", query_count: 0, query_limit: 5, is_allowed: true };
+  }
+  return response.json();
+}
+
+/**
+ * Create a LemonSqueezy checkout session.
+ */
+export async function createCheckout(
+  variantId: string,
+): Promise<{ checkout_url: string }> {
+  const headers = await authHeaders({ "Content-Type": "application/json" });
+  const response = await fetchWithRetry(`${API_BASE}/billing/checkout`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ variant_id: variantId }),
+  });
+  if (!response.ok) {
+    const err = await response
+      .json()
+      .catch(() => ({ detail: "Checkout failed" }));
+    throw new Error(err.detail || "Checkout failed");
   }
   return response.json();
 }

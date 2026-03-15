@@ -27,6 +27,14 @@ class Settings(BaseSettings):
     supabase_key: str = ""
     google_drive_credentials: str = ""
 
+    # Auth (Supabase)
+    supabase_jwt_secret: str = ""
+
+    # Billing (LemonSqueezy)
+    lemonsqueezy_api_key: str = ""
+    lemonsqueezy_store_id: str = ""
+    lemonsqueezy_webhook_secret: str = ""
+
     # App
     app_env: str = "development"
     cors_origins: str = "http://localhost:3000"

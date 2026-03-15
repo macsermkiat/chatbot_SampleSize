@@ -13,6 +13,7 @@ venv/
 node_modules/
 .next/
 out/
+*.tsbuildinfo
 
 # IDE
 .vscode/
@@ -38,3 +39,6 @@ evaluation/output/
 
 # Tasks (local planning files)
 tasks/
+
+# Market analysis / business docs
+DAB-Research_Market-Analysis*

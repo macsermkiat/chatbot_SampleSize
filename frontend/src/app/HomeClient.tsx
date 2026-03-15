@@ -11,6 +11,7 @@ import ExpertisePicker, {
 } from "@/components/ExpertisePicker";
 import FileUpload from "@/components/FileUpload";
 import FloatingParticles from "@/components/FloatingParticles";
+import UserMenu from "@/components/UserMenu";
 import MessageBubble from "@/components/MessageBubble";
 import PhaseIndicator from "@/components/PhaseIndicator";
 import TypingIndicator from "@/components/TypingIndicator";
@@ -205,6 +206,7 @@ export default function HomeClient() {
                     content: data.content,
                     node: data.node,
                     phase: data.phase,
+                    confidence: data.confidence,
                     timestamp: Date.now(),
                   };
                   setMessages((prev) => [...prev, assistantMsg]);
@@ -412,6 +414,7 @@ export default function HomeClient() {
               <span className="text-caption text-ink-500 font-display">
                 Active
               </span>
+              <UserMenu />
             </div>
           </div>
           <PhaseIndicator currentPhase={phase} />

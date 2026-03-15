@@ -7,14 +7,16 @@ import logging
 import uuid
 from typing import AsyncGenerator
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 from langchain_core.messages import HumanMessage
 from sse_starlette.sse import EventSourceResponse
 
 from app.agents.graph import build_graph
 from app.agents.state import ResearchState
+from app.auth import AuthUser, get_optional_user
 from app.db import get_pool
 from app.models import ChatRequest
+from app.services.billing import increment_usage
 from app.services.llm import extract_token_usage
 from app.services.memory import get_checkpointer
 from app.services.message_logger import log_message, log_tokens
@@ -22,6 +24,17 @@ from app.services.message_logger import log_message, log_tokens
 _logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api", tags=["chat"])
+
+
+async def _limit_reached_generator():
+    """Yield a single error event when the user's query limit is reached."""
+    yield {
+        "event": "error",
+        "data": json.dumps({
+            "error": "Monthly query limit reached. Upgrade your plan for more queries.",
+            "code": "LIMIT_REACHED",
+        }),
+    }
 
 # Build the graph once at module level (stateless; state is per-invocation)
 _graph = build_graph()
@@ -112,6 +125,7 @@ async def _stream_graph(
             "execution_result": {},
             "stored_python_script": "",
             "has_pending_code": False,
+            "confidence_level": "",
         }
 
     # Log the user message (fire-and-forget)
@@ -163,13 +177,17 @@ async def _stream_graph(
                 if content:
                     phase = output.get("current_phase", "")
                     log_message(session_id, "assistant", content, node=node_name, phase=phase)
+                    msg_data: dict = {
+                        "node": node_name,
+                        "content": content,
+                        "phase": phase,
+                    }
+                    confidence = output.get("confidence_level")
+                    if confidence:
+                        msg_data["confidence"] = confidence
                     yield {
                         "event": "message",
-                        "data": json.dumps({
-                            "node": node_name,
-                            "content": content,
-                            "phase": phase,
-                        }),
+                        "data": json.dumps(msg_data),
                     }
 
             # Emit phase change only when the phase actually changes
@@ -193,10 +211,23 @@ async def _stream_graph(
 
 
 @router.post("/chat")
-async def chat(request: Request, body: ChatRequest):
+async def chat(
+    request: Request,
+    body: ChatRequest,
+    user: AuthUser | None = Depends(get_optional_user),
+):
     """Accept a chat message and return an SSE stream of agent responses."""
 
     session_id = body.session_id or str(uuid.uuid4())
+
+    # Usage metering: check and increment query count for authenticated users
+    if user is not None:
+        allowed = await increment_usage(user.id)
+        if not allowed:
+            return EventSourceResponse(
+                _limit_reached_generator(),
+                ping=20,
+            )
 
     uploaded_files = [f.model_dump() for f in body.uploaded_files] if body.uploaded_files else None
 
