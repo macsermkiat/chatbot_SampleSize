@@ -67,6 +67,19 @@ This project uses uv (not conda/anaconda) for Python package management. Backend
 - **Database:** Supabase PostgreSQL
 - **Search:** Tavily API
 
+## Database
+
+- **Supabase PostgreSQL** with asyncpg connection pool (see `backend/app/db.py`)
+- All timestamps stored as `TIMESTAMP` (without tz) in **Asia/Bangkok (UTC+7)** local time
+- Pool init callback sets `SET timezone = 'Asia/Bangkok'` on every connection -- `server_settings` does NOT work with Supabase PgBouncer
+- asyncpg binary protocol ignores session timezone for `TIMESTAMPTZ` columns -- use `TIMESTAMP` (no tz) with `DEFAULT (now() AT TIME ZONE 'Asia/Bangkok')` instead
+- Migrations in `backend/migrations/` run in sorted order on startup via `_run_migrations()` in `main.py`
+- `CREATE TABLE IF NOT EXISTS` silently skips if table exists with different schema -- verify columns match when debugging
+- Tables: `sessions` (PK: session_id TEXT), `message_logs` (FK: session_id), `token_logs` (FK: session_id)
+- LangGraph auto-creates `checkpoints`, `checkpoint_blobs`, `checkpoint_writes` tables
+- Session IDs are client-generated UUIDs (no server auth) -- `createSession()` in api.ts is dead code
+- `log_message()` and `log_tokens()` are fire-and-forget (asyncio.create_task) -- failures don't break chat
+
 ## Commands
 
 CRITICAL: Always use the Makefile or explicit `.venv/bin/` paths. Never run bare
@@ -87,6 +100,8 @@ make frontend         # Next.js on :3000
 # Tests
 make test             # pytest via .venv/bin/pytest
 make lint             # frontend linting
+cd frontend && npm run test:e2e   # Playwright E2E tests (32 tests)
+cd frontend && npm run test:e2e:ui # Playwright with interactive UI
 
 # Verify environment is healthy
 make check-env
@@ -112,6 +127,9 @@ cd backend && .venv/bin/pytest
 - Use `uv` not `pip` for package management
 - `timeout` unavailable on macOS -- use `gtimeout` or Python httpx ASGITransport
 - Build backend uses `setuptools.build_meta`, not `setuptools.backends._legacy:_Backend`
+- `DATABASE_URL` uses `postgresql+asyncpg://` scheme -- strip to `postgresql://` for raw asyncpg (handled by `config.database_dsn`)
+- Supabase PgBouncer on port 6543 needs `statement_cache_size=0`
+- Frontend pages split into server component (page.tsx exports metadata) + client component (HomeClient.tsx / BenchmarkClient.tsx) for SEO
 
 ## Task Tracking
 
@@ -123,6 +141,13 @@ cd backend && .venv/bin/pytest
 Always check `../../Context-hub/openai.md` for correct OpenAI model names before using or changing them. Current models used in this project:
 - **Comparison model:** `gpt-5`
 - **Simulated user:** `gpt-5-nano`
+
+## Known Production Gaps
+
+- No authentication / user identity (sessions are anonymous UUIDs)
+- File uploads not persisted to DB (processed in-memory only)
+- No `updated_at` on sessions table
+- `createSession()` in `frontend/src/lib/api.ts` is dead code (never called)
 
 ## Architecture Details
 
