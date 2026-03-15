@@ -1,0 +1,436 @@
+{
+  "version": "1.0.0",
+  "description": "Sample size validation benchmarks with exact expected values from published formulas. Sources: Chow et al. (2018) Sample Size Calculations in Clinical Research, Machin et al. (2018) Sample Sizes for Clinical, Laboratory and Epidemiology Studies, Julious (2023) Sample Sizes for Clinical Trials, statsmodels/scipy reference implementations.",
+  "benchmarks": [
+    {
+      "id": "V01",
+      "scenario": "Two independent means (equal groups)",
+      "description": "Compare mean systolic BP between drug and placebo. Two-sided two-sample t-test.",
+      "parameters": {
+        "test_type": "two_sample_t_test",
+        "alpha": 0.05,
+        "power": 0.80,
+        "effect_size_type": "mean_difference",
+        "mean_difference": 5.0,
+        "sd": 12.0,
+        "sides": 2,
+        "allocation_ratio": 1.0
+      },
+      "expected": {
+        "n_per_group": 91,
+        "total_n": 182,
+        "source": "Chow et al. Table 3.2.1; statsmodels TTestIndPower",
+        "formula": "n = 2 * ((z_alpha/2 + z_beta) * sigma / delta)^2"
+      },
+      "tolerance_5pct": [87, 96],
+      "tolerance_10pct": [82, 100]
+    },
+    {
+      "id": "V02",
+      "scenario": "Two independent means (unequal SD)",
+      "description": "Compare pain scores. Group 1 SD=2.5, Group 2 SD=3.0, difference=1.5.",
+      "parameters": {
+        "test_type": "two_sample_t_test",
+        "alpha": 0.05,
+        "power": 0.80,
+        "effect_size_type": "mean_difference",
+        "mean_difference": 1.5,
+        "sd_group1": 2.5,
+        "sd_group2": 3.0,
+        "sides": 2,
+        "allocation_ratio": 1.0
+      },
+      "expected": {
+        "n_per_group": 58,
+        "total_n": 116,
+        "source": "Pooled SD=2.76, d=0.543; statsmodels TTestIndPower",
+        "formula": "n = 2 * ((z_alpha/2 + z_beta) / d)^2 with pooled SD"
+      },
+      "tolerance_5pct": [55, 61],
+      "tolerance_10pct": [52, 64]
+    },
+    {
+      "id": "V03",
+      "scenario": "Paired t-test",
+      "description": "Pre-post blood pressure change. Expected mean change=8 mmHg, SD of change=15 mmHg.",
+      "parameters": {
+        "test_type": "paired_t_test",
+        "alpha": 0.05,
+        "power": 0.80,
+        "mean_difference": 8.0,
+        "sd_difference": 15.0,
+        "sides": 2
+      },
+      "expected": {
+        "n_per_group": 29,
+        "total_n": 29,
+        "source": "d=0.533; statsmodels TTestPower",
+        "formula": "n = ((z_alpha/2 + z_beta) * sd_diff / delta)^2"
+      },
+      "tolerance_5pct": [28, 31],
+      "tolerance_10pct": [26, 32]
+    },
+    {
+      "id": "V04",
+      "scenario": "Two proportions (chi-square)",
+      "description": "Compare infection rates: control=30%, treatment=20%.",
+      "parameters": {
+        "test_type": "two_proportions",
+        "alpha": 0.05,
+        "power": 0.80,
+        "p1": 0.30,
+        "p2": 0.20,
+        "sides": 2
+      },
+      "expected": {
+        "n_per_group": 294,
+        "total_n": 588,
+        "source": "Fleiss et al.; statsmodels NormalIndPower with arcsin transform",
+        "formula": "n = (z_alpha/2 * sqrt(2*p_bar*q_bar) + z_beta * sqrt(p1*q1 + p2*q2))^2 / (p1-p2)^2"
+      },
+      "tolerance_5pct": [279, 309],
+      "tolerance_10pct": [265, 323]
+    },
+    {
+      "id": "V05",
+      "scenario": "Two proportions (small difference)",
+      "description": "Mortality reduction from 5% to 3%.",
+      "parameters": {
+        "test_type": "two_proportions",
+        "alpha": 0.05,
+        "power": 0.80,
+        "p1": 0.05,
+        "p2": 0.03,
+        "sides": 2
+      },
+      "expected": {
+        "n_per_group": 1543,
+        "total_n": 3086,
+        "source": "statsmodels proportion_effectsize + NormalIndPower",
+        "formula": "Cohen h = 2*arcsin(sqrt(p1)) - 2*arcsin(sqrt(p2))"
+      },
+      "tolerance_5pct": [1466, 1620],
+      "tolerance_10pct": [1389, 1697]
+    },
+    {
+      "id": "V06",
+      "scenario": "One-way ANOVA (3 groups)",
+      "description": "Compare 3 drug doses. Effect size f=0.25 (medium).",
+      "parameters": {
+        "test_type": "one_way_anova",
+        "alpha": 0.05,
+        "power": 0.80,
+        "effect_size_f": 0.25,
+        "num_groups": 3,
+        "sides": 2
+      },
+      "expected": {
+        "n_per_group": 53,
+        "total_n": 159,
+        "source": "Cohen (1988); statsmodels FTestAnovaPower",
+        "formula": "F-test with k=3 groups, df1=2, df2=3(n-1)"
+      },
+      "tolerance_5pct": [50, 56],
+      "tolerance_10pct": [48, 58]
+    },
+    {
+      "id": "V07",
+      "scenario": "One-way ANOVA (4 groups, small effect)",
+      "description": "Compare 4 treatment arms. Effect size f=0.15 (small-medium).",
+      "parameters": {
+        "test_type": "one_way_anova",
+        "alpha": 0.05,
+        "power": 0.80,
+        "effect_size_f": 0.15,
+        "num_groups": 4,
+        "sides": 2
+      },
+      "expected": {
+        "n_per_group": 109,
+        "total_n": 436,
+        "source": "Cohen (1988); statsmodels FTestAnovaPower",
+        "formula": "F-test with k=4 groups, df1=3"
+      },
+      "tolerance_5pct": [104, 114],
+      "tolerance_10pct": [98, 120]
+    },
+    {
+      "id": "V08",
+      "scenario": "Survival analysis (log-rank, Schoenfeld)",
+      "description": "Compare overall survival. HR=0.75, median control=18 months, 24-month accrual, 12-month follow-up.",
+      "parameters": {
+        "test_type": "survival_log_rank",
+        "alpha": 0.05,
+        "power": 0.80,
+        "hazard_ratio": 0.75,
+        "median_control_months": 18,
+        "accrual_months": 24,
+        "followup_months": 12,
+        "sides": 2
+      },
+      "expected": {
+        "total_events": 380,
+        "source": "Schoenfeld (1983); d = 4*(z_alpha/2 + z_beta)^2 / (log(HR))^2",
+        "formula": "Schoenfeld formula for event-driven survival trials"
+      },
+      "tolerance_5pct": [361, 399],
+      "tolerance_10pct": [342, 418]
+    },
+    {
+      "id": "V09",
+      "scenario": "Survival analysis (HR=0.70, high power)",
+      "description": "Phase III oncology trial. HR=0.70, 90% power.",
+      "parameters": {
+        "test_type": "survival_log_rank",
+        "alpha": 0.05,
+        "power": 0.90,
+        "hazard_ratio": 0.70,
+        "sides": 2
+      },
+      "expected": {
+        "total_events": 328,
+        "source": "Schoenfeld formula; d = 4*(1.96+1.28)^2 / (log(0.70))^2",
+        "formula": "Schoenfeld formula"
+      },
+      "tolerance_5pct": [312, 344],
+      "tolerance_10pct": [295, 361]
+    },
+    {
+      "id": "V10",
+      "scenario": "Non-inferiority trial (means)",
+      "description": "Non-inferiority margin=5 mmHg, SD=15, true difference=0.",
+      "parameters": {
+        "test_type": "non_inferiority_means",
+        "alpha": 0.025,
+        "power": 0.80,
+        "non_inferiority_margin": 5.0,
+        "sd": 15.0,
+        "true_difference": 0.0,
+        "sides": 1
+      },
+      "expected": {
+        "n_per_group": 142,
+        "total_n": 284,
+        "source": "Julious (2023); one-sided alpha=0.025 equivalent to CI approach",
+        "formula": "n = 2 * ((z_alpha + z_beta) * sigma / delta_NI)^2"
+      },
+      "tolerance_5pct": [135, 149],
+      "tolerance_10pct": [128, 156]
+    },
+    {
+      "id": "V11",
+      "scenario": "Correlation test",
+      "description": "Detect correlation r=0.30 between biomarker and outcome.",
+      "parameters": {
+        "test_type": "correlation",
+        "alpha": 0.05,
+        "power": 0.80,
+        "expected_r": 0.30,
+        "sides": 2
+      },
+      "expected": {
+        "n_per_group": 85,
+        "total_n": 85,
+        "source": "Fisher z-transform; statsmodels",
+        "formula": "n = ((z_alpha/2 + z_beta) / arctanh(r))^2 + 3"
+      },
+      "tolerance_5pct": [81, 89],
+      "tolerance_10pct": [77, 94]
+    },
+    {
+      "id": "V12",
+      "scenario": "Logistic regression (single predictor)",
+      "description": "Binary outcome, OR=2.0, baseline probability=0.15.",
+      "parameters": {
+        "test_type": "logistic_regression",
+        "alpha": 0.05,
+        "power": 0.80,
+        "odds_ratio": 2.0,
+        "baseline_probability": 0.15,
+        "r_squared_other": 0.0,
+        "sides": 2
+      },
+      "expected": {
+        "total_n": 262,
+        "source": "Hsieh (1989); Demidenko (2007)",
+        "formula": "Wald test-based sample size for logistic regression"
+      },
+      "tolerance_5pct": [249, 275],
+      "tolerance_10pct": [236, 288]
+    },
+    {
+      "id": "V13",
+      "scenario": "McNemar's test (paired proportions)",
+      "description": "Diagnostic test comparison. Discordant proportions: p12=0.15, p21=0.05.",
+      "parameters": {
+        "test_type": "mcnemar",
+        "alpha": 0.05,
+        "power": 0.80,
+        "p_discordant_12": 0.15,
+        "p_discordant_21": 0.05,
+        "sides": 2
+      },
+      "expected": {
+        "total_n": 113,
+        "source": "Connor (1987); exact McNemar sample size",
+        "formula": "n = (z_alpha/2 * sqrt(p12+p21) + z_beta * sqrt(p12+p21-(p12-p21)^2))^2 / (p12-p21)^2"
+      },
+      "tolerance_5pct": [107, 119],
+      "tolerance_10pct": [102, 124]
+    },
+    {
+      "id": "V14",
+      "scenario": "Two independent means (90% power)",
+      "description": "Same as V01 but 90% power. Cohen's d=0.417.",
+      "parameters": {
+        "test_type": "two_sample_t_test",
+        "alpha": 0.05,
+        "power": 0.90,
+        "mean_difference": 5.0,
+        "sd": 12.0,
+        "sides": 2,
+        "allocation_ratio": 1.0
+      },
+      "expected": {
+        "n_per_group": 122,
+        "total_n": 244,
+        "source": "statsmodels TTestIndPower; z_beta=1.28",
+        "formula": "Same as V01 with z_beta=1.28"
+      },
+      "tolerance_5pct": [116, 128],
+      "tolerance_10pct": [110, 134]
+    },
+    {
+      "id": "V15",
+      "scenario": "Cluster-randomized trial (proportions)",
+      "description": "Cluster RCT. p1=0.40, p2=0.25, ICC=0.05, cluster size=50.",
+      "parameters": {
+        "test_type": "cluster_randomized_proportions",
+        "alpha": 0.05,
+        "power": 0.80,
+        "p1": 0.40,
+        "p2": 0.25,
+        "icc": 0.05,
+        "cluster_size": 50,
+        "sides": 2
+      },
+      "expected": {
+        "n_per_group_individual": 875,
+        "design_effect": 3.45,
+        "clusters_per_arm": 18,
+        "source": "Design effect = 1 + (m-1)*ICC; Donner & Klar (2000)",
+        "formula": "n_cluster = n_individual * [1 + (m-1)*ICC]"
+      },
+      "tolerance_5pct": [831, 919],
+      "tolerance_10pct": [788, 963]
+    },
+    {
+      "id": "V16",
+      "scenario": "Equivalence trial (two proportions)",
+      "description": "Bioequivalence of generic drug. p1=p2=0.80, equivalence margin=0.10.",
+      "parameters": {
+        "test_type": "equivalence_proportions",
+        "alpha": 0.05,
+        "power": 0.80,
+        "p1": 0.80,
+        "p2": 0.80,
+        "equivalence_margin": 0.10,
+        "sides": 2
+      },
+      "expected": {
+        "n_per_group": 199,
+        "total_n": 398,
+        "source": "TOST for proportions; Julious (2023)",
+        "formula": "Two one-sided tests with alpha/2 for each"
+      },
+      "tolerance_5pct": [189, 209],
+      "tolerance_10pct": [179, 219]
+    },
+    {
+      "id": "V17",
+      "scenario": "Repeated measures ANOVA",
+      "description": "4 time points, expected effect f=0.20, correlation among repeated measures=0.50.",
+      "parameters": {
+        "test_type": "repeated_measures_anova",
+        "alpha": 0.05,
+        "power": 0.80,
+        "effect_size_f": 0.20,
+        "num_measurements": 4,
+        "correlation": 0.50,
+        "num_groups": 1,
+        "sides": 2
+      },
+      "expected": {
+        "total_n": 42,
+        "source": "G*Power; corrected for non-sphericity",
+        "formula": "F-test with Greenhouse-Geisser correction"
+      },
+      "tolerance_5pct": [40, 44],
+      "tolerance_10pct": [38, 46]
+    },
+    {
+      "id": "V18",
+      "scenario": "Two proportions (large effect)",
+      "description": "Surgical complication: 15% vs 5%.",
+      "parameters": {
+        "test_type": "two_proportions",
+        "alpha": 0.05,
+        "power": 0.80,
+        "p1": 0.15,
+        "p2": 0.05,
+        "sides": 2
+      },
+      "expected": {
+        "n_per_group": 141,
+        "total_n": 282,
+        "source": "statsmodels proportion_effectsize + NormalIndPower",
+        "formula": "Cohen h with arcsin transform"
+      },
+      "tolerance_5pct": [134, 148],
+      "tolerance_10pct": [127, 155]
+    },
+    {
+      "id": "V19",
+      "scenario": "Two-sample t-test with 2:1 allocation",
+      "description": "Unequal allocation. Mean diff=3, SD=10, ratio=2:1 (treatment:control).",
+      "parameters": {
+        "test_type": "two_sample_t_test",
+        "alpha": 0.05,
+        "power": 0.80,
+        "mean_difference": 3.0,
+        "sd": 10.0,
+        "sides": 2,
+        "allocation_ratio": 2.0
+      },
+      "expected": {
+        "n_control": 118,
+        "n_treatment": 236,
+        "total_n": 354,
+        "source": "Unequal allocation: n1 = (1+1/k) * ((z_a/2+z_b)*s/d)^2",
+        "formula": "Modified t-test formula with allocation ratio k=2"
+      },
+      "tolerance_5pct": [336, 372],
+      "tolerance_10pct": [319, 389]
+    },
+    {
+      "id": "V20",
+      "scenario": "Single proportion (exact binomial)",
+      "description": "Test if treatment response rate exceeds 20%. Expected=35%, H0: p=0.20.",
+      "parameters": {
+        "test_type": "single_proportion",
+        "alpha": 0.05,
+        "power": 0.80,
+        "p0": 0.20,
+        "p1": 0.35,
+        "sides": 2
+      },
+      "expected": {
+        "total_n": 58,
+        "source": "Normal approximation; statsmodels proportions_ztest",
+        "formula": "n = (z_alpha/2 * sqrt(p0*q0) + z_beta * sqrt(p1*q1))^2 / (p1-p0)^2"
+      },
+      "tolerance_5pct": [55, 61],
+      "tolerance_10pct": [52, 64]
+    }
+  ]
+}
