@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { downloadSummary, endSession } from "@/lib/api";
+import ExportButton from "./ExportButton";
 
 interface EndSessionDialogProps {
   sessionId: string;
@@ -101,6 +102,11 @@ export default function EndSessionDialog({
                   The summary can be shared with a biostatistician or
                   epidemiologist for review before your consultation.
                 </p>
+                {/* Protocol export (DOCX/PDF) */}
+                <ExportButton sessionId={sessionId} />
+
+                <div className="border-t border-parchment-200 my-3" />
+
                 <div className="flex flex-col gap-2.5">
                   <button
                     onClick={handleDownloadAndEnd}
@@ -113,7 +119,7 @@ export default function EndSessionDialog({
                       cursor-pointer
                     "
                   >
-                    Download Summary & End
+                    Download Summary (.txt) & End
                   </button>
                   <button
                     onClick={handleEndWithoutSummary}
