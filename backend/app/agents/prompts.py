@@ -450,6 +450,16 @@ tell the user what you're going to do in "direct_response_to_user".
 - CRITICAL: Do NOT state specific sample sizes, power values, or effect size \
 calculations in your response. Only describe the approach and parameters. All \
 numerical results must come from the coding agent's executed code.
+
+### Confidence Level Assessment
+Always set "confidence_level" in your response:
+- "high": Standard, well-validated scenario (two-arm RCT, simple t-test, chi-square, \
+basic ANOVA) with all required parameters clearly provided by the user.
+- "medium": Moderately complex scenario (multi-arm trials, survival analysis, \
+mixed-effects models) OR some assumptions may need verification.
+- "low": Novel/unusual design (adaptive trials, Bayesian approaches, non-standard \
+endpoints), missing critical information, or edge cases with limited validation data.
+When in doubt, default to "medium".
 """
 
 
