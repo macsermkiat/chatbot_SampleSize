@@ -35,6 +35,20 @@ SAMPLE_MESSAGES = [
     },
 ]
 
+MESSAGES_WITH_CITATIONS = [
+    {"role": "user", "content": "Analyze this topic", "phase": ""},
+    {
+        "role": "assistant",
+        "content": "See [Study X](https://example.com/study-x) for background on CONSORT.",
+        "phase": "research_gap",
+    },
+    {
+        "role": "assistant",
+        "content": "Based on [Protocol Y](https://example.com/protocol-y).",
+        "phase": "methodology",
+    },
+]
+
 
 class TestBuildProtocolSections:
     def test_includes_summary_section(self):
@@ -130,3 +144,38 @@ class TestGenerateProtocol:
     def test_default_format_is_docx(self):
         _, content_type, filename = generate_protocol("Summary", [], SESSION_ID)
         assert filename.endswith(".docx")
+
+
+class TestReferencesInExport:
+    def test_docx_contains_references_section_when_links_present(self):
+        result = generate_docx("Summary", MESSAGES_WITH_CITATIONS, SESSION_ID)
+        doc = Document(io.BytesIO(result))
+        full_text = "\n".join(p.text for p in doc.paragraphs)
+        assert "References" in full_text
+        assert "Study X" in full_text
+        assert "example.com/study-x" in full_text
+
+    def test_no_references_section_when_no_citations(self):
+        plain_messages = [
+            {"role": "assistant", "content": "No links here.", "phase": "methodology"},
+        ]
+        result = generate_docx("Summary", plain_messages, SESSION_ID)
+        doc = Document(io.BytesIO(result))
+        headings = [p.text for p in doc.paragraphs if p.style.name.startswith("Heading")]
+        assert "References" not in headings
+
+    def test_references_appear_before_disclaimer(self):
+        result = generate_docx("Summary", MESSAGES_WITH_CITATIONS, SESSION_ID)
+        doc = Document(io.BytesIO(result))
+        texts = [p.text for p in doc.paragraphs if p.text.strip()]
+        # Find positions
+        ref_idx = next(i for i, t in enumerate(texts) if "References" in t)
+        disc_idx = next(i for i, t in enumerate(texts) if "Disclaimer" in t)
+        assert ref_idx < disc_idx
+
+    def test_static_refs_included_for_keyword_match(self):
+        result = generate_docx("Summary", MESSAGES_WITH_CITATIONS, SESSION_ID)
+        doc = Document(io.BytesIO(result))
+        full_text = "\n".join(p.text for p in doc.paragraphs)
+        # CONSORT keyword in messages should trigger static ref
+        assert "CONSORT" in full_text

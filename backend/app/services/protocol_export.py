@@ -11,6 +11,11 @@ from docx import Document
 from docx.shared import Inches, Pt
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 
+from app.services.citation_extractor import (
+    extract_citations_from_messages,
+    format_vancouver_bibliography,
+)
+
 _logger = logging.getLogger(__name__)
 
 
@@ -61,6 +66,15 @@ def _build_protocol_sections(
         sections.append({
             "heading": "Biostatistical Analysis & Sample Size",
             "content": "\n\n".join(biostatistics_content),
+        })
+
+    # References section -- extract citations from all messages
+    citations = extract_citations_from_messages(messages)
+    bibliography = format_vancouver_bibliography(citations)
+    if bibliography:
+        sections.append({
+            "heading": "References",
+            "content": bibliography,
         })
 
     return sections
