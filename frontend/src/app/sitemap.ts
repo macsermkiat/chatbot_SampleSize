@@ -28,5 +28,23 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "monthly",
       priority: 0.7,
     },
+    {
+      url: `${BASE_URL}/blog`,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.7,
+    },
+    {
+      url: `${BASE_URL}/blog/sample-size-pitfalls-researchers-overlook`,
+      lastModified: new Date("2026-03-15"),
+      changeFrequency: "yearly",
+      priority: 0.6,
+    },
+    {
+      url: `${BASE_URL}/blog/research-question-to-protocol-three-phases`,
+      lastModified: new Date("2026-03-10"),
+      changeFrequency: "yearly",
+      priority: 0.6,
+    },
   ];
 }

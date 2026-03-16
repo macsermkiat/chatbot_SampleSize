@@ -87,6 +87,9 @@ export default function LandingClient() {
             <Link href="/benchmark" className="text-body-sm text-ink-600 hover:text-ink-900 transition-colors font-body">
               Benchmark
             </Link>
+            <Link href="/blog" className="text-body-sm text-ink-600 hover:text-ink-900 transition-colors font-body">
+              Blog
+            </Link>
             <Link
               href="/login"
               className="text-body-sm text-ink-600 hover:text-ink-900 transition-colors font-body"
@@ -314,6 +317,9 @@ export default function LandingClient() {
           <div className="flex items-center gap-6">
             <Link href="/pricing" className="text-caption text-ink-400 hover:text-ink-600 transition-colors font-display">
               Pricing
+            </Link>
+            <Link href="/blog" className="text-caption text-ink-400 hover:text-ink-600 transition-colors font-display">
+              Blog
             </Link>
             <Link href="/login" className="text-caption text-ink-400 hover:text-ink-600 transition-colors font-display">
               Sign In
