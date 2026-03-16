@@ -100,10 +100,11 @@ class TestGetCurrentUser:
                 )
         assert response.status_code == 401
 
-    async def test_missing_jwt_secret_returns_503(self):
+    async def test_missing_jwt_secret_and_url_returns_503(self):
         token = _make_token()
         with patch("app.auth.settings") as mock_settings:
             mock_settings.supabase_jwt_secret = ""
+            mock_settings.supabase_url = ""
             transport = ASGITransport(app=app)
             async with AsyncClient(transport=transport, base_url="http://test") as client:
                 response = await client.get(
