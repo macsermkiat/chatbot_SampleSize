@@ -81,7 +81,7 @@ export default function ProjectsClient() {
 
   const handleResume = useCallback(
     (sessionId: string) => {
-      router.push(`/?session=${sessionId}`);
+      router.push(`/app?session=${sessionId}`);
     },
     [router],
   );

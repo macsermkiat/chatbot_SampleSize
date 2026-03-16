@@ -133,6 +133,11 @@ export default function HomeClient() {
         }));
         if (loaded.length > 0) {
           setMessages(loaded);
+          // Restore the phase from the last message that has one
+          const lastPhase = [...loaded].reverse().find((m) => m.phase)?.phase;
+          if (lastPhase) {
+            setPhase(lastPhase);
+          }
         }
       })
       .catch(() => {

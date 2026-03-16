@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { downloadSummary, endSession } from "@/lib/api";
+import { endSession } from "@/lib/api";
 import ExportButton from "./ExportButton";
 
 interface EndSessionDialogProps {
@@ -12,7 +12,7 @@ interface EndSessionDialogProps {
   onSessionEnded: () => void;
 }
 
-type DialogState = "confirm" | "generating" | "error";
+type DialogState = "confirm" | "ending" | "error";
 
 export default function EndSessionDialog({
   sessionId,
@@ -23,31 +23,18 @@ export default function EndSessionDialog({
   const [state, setState] = useState<DialogState>("confirm");
   const [errorMessage, setErrorMessage] = useState("");
 
-  const handleDownloadAndEnd = useCallback(async () => {
-    setState("generating");
+  const handleEndSession = useCallback(async () => {
+    setState("ending");
     try {
-      await downloadSummary(sessionId);
       await endSession(sessionId).catch(() => {
-        // Session end is best-effort -- summary already downloaded
+        // Best-effort -- session may already be ended
       });
       onSessionEnded();
     } catch (err) {
       setErrorMessage(
-        err instanceof Error ? err.message : "Failed to generate summary",
+        err instanceof Error ? err.message : "Failed to end session",
       );
       setState("error");
-    }
-  }, [sessionId, onSessionEnded]);
-
-  const handleEndWithoutSummary = useCallback(async () => {
-    setState("generating");
-    try {
-      await endSession(sessionId).catch(() => {
-        // Best-effort
-      });
-      onSessionEnded();
-    } catch {
-      onSessionEnded();
     }
   }, [sessionId, onSessionEnded]);
 
@@ -97,42 +84,29 @@ export default function EndSessionDialog({
                 <h2 className="font-display text-display-sm font-semibold text-ink-900 mb-2">
                   End Session
                 </h2>
-                <p className="text-body-md text-ink-600 font-body mb-6">
-                  Would you like to download a summary of this consultation?
-                  The summary can be shared with a biostatistician or
-                  epidemiologist for review before your consultation.
+                <p className="text-body-md text-ink-600 font-body mb-4">
+                  Download your consultation protocol before ending.
+                  You can export as DOCX or PDF.
                 </p>
+
                 {/* Protocol export (DOCX/PDF) */}
                 <ExportButton sessionId={sessionId} />
 
-                <div className="border-t border-parchment-200 my-3" />
+                <div className="border-t border-parchment-200 my-4" />
 
                 <div className="flex flex-col gap-2.5">
                   <button
-                    onClick={handleDownloadAndEnd}
+                    onClick={handleEndSession}
                     className="
                       w-full px-4 py-2.5 rounded-xl
-                      bg-ink-900 text-parchment-100
+                      bg-red-600 text-parchment-100
                       font-display text-body-sm font-medium
-                      hover:bg-ink-800
+                      hover:bg-red-700
                       transition-colors duration-200
                       cursor-pointer
                     "
                   >
-                    Download Summary (.txt) & End
-                  </button>
-                  <button
-                    onClick={handleEndWithoutSummary}
-                    className="
-                      w-full px-4 py-2.5 rounded-xl
-                      border border-parchment-300
-                      text-ink-600 font-display text-body-sm
-                      hover:bg-parchment-100 hover:border-parchment-400
-                      transition-colors duration-200
-                      cursor-pointer
-                    "
-                  >
-                    End Without Summary
+                    End Session
                   </button>
                   <button
                     onClick={handleClose}
@@ -150,11 +124,11 @@ export default function EndSessionDialog({
               </>
             )}
 
-            {state === "generating" && (
+            {state === "ending" && (
               <div className="flex flex-col items-center py-4">
                 <div className="w-6 h-6 border-2 border-ink-300 border-t-ink-800 rounded-full animate-spin mb-4" />
                 <p className="text-body-md text-ink-600 font-body">
-                  Generating summary...
+                  Ending session...
                 </p>
               </div>
             )}
@@ -162,14 +136,14 @@ export default function EndSessionDialog({
             {state === "error" && (
               <>
                 <h2 className="font-display text-display-sm font-semibold text-ink-900 mb-2">
-                  Summary Failed
+                  Error
                 </h2>
                 <p className="text-body-md text-ink-600 font-body mb-4">
                   {errorMessage}
                 </p>
                 <div className="flex flex-col gap-2.5">
                   <button
-                    onClick={handleDownloadAndEnd}
+                    onClick={handleEndSession}
                     className="
                       w-full px-4 py-2.5 rounded-xl
                       bg-ink-900 text-parchment-100
@@ -180,19 +154,6 @@ export default function EndSessionDialog({
                     "
                   >
                     Try Again
-                  </button>
-                  <button
-                    onClick={handleEndWithoutSummary}
-                    className="
-                      w-full px-4 py-2.5 rounded-xl
-                      border border-parchment-300
-                      text-ink-600 font-display text-body-sm
-                      hover:bg-parchment-100
-                      transition-colors duration-200
-                      cursor-pointer
-                    "
-                  >
-                    End Without Summary
                   </button>
                   <button
                     onClick={handleClose}

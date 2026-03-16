@@ -18,6 +18,38 @@ from app.services.citation_extractor import (
 
 _logger = logging.getLogger(__name__)
 
+# Unicode -> ASCII replacements for fpdf2 built-in fonts (no Unicode support)
+_UNICODE_MAP: dict[str, str] = {
+    "\u2014": "--",   # em-dash
+    "\u2013": "-",    # en-dash
+    "\u2026": "...",  # ellipsis
+    "\u2018": "'",    # left single quote
+    "\u2019": "'",    # right single quote
+    "\u201c": '"',    # left double quote
+    "\u201d": '"',    # right double quote
+    "\u00b1": "+/-",  # plus-minus
+    "\u2248": "~",    # approximately equal
+    "\u2264": "<=",   # less than or equal
+    "\u2265": ">=",   # greater than or equal
+    "\u03b1": "alpha",    # α
+    "\u03b2": "beta",     # β
+    "\u03b3": "gamma",    # γ
+    "\u03b4": "delta",    # δ
+    "\u03bc": "mu",       # μ
+    "\u03c3": "sigma",    # σ
+    "\u03c7": "chi",      # χ
+    "\u00b2": "^2",   # superscript 2
+    "\u2192": "->",   # right arrow
+}
+
+
+def _sanitize_for_pdf(text: str) -> str:
+    """Replace Unicode characters unsupported by fpdf2 built-in fonts."""
+    for char, replacement in _UNICODE_MAP.items():
+        text = text.replace(char, replacement)
+    # Strip any remaining non-latin1 characters
+    return text.encode("latin-1", errors="replace").decode("latin-1")
+
 
 def _build_protocol_sections(
     summary_text: str,
@@ -259,7 +291,7 @@ def generate_pdf(
 
         pdf.set_font("Helvetica", "", 10)
         pdf.set_text_color(26, 26, 26)
-        pdf.multi_cell(0, 5.5, section["content"])
+        pdf.multi_cell(0, 5.5, _sanitize_for_pdf(section["content"]))
         pdf.ln(4)
 
     # Disclaimer
