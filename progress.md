@@ -71,4 +71,29 @@
 
 ---
 
-## Phase 6 Complete. Next: Phase 9 (Calculator Validation)
+### Phase 9: Calculator Validation — in progress (2026-03-16)
+- [x] 9.1 Expanded validation benchmarks from 20 to 50 scenarios
+  - V21-V22: One-sample t-test (moderate + small effect)
+  - V23-V24: Two-sample t-test (large effect, one-sided)
+  - V25-V27: Survival analysis (HR=0.80, 0.65, 0.85)
+  - V28-V29: Non-inferiority trials (proportions + means 90% power)
+  - V30: Equivalence trial (means, TOST)
+  - V31-V32: ANOVA (5 groups large effect, 3 groups small effect)
+  - V33-V34: Paired t-test (strong effect, 90% power)
+  - V35-V39: Two proportions (rare events, large effect, 90% power, alpha=0.01, nearly equal)
+  - V40-V41: Two-sample t-test (very small effect d=0.20, 3:1 allocation)
+  - V42-V43: Correlation (strong r=0.50, weak r=0.15)
+  - V44-V45: Single proportion (one-sided, 90% power)
+  - V46: McNemar's (larger sample)
+  - V47: Crossover 2x2
+  - V48: Chi-square 2x3
+  - V49: Survival HR=0.75 at 90% power
+  - V50: Cluster RCT (large ICC=0.10)
+- [x] All sources cited (Chow, Cohen, Julious, Schoenfeld, Connor, Donner & Klar, G*Power)
+- [x] All 19 validation tests passing (updated count assertions to 50+)
+- [ ] 9.2-9.3 Automated test runner against live chatbot (requires running backend)
+- [ ] 9.4 Fix calculation discrepancies found
+- [ ] 9.5 Generate publishable validation report
+- [ ] 9.6 Add validation results to benchmark page
+
+**Total: 243 backend + 19 validation = 262 tests passing, 0 TypeScript errors**

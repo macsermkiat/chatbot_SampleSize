@@ -30,9 +30,9 @@ class TestBenchmarkFile:
         assert "benchmarks" in data
         assert "version" in data
 
-    def test_has_at_least_20_benchmarks(self):
+    def test_has_at_least_50_benchmarks(self):
         data = json.loads(BENCHMARKS_PATH.read_text())
-        assert len(data["benchmarks"]) >= 20
+        assert len(data["benchmarks"]) >= 50
 
     def test_each_benchmark_has_required_fields(self):
         data = json.loads(BENCHMARKS_PATH.read_text())
@@ -80,7 +80,7 @@ class TestBenchmarkSchema:
         from evaluation.validators.sample_size_validator import load_benchmarks
 
         suite = load_benchmarks()
-        assert len(suite.benchmarks) >= 20
+        assert len(suite.benchmarks) >= 50
 
     def test_benchmark_has_expected_n(self):
         from evaluation.validators.sample_size_validator import load_benchmarks
