@@ -55,7 +55,9 @@ function isNetworkError(err: unknown): boolean {
 
 export default function HomeClient() {
   const searchParams = useSearchParams();
-  const resumeSessionId = searchParams.get("session");
+  const rawResumeId = searchParams.get("session");
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const resumeSessionId = rawResumeId && UUID_RE.test(rawResumeId) ? rawResumeId : null;
 
   const [sessionId] = useState(() => {
     if (resumeSessionId) {

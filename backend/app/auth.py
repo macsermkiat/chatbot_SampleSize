@@ -99,5 +99,11 @@ async def get_optional_user(
             email=payload.get("email", ""),
             role=payload.get("role", "authenticated"),
         )
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token has expired.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
     except jwt.InvalidTokenError:
         return None

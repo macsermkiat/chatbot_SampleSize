@@ -38,7 +38,8 @@ async def list_projects(
     try:
         async with pool.acquire(timeout=5) as conn:
             if q:
-                search_pattern = f"%{q}%"
+                escaped_q = q.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+                search_pattern = f"%{escaped_q}%"
                 total = await conn.fetchval(
                     """
                     SELECT COUNT(*) FROM sessions

@@ -52,10 +52,27 @@ def _get_compiled_graph():
 
 
 async def _ensure_session_exists(session_id: str, user_id: str | None = None) -> None:
-    """Upsert session row so FK constraints on message_logs/token_logs won't fail."""
+    """Upsert session row so FK constraints on message_logs/token_logs won't fail.
+
+    If an authenticated user sends to a session owned by a different user,
+    the upsert is skipped (the session belongs to someone else).
+    """
     try:
         pool = await get_pool()
         async with pool.acquire(timeout=5) as conn:
+            # Check ownership before upserting
+            if user_id is not None:
+                existing_owner = await conn.fetchval(
+                    "SELECT user_id FROM sessions WHERE session_id = $1",
+                    session_id,
+                )
+                if existing_owner is not None and existing_owner != user_id:
+                    _logger.warning(
+                        "Session %s belongs to %s, not %s -- skipping upsert",
+                        session_id, existing_owner, user_id,
+                    )
+                    return
+
             await conn.execute(
                 """
                 INSERT INTO sessions (session_id, current_phase, user_id)

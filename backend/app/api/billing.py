@@ -132,9 +132,16 @@ async def handle_lemonsqueezy_webhook(request: Request) -> dict[str, str]:
     signature = request.headers.get("X-Signature", "")
     event_name = request.headers.get("X-Event-Name", "")
 
+    if not settings.lemonsqueezy_webhook_secret:
+        _logger.error("Webhook secret not configured -- rejecting request")
+        raise HTTPException(status_code=503, detail="Webhook verification unavailable.")
+
+    if not signature:
+        raise HTTPException(status_code=403, detail="Missing signature.")
+
     if not _verify_signature(raw_body, signature, settings.lemonsqueezy_webhook_secret):
         _logger.warning("Invalid webhook signature for event: %s", event_name)
-        raise HTTPException(status_code=403, detail="Invalid signature")
+        raise HTTPException(status_code=403, detail="Invalid signature.")
 
     payload: dict[str, Any] = json.loads(raw_body)
 
@@ -175,6 +182,10 @@ async def _handle_subscription_created(payload: dict[str, Any]) -> None:
     custom_data = payload.get("meta", {}).get("custom_data", {})
 
     user_id = custom_data.get("user_id")
+    if not user_id:
+        _logger.error("subscription_created webhook missing user_id in custom_data: %s", data["id"])
+        return
+
     ls_subscription_id = str(data["id"])
     ls_customer_id = str(attrs["customer_id"])
     variant_id = str(attrs["variant_id"])

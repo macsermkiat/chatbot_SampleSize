@@ -88,6 +88,10 @@ export default function ProjectsClient() {
 
   const handleDelete = useCallback(
     async (sessionId: string) => {
+      const confirmed = window.confirm(
+        "Are you sure you want to delete this project? This cannot be undone.",
+      );
+      if (!confirmed) return;
       try {
         await deleteProject(sessionId);
         setProjects((prev) => prev.filter((p) => p.session_id !== sessionId));

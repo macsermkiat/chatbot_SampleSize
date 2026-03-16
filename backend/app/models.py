@@ -109,7 +109,7 @@ class ProjectListResponse(BaseModel):
 
 
 class ProjectUpdateRequest(BaseModel):
-    name: str = Field(..., max_length=200)
+    name: str = Field(..., min_length=1, max_length=200)
     description: str | None = Field(default=None, max_length=2000)
 
 

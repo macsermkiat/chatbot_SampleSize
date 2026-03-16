@@ -80,6 +80,7 @@ async def create_session():
 @router.get("/sessions/{session_id}", response_model=SessionResponse)
 async def get_session(session_id: str):
     """Retrieve an existing session."""
+    _validate_session_id(session_id)
     try:
         pool = await get_pool()
     except RuntimeError as exc:
@@ -316,6 +317,7 @@ async def get_session_messages(
 async def export_session_protocol(
     session_id: str,
     format: Literal["docx", "pdf"] = Query("docx", description="Export format: docx or pdf"),
+    user: AuthUser = Depends(get_current_user),
 ):
     """Export session as a formatted research protocol document (DOCX or PDF)."""
     _validate_session_id(session_id)
@@ -329,10 +331,12 @@ async def export_session_protocol(
     try:
         async with pool.acquire(timeout=5) as conn:
             session = await conn.fetchrow(
-                "SELECT session_id FROM sessions WHERE session_id = $1",
+                "SELECT session_id, user_id FROM sessions WHERE session_id = $1",
                 session_id,
             )
             if not session:
+                raise HTTPException(status_code=404, detail="Session not found.")
+            if session["user_id"] != user.id:
                 raise HTTPException(status_code=404, detail="Session not found.")
 
             rows = await conn.fetch(

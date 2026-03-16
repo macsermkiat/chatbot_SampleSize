@@ -202,29 +202,49 @@ async def get_current_usage(user_id: str) -> dict[str, Any]:
 
 
 async def increment_usage(user_id: str) -> bool:
-    """Increment query count for the current billing period.
+    """Atomically increment query count and enforce the limit.
 
     Returns True if the query is allowed, False if the limit is reached.
+    Uses a single atomic SQL statement to prevent race conditions.
     """
     usage = await get_current_usage(user_id)
     if not usage["is_allowed"]:
         return False
 
+    limit = usage["query_limit"]
     pool = await get_pool()
     async with pool.acquire(timeout=5) as conn:
         period_start = datetime.fromisoformat(usage["period_start"])
         period_end = datetime.fromisoformat(usage["period_end"])
 
-        await conn.execute(
-            """
-            INSERT INTO usage_tracking (user_id, period_start, period_end, query_count)
-            VALUES ($1, $2, $3, 1)
-            ON CONFLICT (user_id, period_start) DO UPDATE SET
-                query_count = usage_tracking.query_count + 1
-            """,
-            user_id,
-            period_start,
-            period_end,
-        )
-
-    return True
+        if limit is not None:
+            # Atomic increment with limit guard -- prevents concurrent bypass
+            result = await conn.fetchval(
+                """
+                INSERT INTO usage_tracking (user_id, period_start, period_end, query_count)
+                VALUES ($1, $2, $3, 1)
+                ON CONFLICT (user_id, period_start) DO UPDATE SET
+                    query_count = usage_tracking.query_count + 1
+                WHERE usage_tracking.query_count < $4
+                RETURNING query_count
+                """,
+                user_id,
+                period_start,
+                period_end,
+                limit,
+            )
+            return result is not None
+        else:
+            # Unlimited tier -- just increment
+            await conn.execute(
+                """
+                INSERT INTO usage_tracking (user_id, period_start, period_end, query_count)
+                VALUES ($1, $2, $3, 1)
+                ON CONFLICT (user_id, period_start) DO UPDATE SET
+                    query_count = usage_tracking.query_count + 1
+                """,
+                user_id,
+                period_start,
+                period_end,
+            )
+            return True
