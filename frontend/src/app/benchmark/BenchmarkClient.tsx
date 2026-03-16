@@ -588,7 +588,7 @@ export default function BenchmarkClient() {
                     backgroundColor: COLORS.bg,
                     border: "1px solid #ddd3b8",
                     borderRadius: "8px",
-                    fontFamily: "var(--font-source-serif)",
+                    fontFamily: "var(--font-inter)",
                   }}
                 />
               </PieChart>
@@ -652,7 +652,7 @@ export default function BenchmarkClient() {
                   />
                   <Tooltip content={<CustomBarTooltip />} />
                   <Legend
-                    wrapperStyle={{ fontFamily: "var(--font-source-serif)", fontSize: 13 }}
+                    wrapperStyle={{ fontFamily: "var(--font-inter)", fontSize: 13 }}
                   />
                   <Bar dataKey="Rexearch" fill={COLORS.chatbot} radius={[4, 4, 0, 0]} />
                   <Bar dataKey="GPT-5" fill={COLORS.gpt5} radius={[4, 4, 0, 0]} />
@@ -709,14 +709,14 @@ export default function BenchmarkClient() {
                     strokeWidth={2}
                   />
                   <Legend
-                    wrapperStyle={{ fontFamily: "var(--font-source-serif)", fontSize: 12 }}
+                    wrapperStyle={{ fontFamily: "var(--font-inter)", fontSize: 12 }}
                   />
                   <Tooltip
                     contentStyle={{
                       backgroundColor: COLORS.bg,
                       border: "1px solid #ddd3b8",
                       borderRadius: "8px",
-                      fontFamily: "var(--font-source-serif)",
+                      fontFamily: "var(--font-inter)",
                     }}
                   />
                 </RadarChart>
@@ -751,14 +751,14 @@ export default function BenchmarkClient() {
                     strokeWidth={2}
                   />
                   <Legend
-                    wrapperStyle={{ fontFamily: "var(--font-source-serif)", fontSize: 12 }}
+                    wrapperStyle={{ fontFamily: "var(--font-inter)", fontSize: 12 }}
                   />
                   <Tooltip
                     contentStyle={{
                       backgroundColor: COLORS.bg,
                       border: "1px solid #ddd3b8",
                       borderRadius: "8px",
-                      fontFamily: "var(--font-source-serif)",
+                      fontFamily: "var(--font-inter)",
                     }}
                   />
                 </RadarChart>

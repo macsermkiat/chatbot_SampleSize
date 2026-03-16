@@ -45,7 +45,7 @@ const config: Config = {
       },
       fontFamily: {
         display: ["var(--font-cormorant)", "Georgia", "serif"],
-        body: ["var(--font-source-serif)", "Georgia", "serif"],
+        body: ["var(--font-inter)", "system-ui", "sans-serif"],
         mono: ["var(--font-jetbrains)", "Menlo", "monospace"],
       },
       fontSize: {
