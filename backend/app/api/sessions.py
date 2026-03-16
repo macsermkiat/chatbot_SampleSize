@@ -282,7 +282,7 @@ async def get_session_messages(
             )
             if not session:
                 raise HTTPException(status_code=404, detail="Session not found.")
-            if session["user_id"] != user.id:
+            if session["user_id"] is not None and session["user_id"] != user.id:
                 raise HTTPException(status_code=404, detail="Session not found.")
 
             rows = await conn.fetch(
@@ -336,7 +336,7 @@ async def export_session_protocol(
             )
             if not session:
                 raise HTTPException(status_code=404, detail="Session not found.")
-            if session["user_id"] != user.id:
+            if session["user_id"] is not None and session["user_id"] != user.id:
                 raise HTTPException(status_code=404, detail="Session not found.")
 
             rows = await conn.fetch(

@@ -78,7 +78,7 @@ async def _ensure_session_exists(session_id: str, user_id: str | None = None) ->
                 INSERT INTO sessions (session_id, current_phase, user_id)
                 VALUES ($1, $2, $3)
                 ON CONFLICT (session_id) DO UPDATE
-                  SET user_id = COALESCE(sessions.user_id, EXCLUDED.user_id)
+                  SET user_id = COALESCE(EXCLUDED.user_id, sessions.user_id)
                 """,
                 session_id,
                 "orchestrator",
