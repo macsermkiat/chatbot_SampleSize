@@ -54,10 +54,21 @@ async def methodology_node(state: ResearchState) -> dict:
             "forwarded_message": "",
         }
 
+    # Safety net: if response ends with a question, don't route away
+    route_target = "" if result.needs_clarification else result.agent_to_route_to
+    response_text = result.direct_response_to_user.strip()
+    if route_target and response_text.endswith("?"):
+        _logger.info(
+            "Methodology response ends with question but set route=%r; "
+            "overriding to stay",
+            route_target,
+        )
+        route_target = ""
+
     return {
         "messages": [AIMessage(content=result.direct_response_to_user)],
         "needs_clarification": result.needs_clarification,
-        "agent_to_route_to": "" if result.needs_clarification else result.agent_to_route_to,
-        "current_phase": result.agent_to_route_to or "methodology",
-        "forwarded_message": result.forwarded_message,
+        "agent_to_route_to": route_target,
+        "current_phase": route_target or "methodology",
+        "forwarded_message": result.forwarded_message if route_target else "",
     }

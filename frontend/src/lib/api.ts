@@ -47,6 +47,7 @@ export interface ChatEventData {
   confidence?: "high" | "medium" | "low";
   status?: string;
   error?: string;
+  code?: string;
   language?: string;
   script?: string;
   session_id?: string;
@@ -354,13 +355,24 @@ export async function getUsage(): Promise<{
   query_count: number;
   query_limit: number | null;
   is_allowed: boolean;
+  project_count: number;
+  project_limit: number | null;
+  can_create_project: boolean;
 }> {
   const headers = await authHeaders();
   const response = await fetchWithRetry(`${API_BASE}/billing/usage`, {
     headers,
   });
   if (!response.ok) {
-    return { tier: "free", query_count: 0, query_limit: 5, is_allowed: true };
+    return {
+      tier: "free",
+      query_count: 0,
+      query_limit: 5,
+      is_allowed: true,
+      project_count: 0,
+      project_limit: 1,
+      can_create_project: true,
+    };
   }
   return response.json();
 }

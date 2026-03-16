@@ -29,6 +29,7 @@ export default function ProjectCard({
   const inputRef = useRef<HTMLInputElement>(null);
 
   const displayName = project.name || "Untitled Research";
+  const isCompleted = !!project.ended_at;
   const phaseLabel = PHASE_LABELS[project.current_phase] ?? project.current_phase;
   const createdDate = new Date(project.created_at).toLocaleDateString("en-US", {
     month: "short",
@@ -125,6 +126,14 @@ export default function ProjectCard({
 
         {/* Metadata row */}
         <div className="flex items-center gap-3 mt-1.5">
+          {isCompleted && (
+            <span className="
+              text-caption font-display px-2 py-0.5 rounded-full
+              bg-green-50 text-green-700 border border-green-200
+            ">
+              Completed
+            </span>
+          )}
           <span className="
             text-caption font-display px-2 py-0.5 rounded-full
             bg-parchment-100 text-ink-500

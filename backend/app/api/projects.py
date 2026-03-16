@@ -44,7 +44,7 @@ async def list_projects(
                     """
                     SELECT COUNT(*) FROM sessions
                     WHERE user_id = $1
-                      AND ended_at IS NULL
+                      AND deleted_at IS NULL
                       AND (name ILIKE $2 OR description ILIKE $2)
                     """,
                     user.id,
@@ -56,7 +56,7 @@ async def list_projects(
                            created_at, updated_at, ended_at
                     FROM sessions
                     WHERE user_id = $1
-                      AND ended_at IS NULL
+                      AND deleted_at IS NULL
                       AND (name ILIKE $2 OR description ILIKE $2)
                     ORDER BY COALESCE(updated_at, created_at) DESC
                     LIMIT $3 OFFSET $4
@@ -70,7 +70,7 @@ async def list_projects(
                 total = await conn.fetchval(
                     """
                     SELECT COUNT(*) FROM sessions
-                    WHERE user_id = $1 AND ended_at IS NULL
+                    WHERE user_id = $1 AND deleted_at IS NULL
                     """,
                     user.id,
                 )
@@ -79,7 +79,7 @@ async def list_projects(
                     SELECT session_id, name, description, current_phase,
                            created_at, updated_at, ended_at
                     FROM sessions
-                    WHERE user_id = $1 AND ended_at IS NULL
+                    WHERE user_id = $1 AND deleted_at IS NULL
                     ORDER BY COALESCE(updated_at, created_at) DESC
                     LIMIT $2 OFFSET $3
                     """,
@@ -155,7 +155,7 @@ async def delete_project(
     session_id: str,
     user: AuthUser = Depends(get_current_user),
 ):
-    """Soft-delete a session (project) by setting ended_at."""
+    """Soft-delete a session (project) by setting deleted_at."""
     try:
         pool = await get_pool()
     except Exception as exc:
@@ -167,8 +167,8 @@ async def delete_project(
             result = await conn.execute(
                 """
                 UPDATE sessions
-                SET ended_at = (now() AT TIME ZONE 'Asia/Bangkok')
-                WHERE session_id = $1 AND user_id = $2 AND ended_at IS NULL
+                SET deleted_at = (now() AT TIME ZONE 'Asia/Bangkok')
+                WHERE session_id = $1 AND user_id = $2 AND deleted_at IS NULL
                 """,
                 session_id,
                 user.id,

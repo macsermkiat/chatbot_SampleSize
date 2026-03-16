@@ -11,6 +11,7 @@ from docx import Document
 from app.services.protocol_export import (
     _build_protocol_sections,
     generate_docx,
+    generate_pdf,
     generate_protocol,
 )
 
@@ -88,6 +89,31 @@ class TestBuildProtocolSections:
         assert sections[0]["content"] == "Just the summary"
 
 
+class TestGeneratePdf:
+    def test_returns_valid_pdf_bytes(self):
+        result = generate_pdf("Test summary", SAMPLE_MESSAGES, SESSION_ID)
+        assert isinstance(result, bytes)
+        assert len(result) > 0
+        assert result[:5] == b"%PDF-"
+
+    def test_pdf_with_empty_messages(self):
+        result = generate_pdf("Just the summary", [], SESSION_ID)
+        assert isinstance(result, bytes)
+        assert result[:5] == b"%PDF-"
+
+    def test_pdf_with_unicode_content(self):
+        messages = [
+            {
+                "role": "assistant",
+                "content": "Effect size: d = 0.5, CI: 0.3\u20130.7, p < 0.001",
+                "phase": "biostatistics",
+            },
+        ]
+        result = generate_pdf("Summary with \u2014 em-dash", messages, SESSION_ID)
+        assert isinstance(result, bytes)
+        assert result[:5] == b"%PDF-"
+
+
 class TestGenerateDocx:
     def test_returns_valid_docx_bytes(self):
         result = generate_docx("Test summary", SAMPLE_MESSAGES, SESSION_ID)
@@ -133,13 +159,17 @@ class TestGenerateProtocol:
         assert SESSION_ID[:8] in filename
         assert isinstance(data, bytes)
 
-    def test_pdf_format_without_weasyprint(self):
-        with patch(
-            "app.services.protocol_export.generate_pdf",
-            side_effect=RuntimeError("PDF export is not available. WeasyPrint is not installed."),
-        ):
-            with pytest.raises(RuntimeError, match="WeasyPrint"):
-                generate_protocol("Summary", [], SESSION_ID, format="pdf")
+    def test_pdf_format_returns_bytes(self):
+        data, content_type, filename = generate_protocol(
+            "Summary", SAMPLE_MESSAGES, SESSION_ID, format="pdf"
+        )
+        assert content_type == "application/pdf"
+        assert filename.endswith(".pdf")
+        assert SESSION_ID[:8] in filename
+        assert isinstance(data, bytes)
+        assert len(data) > 0
+        # PDF magic bytes
+        assert data[:5] == b"%PDF-"
 
     def test_default_format_is_docx(self):
         _, content_type, filename = generate_protocol("Summary", [], SESSION_ID)

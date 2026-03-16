@@ -79,13 +79,25 @@ async def orchestrator_node(state: ResearchState) -> dict:
             "needs_clarification": True,
         }
 
+    # Safety net: if the orchestrator's response ends with a question to the user
+    # (e.g. "Which would you like next?"), do NOT route away -- wait for user reply.
+    response_text = result.direct_response_to_user.strip()
+    route_target = result.agent_to_route_to
+    if route_target and response_text.endswith("?"):
+        _logger.info(
+            "Orchestrator response ends with question but set route=%r; "
+            "overriding to stay and wait for user reply",
+            route_target,
+        )
+        route_target = ""
+
     # agent_to_route_to now uses internal names directly (research_gap, etc.)
-    next_phase = result.agent_to_route_to or state.get("current_phase", "orchestrator")
+    next_phase = route_target or state.get("current_phase", "orchestrator")
 
     return {
         "messages": [AIMessage(content=result.direct_response_to_user)],
         "current_phase": next_phase,
-        "agent_to_route_to": result.agent_to_route_to,
-        "forwarded_message": result.forwarded_message,
+        "agent_to_route_to": route_target,
+        "forwarded_message": result.forwarded_message if route_target else "",
         "needs_clarification": False,
     }

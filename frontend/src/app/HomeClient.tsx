@@ -12,6 +12,7 @@ import ExpertisePicker, {
 import FileUpload from "@/components/FileUpload";
 import FloatingParticles from "@/components/FloatingParticles";
 import UserMenu from "@/components/UserMenu";
+import { QueryBadge, QueryWarningBanner, dispatchUsageRefresh } from "@/components/QueryCounter";
 import MessageBubble from "@/components/MessageBubble";
 import PhaseIndicator from "@/components/PhaseIndicator";
 import TypingIndicator from "@/components/TypingIndicator";
@@ -285,10 +286,13 @@ export default function HomeClient() {
               }
               case "error": {
                 streamCompleted = true;
+                const isLimitError = data.code === "LIMIT_REACHED" || data.code === "PROJECT_LIMIT_REACHED";
                 const errMsg: ChatMessage = {
                   id: uid(),
                   role: "assistant",
-                  content: `Something went wrong: ${data.error || "Unknown error"}. Please try again.`,
+                  content: isLimitError
+                    ? data.error || "Limit reached."
+                    : `Something went wrong: ${data.error || "Unknown error"}. Please try again.`,
                   timestamp: Date.now(),
                 };
                 setMessages((prev) => [...prev, errMsg]);
@@ -330,6 +334,9 @@ export default function HomeClient() {
       isStreamingRef.current = false;
       setStreaming(false);
       inputRef.current?.focus();
+
+      // Refresh query counter after each completed query
+      dispatchUsageRefresh();
     },
     [sessionId, expertiseLevel],
   );
@@ -411,6 +418,7 @@ export default function HomeClient() {
               <span className="block w-2 h-2 rounded-full bg-gold-500 animate-pulse-warm flex-none" />
             </div>
             <div className="flex items-center gap-2 sm:gap-3">
+              <QueryBadge />
               <Link
                 href="/benchmark"
                 className="
@@ -469,6 +477,8 @@ export default function HomeClient() {
           <PhaseIndicator currentPhase={phase} />
         </div>
       </header>
+
+      <QueryWarningBanner />
 
       {/* Messages area */}
       <main ref={scrollRef} className="flex-1 overflow-y-auto">

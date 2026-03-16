@@ -17,6 +17,7 @@ from app.db import get_pool
 from app.services.billing import (
     create_checkout,
     get_current_usage,
+    get_project_usage,
     get_subscription_portal_urls,
     get_tier_for_variant,
     get_user_subscription,
@@ -56,6 +57,9 @@ class UsageResponse(BaseModel):
     period_start: str
     period_end: str
     is_allowed: bool
+    project_count: int = 0
+    project_limit: int | None = 1
+    can_create_project: bool = True
 
 
 # ---------------------------------------------------------------------------
@@ -109,9 +113,15 @@ async def api_get_subscription(user: AuthUser = Depends(get_current_user)):
 
 @router.get("/billing/usage", response_model=UsageResponse)
 async def api_get_usage(user: AuthUser = Depends(get_current_user)):
-    """Get the authenticated user's query usage for the current billing period."""
+    """Get the authenticated user's query and project usage."""
     usage = await get_current_usage(user.id)
-    return UsageResponse(**usage)
+    project = await get_project_usage(user.id)
+    return UsageResponse(
+        **usage,
+        project_count=project["project_count"],
+        project_limit=project["project_limit"],
+        can_create_project=project["can_create_project"],
+    )
 
 
 # ---------------------------------------------------------------------------

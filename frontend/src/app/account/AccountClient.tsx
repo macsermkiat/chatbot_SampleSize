@@ -21,6 +21,9 @@ interface UsageInfo {
   period_start?: string;
   period_end?: string;
   is_allowed: boolean;
+  project_count?: number;
+  project_limit?: number | null;
+  can_create_project?: boolean;
 }
 
 const TIER_LABELS: Record<string, string> = {

@@ -47,6 +47,15 @@ TIER_LIMITS: dict[str, int | None] = {
     "institutional": None,
 }
 
+PROJECT_LIMITS: dict[str, int | None] = {
+    "free": 1,
+    "researcher": 3,
+    "researcher_annual": 3,
+    "pro": 10,
+    "pro_annual": 10,
+    "institutional": None,  # unlimited
+}
+
 
 def get_tier_for_variant(variant_id: str) -> str:
     return VARIANT_TIER_MAP.get(str(variant_id), "free")
@@ -54,6 +63,10 @@ def get_tier_for_variant(variant_id: str) -> str:
 
 def get_limit_for_tier(tier: str) -> int | None:
     return TIER_LIMITS.get(tier, 5)
+
+
+def get_project_limit_for_tier(tier: str) -> int | None:
+    return PROJECT_LIMITS.get(tier, 1)
 
 
 # ---------------------------------------------------------------------------
@@ -150,6 +163,42 @@ async def get_subscription_portal_urls(ls_subscription_id: str) -> dict[str, str
 # ---------------------------------------------------------------------------
 # Usage metering
 # ---------------------------------------------------------------------------
+
+
+async def get_project_usage(user_id: str) -> dict[str, Any]:
+    """Get project count and limit for a user based on their tier."""
+    pool = await get_pool()
+    async with pool.acquire(timeout=5) as conn:
+        sub = await conn.fetchrow(
+            """
+            SELECT variant_id
+            FROM subscriptions
+            WHERE user_id = $1 AND status IN ('active', 'on_trial')
+            ORDER BY created_at DESC LIMIT 1
+            """,
+            user_id,
+        )
+
+        tier = "free"
+        if sub is not None:
+            tier = get_tier_for_variant(str(sub["variant_id"]))
+
+        count = await conn.fetchval(
+            """
+            SELECT COUNT(*) FROM sessions
+            WHERE user_id = $1 AND deleted_at IS NULL
+            """,
+            user_id,
+        ) or 0
+
+    limit = get_project_limit_for_tier(tier)
+
+    return {
+        "tier": tier,
+        "project_count": count,
+        "project_limit": limit,
+        "can_create_project": limit is None or count < limit,
+    }
 
 
 async def get_current_usage(user_id: str) -> dict[str, Any]:

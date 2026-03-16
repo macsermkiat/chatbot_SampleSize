@@ -1,4 +1,4 @@
-"""Tests for saved-projects API endpoints (list, update, delete, messages)."""
+"""Tests for saved-projects API endpoints (list, update, delete, messages, limits)."""
 
 from __future__ import annotations
 
@@ -11,6 +11,7 @@ import pytest
 from httpx import ASGITransport, AsyncClient
 
 from app.main import app
+from app.services.billing import PROJECT_LIMITS, get_project_limit_for_tier
 
 _TEST_SECRET = "test-jwt-secret-256-bit-long-key!"
 VALID_UUID = "550e8400-e29b-41d4-a716-446655440000"
@@ -214,7 +215,7 @@ class TestUpdateProject:
 class TestDeleteProject:
     """Tests for DELETE /api/projects/{session_id}."""
 
-    async def test_soft_delete_sets_ended_at(self, mock_pool, auth_header):
+    async def test_soft_delete_sets_deleted_at(self, mock_pool, auth_header):
         pool, conn = mock_pool
         conn.execute = AsyncMock(return_value="UPDATE 1")
 
@@ -231,7 +232,7 @@ class TestDeleteProject:
         assert response.status_code == 204
         conn.execute.assert_called_once()
         sql = conn.execute.call_args[0][0]
-        assert "ended_at" in sql
+        assert "deleted_at" in sql
 
     async def test_delete_not_found(self, mock_pool, auth_header):
         pool, conn = mock_pool
@@ -338,3 +339,23 @@ class TestGetMessages:
                 )
 
         assert response.status_code == 404
+
+
+class TestProjectLimits:
+    """Tests for project count limits by tier."""
+
+    def test_project_limits_defined(self):
+        assert PROJECT_LIMITS["free"] == 1
+        assert PROJECT_LIMITS["researcher"] == 3
+        assert PROJECT_LIMITS["pro"] == 10
+        assert PROJECT_LIMITS["institutional"] is None
+
+    def test_get_project_limit_for_tier(self):
+        assert get_project_limit_for_tier("free") == 1
+        assert get_project_limit_for_tier("researcher") == 3
+        assert get_project_limit_for_tier("researcher_annual") == 3
+        assert get_project_limit_for_tier("pro") == 10
+        assert get_project_limit_for_tier("pro_annual") == 10
+        assert get_project_limit_for_tier("institutional") is None
+        # Unknown tier defaults to free limit
+        assert get_project_limit_for_tier("nonexistent") == 1

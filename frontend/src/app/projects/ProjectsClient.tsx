@@ -9,6 +9,7 @@ import ProjectCard from "@/components/ProjectCard";
 import UserMenu from "@/components/UserMenu";
 import {
   getProjects,
+  getUsage,
   deleteProject,
   type ProjectListItem,
 } from "@/lib/api";
@@ -32,6 +33,9 @@ export default function ProjectsClient() {
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 300);
   const [error, setError] = useState<string | null>(null);
+  const [canCreateProject, setCanCreateProject] = useState(true);
+  const [projectCount, setProjectCount] = useState(0);
+  const [projectLimit, setProjectLimit] = useState<number | null>(1);
   const fetchedRef = useRef(false);
 
   // Auth check
@@ -46,16 +50,29 @@ export default function ProjectsClient() {
     });
   }, [router]);
 
-  // Fetch projects
+  // Fetch projects and usage info
   const fetchProjects = useCallback(
     async (q?: string) => {
       if (!user) return;
       setLoading(true);
       setError(null);
       try {
-        const result = await getProjects(q || undefined);
-        setProjects(result.items);
-        setTotal(result.total);
+        const [result, usageResult] = await Promise.allSettled([
+          getProjects(q || undefined),
+          getUsage(),
+        ]);
+        if (usageResult.status === "fulfilled") {
+          const usage = usageResult.value;
+          setCanCreateProject(usage.can_create_project);
+          setProjectCount(usage.project_count);
+          setProjectLimit(usage.project_limit);
+        }
+        if (result.status === "fulfilled") {
+          setProjects(result.value.items);
+          setTotal(result.value.total);
+        } else {
+          throw result.reason;
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load projects");
       } finally {
@@ -131,17 +148,30 @@ export default function ProjectsClient() {
             </h1>
           </div>
           <div className="flex items-center gap-3">
-            <Link
-              href="/app"
-              className="
-                text-caption font-display px-3 py-1.5 rounded-full
-                border border-gold-300 bg-gold-50
-                text-gold-700 hover:bg-gold-100
-                transition-all duration-200
-              "
-            >
-              New Research
-            </Link>
+            {canCreateProject ? (
+              <Link
+                href="/app"
+                className="
+                  text-caption font-display px-3 py-1.5 rounded-full
+                  border border-gold-300 bg-gold-50
+                  text-gold-700 hover:bg-gold-100
+                  transition-all duration-200
+                "
+              >
+                New Research
+              </Link>
+            ) : (
+              <span
+                title="Project limit reached. Upgrade your plan to create more."
+                className="
+                  text-caption font-display px-3 py-1.5 rounded-full
+                  border border-parchment-300 bg-parchment-100
+                  text-ink-400 cursor-not-allowed
+                "
+              >
+                New Research
+              </span>
+            )}
             <UserMenu />
           </div>
         </div>
@@ -168,6 +198,25 @@ export default function ProjectsClient() {
             "
           />
         </div>
+
+        {/* Project limit indicator */}
+        {!loading && (
+          <div className="mb-4 flex items-center justify-between">
+            <p className="text-caption text-ink-500 font-display">
+              {projectLimit === null
+                ? `${projectCount} projects`
+                : `${projectCount} / ${projectLimit} projects`}
+            </p>
+            {!canCreateProject && (
+              <Link
+                href="/account"
+                className="text-caption text-gold-700 hover:text-gold-800 font-display underline"
+              >
+                Upgrade plan
+              </Link>
+            )}
+          </div>
+        )}
 
         {/* Error state */}
         {error && (
@@ -203,18 +252,33 @@ export default function ProjectsClient() {
             <p className="text-body-sm text-ink-400 font-body mb-6">
               Start a new conversation to begin your research.
             </p>
-            <Link
-              href="/app"
-              className="
-                px-4 py-2 rounded-xl
-                bg-ink-900 text-parchment-100
-                hover:bg-ink-800
-                transition-colors duration-200
-                font-display text-body-sm
-              "
-            >
-              Start New Research
-            </Link>
+            {canCreateProject ? (
+              <Link
+                href="/app"
+                className="
+                  px-4 py-2 rounded-xl
+                  bg-ink-900 text-parchment-100
+                  hover:bg-ink-800
+                  transition-colors duration-200
+                  font-display text-body-sm
+                "
+              >
+                Start New Research
+              </Link>
+            ) : (
+              <Link
+                href="/account"
+                className="
+                  px-4 py-2 rounded-xl
+                  bg-gold-600 text-white
+                  hover:bg-gold-700
+                  transition-colors duration-200
+                  font-display text-body-sm
+                "
+              >
+                Upgrade to Create More Projects
+              </Link>
+            )}
           </div>
         )}
 

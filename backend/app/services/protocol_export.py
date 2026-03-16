@@ -309,7 +309,7 @@ def generate_pdf(
         "or ethics committee.",
     )
 
-    return pdf.output()
+    return bytes(pdf.output())
 
 
 def generate_protocol(
