@@ -75,6 +75,7 @@ async def biostatistics_node(state: ResearchState) -> dict:
         "need_info": result.need_info,
         "agent_to_route_to": "",
         "forwarded_message": result.forwarded_message,
+        "confidence_level": result.confidence_level,
     }
 
 
@@ -145,12 +146,20 @@ def _detect_language(message: str) -> str:
     return "python"
 
 
+_STATISTICAL_DISCLAIMER = (
+    "\n\n---\n\n"
+    "*Verify with your biostatistician before using these results "
+    "in a protocol submission. AI-generated calculations should be "
+    "cross-checked with validated software (e.g. nQuery, PASS, G\\*Power).*"
+)
+
+
 def _format_execution_results(execution_result: dict) -> str:
     """Format code execution results for display to the user.
 
     Stdout is rendered as raw markdown (not wrapped in a code fence) so that
     markdown tables produced by the coding agent display as proper HTML tables
-    in the frontend.
+    in the frontend. A disclaimer is appended to successful results.
     """
     if not execution_result:
         return ""
@@ -158,7 +167,7 @@ def _format_execution_results(execution_result: dict) -> str:
         stdout = execution_result.get("stdout", "").strip()
         if not stdout:
             return ""
-        return f"\n\n---\n\n**Computed Results**\n\n{stdout}"
+        return f"\n\n---\n\n**Computed Results**\n\n{stdout}{_STATISTICAL_DISCLAIMER}"
     return (
         f"\n\n*Code execution encountered an issue: "
         f"{execution_result.get('error_message', 'unknown error')}. "

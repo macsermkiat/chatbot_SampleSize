@@ -5,6 +5,7 @@ import ReactMarkdown from "react-markdown";
 import rehypeSanitize from "rehype-sanitize";
 import remarkGfm from "remark-gfm";
 import type { ChatMessage } from "@/lib/api";
+import ConfidenceBadge from "@/components/ConfidenceBadge";
 
 interface MessageBubbleProps {
   message: ChatMessage;
@@ -90,13 +91,16 @@ export default function MessageBubble({ message }: MessageBubbleProps) {
           ${isUser ? "ml-8" : "mr-8"}
         `}
       >
-        {/* Agent label */}
+        {/* Agent label + confidence badge */}
         {!isUser && message.node && (
           <div className="flex items-center gap-2 mb-1.5 ml-0.5">
             <span className="inline-block w-1.5 h-1.5 rounded-full bg-gold-500" />
             <span className="text-caption font-display text-ink-500 font-medium">
               {NODE_LABELS[message.node] || message.node}
             </span>
+            {message.confidence && (
+              <ConfidenceBadge level={message.confidence} />
+            )}
           </div>
         )}
 

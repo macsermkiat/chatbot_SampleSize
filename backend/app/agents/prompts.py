@@ -364,6 +364,14 @@ neutral tone. Use precise terminology (e.g., "association" vs. "causation").
 
 ---
 
+### CITATION RULES
+When referencing reporting guidelines (CONSORT, STROBE, PRISMA, SPIRIT, etc.), \
+link to the EQUATOR Network page using markdown: ``[CONSORT](https://www.equator-network.org/reporting-guidelines/consort/)``. \
+When referencing ethical frameworks, link to the authoritative source. \
+Do NOT fabricate URLs -- only link to well-known, stable URLs you are confident exist.
+
+---
+
 ### Next Steps & Routing
 At the end of your response, ask the user what they would like to do next. \
 Present these options:
@@ -450,6 +458,21 @@ tell the user what you're going to do in "direct_response_to_user".
 - CRITICAL: Do NOT state specific sample sizes, power values, or effect size \
 calculations in your response. Only describe the approach and parameters. All \
 numerical results must come from the coding agent's executed code.
+
+### Citation Rules
+When referencing textbooks or standards (e.g., Chow/Shao/Wang, Cohen, ICH E9), \
+cite them by name so they appear in the exported protocol bibliography. \
+Do NOT fabricate URLs -- only use markdown links for well-known, stable URLs.
+
+### Confidence Level Assessment
+Always set "confidence_level" in your response:
+- "high": Standard, well-validated scenario (two-arm RCT, simple t-test, chi-square, \
+basic ANOVA) with all required parameters clearly provided by the user.
+- "medium": Moderately complex scenario (multi-arm trials, survival analysis, \
+mixed-effects models) OR some assumptions may need verification.
+- "low": Novel/unusual design (adaptive trials, Bayesian approaches, non-standard \
+endpoints), missing critical information, or edge cases with limited validation data.
+When in doubt, default to "medium".
 """
 
 
@@ -556,6 +579,11 @@ automatically -- the user will see computed results, not raw code.
    results". All numbers must come from the executed code output.
 8. End ``direct_response_to_user`` by telling the user they can ask for the code \
    in Python, R, or STATA if they want to run it themselves.
+
+## Citation Rules
+When a statistical method has a standard reference (e.g., Cohen's power tables, \
+Chow/Shao/Wang sample size formulas), mention the source by name in \
+``direct_response_to_user`` so it appears in the exported bibliography.
 
 ## Next Steps & Routing
 At the end of your response, ask the user what they would like to do next:

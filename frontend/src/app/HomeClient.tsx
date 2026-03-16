@@ -11,15 +11,18 @@ import ExpertisePicker, {
 } from "@/components/ExpertisePicker";
 import FileUpload from "@/components/FileUpload";
 import FloatingParticles from "@/components/FloatingParticles";
+import UserMenu from "@/components/UserMenu";
 import MessageBubble from "@/components/MessageBubble";
 import PhaseIndicator from "@/components/PhaseIndicator";
 import TypingIndicator from "@/components/TypingIndicator";
 import {
   streamChat,
   uid,
+  getSessionMessages,
   type ChatMessage,
   type FileUploadResult,
 } from "@/lib/api";
+import { useSearchParams } from "next/navigation";
 import {
   presenceVariants,
   welcomeVariants,
@@ -30,7 +33,7 @@ import {
 
 type Phase = "orchestrator" | "research_gap" | "methodology" | "biostatistics";
 
-const WELCOME_HEADING = "Research Assistant";
+const WELCOME_HEADING = "Rexearch";
 const WELCOME_QUOTE =
   "\u201CThe goal of research is not to confirm what we already know, but to discover what we do not.\u201D";
 
@@ -51,7 +54,18 @@ function isNetworkError(err: unknown): boolean {
 }
 
 export default function HomeClient() {
+  const searchParams = useSearchParams();
+  const rawResumeId = searchParams.get("session");
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const resumeSessionId = rawResumeId && UUID_RE.test(rawResumeId) ? rawResumeId : null;
+
   const [sessionId] = useState(() => {
+    if (resumeSessionId) {
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem("research_session_id", resumeSessionId);
+      }
+      return resumeSessionId;
+    }
     if (typeof window !== "undefined") {
       const stored = sessionStorage.getItem("research_session_id");
       if (stored) return stored;
@@ -101,6 +115,33 @@ export default function HomeClient() {
     sessionStorage.setItem("research_session_id", uid());
     window.location.reload();
   }, []);
+
+  // Load existing messages when resuming a session
+  useEffect(() => {
+    if (!resumeSessionId) return;
+    let cancelled = false;
+    getSessionMessages(resumeSessionId)
+      .then((msgs) => {
+        if (cancelled) return;
+        const loaded: ChatMessage[] = msgs.map((m) => ({
+          id: uid(),
+          role: m.role as "user" | "assistant" | "system",
+          content: m.content,
+          node: m.node ?? undefined,
+          phase: m.phase ?? undefined,
+          timestamp: new Date(m.created_at).getTime(),
+        }));
+        if (loaded.length > 0) {
+          setMessages(loaded);
+        }
+      })
+      .catch(() => {
+        // Silently fail -- user can still send new messages
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [resumeSessionId]);
 
   // Warm up the backend on page load (fire-and-forget)
   useEffect(() => {
@@ -205,6 +246,7 @@ export default function HomeClient() {
                     content: data.content,
                     node: data.node,
                     phase: data.phase,
+                    confidence: data.confidence,
                     timestamp: Date.now(),
                   };
                   setMessages((prev) => [...prev, assistantMsg]);
@@ -412,6 +454,7 @@ export default function HomeClient() {
               <span className="text-caption text-ink-500 font-display">
                 Active
               </span>
+              <UserMenu />
             </div>
           </div>
           <PhaseIndicator currentPhase={phase} />
@@ -486,7 +529,7 @@ export default function HomeClient() {
                   variants={welcomeVariants.divider}
                   style={{ originX: "50%" }}
                 >
-                  Research Assistant
+                  Rexearch
                 </motion.div>
 
                 <motion.p

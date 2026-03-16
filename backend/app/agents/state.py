@@ -23,6 +23,8 @@ Phase = Literal[
 
 ExpertiseLevel = Literal["simple", "advanced"]
 
+ConfidenceLevel = Literal["high", "medium", "low"]
+
 
 class ResearchState(TypedDict):
     """Shared state passed through every node in the LangGraph."""
@@ -61,6 +63,9 @@ class ResearchState(TypedDict):
     execution_result: dict          # {success, stdout, error_message}
     stored_python_script: str       # last generated script (for follow-up code requests)
     has_pending_code: bool          # True when code is available for follow-up
+
+    # Confidence scoring (Phase 4: Output Accuracy Validation)
+    confidence_level: str           # "high" | "medium" | "low" — set by biostatistics agent
 
 
 # ---------------------------------------------------------------------------
@@ -173,6 +178,15 @@ class BiostatisticsOutput(BaseModel):
     )
     forwarded_message: str = Field(
         default="", description="Detailed instruction for the coding agent."
+    )
+    confidence_level: ConfidenceLevel = Field(
+        default="medium",
+        description=(
+            "Self-assessed confidence in the statistical recommendation. "
+            "'high' = standard scenario with all parameters known (e.g. two-arm RCT, simple t-test). "
+            "'medium' = moderately complex or some assumptions need verification. "
+            "'low' = novel/unusual design, missing critical info, or edge case."
+        ),
     )
 
 
