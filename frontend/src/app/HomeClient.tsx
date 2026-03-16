@@ -33,7 +33,7 @@ import {
 
 type Phase = "orchestrator" | "research_gap" | "methodology" | "biostatistics";
 
-const WELCOME_HEADING = "Research Assistant";
+const WELCOME_HEADING = "Rexearch";
 const WELCOME_QUOTE =
   "\u201CThe goal of research is not to confirm what we already know, but to discover what we do not.\u201D";
 
@@ -529,7 +529,7 @@ export default function HomeClient() {
                   variants={welcomeVariants.divider}
                   style={{ originX: "50%" }}
                 >
-                  Research Assistant
+                  Rexearch
                 </motion.div>
 
                 <motion.p

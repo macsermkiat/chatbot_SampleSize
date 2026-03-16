@@ -96,7 +96,7 @@ export default function AccountClient() {
       <div className="max-w-2xl mx-auto space-y-8">
         {/* Back link */}
         <Link
-          href="/"
+          href="/app"
           className="text-parchment-600 text-sm hover:text-parchment-800 inline-block"
         >
           &larr; Back to app

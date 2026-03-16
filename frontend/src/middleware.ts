@@ -2,7 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 // Routes that don't require authentication
-const PUBLIC_ROUTES = ["/login", "/signup", "/auth", "/pricing", "/benchmark"];
+const PUBLIC_ROUTES = ["/login", "/signup", "/auth", "/pricing", "/benchmark", "/keep-alive"];
 
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
@@ -42,7 +42,8 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith(route),
   );
 
-  if (!user && !isPublicRoute) {
+  // Landing page is public
+  if (!user && !isPublicRoute && pathname !== "/") {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.searchParams.set("next", pathname);
@@ -52,7 +53,7 @@ export async function middleware(request: NextRequest) {
   // Redirect authenticated users away from login/signup
   if (user && (pathname === "/login" || pathname === "/signup")) {
     const url = request.nextUrl.clone();
-    url.pathname = "/";
+    url.pathname = "/app";
     return NextResponse.redirect(url);
   }
 

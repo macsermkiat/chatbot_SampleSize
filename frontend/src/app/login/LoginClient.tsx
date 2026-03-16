@@ -41,7 +41,7 @@ function LoginForm() {
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="font-cormorant text-3xl font-semibold text-parchment-900 mb-2">
-            DAB Research
+            Rexearch
           </h1>
           <p className="text-parchment-600 text-sm">
             AI-powered medical research methodology assistant

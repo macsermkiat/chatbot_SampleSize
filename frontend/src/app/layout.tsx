@@ -27,20 +27,20 @@ const jetbrains = JetBrains_Mono({
 // Note: poweredByHeader: false is configured in next.config.js
 export const metadata: Metadata = {
   metadataBase: new URL("https://research-assistant.app"),
-  title: "Research Assistant",
+  title: "Rexearch",
   description:
-    "Medical research planning: gap analysis, methodology design, biostatistics",
+    "AI-powered medical research planning: gap analysis, methodology design, biostatistics",
   openGraph: {
-    title: "Research Assistant",
+    title: "Rexearch",
     description:
       "AI-powered medical research planning: gap analysis, study methodology design, and biostatistical analysis.",
     url: "https://research-assistant.app",
-    siteName: "Research Assistant",
+    siteName: "Rexearch",
     type: "website",
   },
   twitter: {
     card: "summary",
-    title: "Research Assistant",
+    title: "Rexearch",
     description:
       "AI-powered medical research planning: gap analysis, study methodology design, and biostatistical analysis.",
   },

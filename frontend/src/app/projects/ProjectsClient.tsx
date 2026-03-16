@@ -123,7 +123,7 @@ export default function ProjectsClient() {
               href="/"
               className="font-display text-display-md font-semibold text-ink-900 tracking-tight hover:text-ink-700 transition-colors"
             >
-              Research Assistant
+              Rexearch
             </Link>
             <span className="text-ink-300">/</span>
             <h1 className="font-display text-body-lg font-medium text-ink-700">
@@ -132,7 +132,7 @@ export default function ProjectsClient() {
           </div>
           <div className="flex items-center gap-3">
             <Link
-              href="/"
+              href="/app"
               className="
                 text-caption font-display px-3 py-1.5 rounded-full
                 border border-gold-300 bg-gold-50
@@ -204,7 +204,7 @@ export default function ProjectsClient() {
               Start a new conversation to begin your research.
             </p>
             <Link
-              href="/"
+              href="/app"
               className="
                 px-4 py-2 rounded-xl
                 bg-ink-900 text-parchment-100

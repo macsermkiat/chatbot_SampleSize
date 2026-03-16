@@ -83,7 +83,7 @@ export default function PricingClient() {
         {/* Header */}
         <div className="text-center mb-12">
           <a
-            href="/"
+            href="/app"
             className="text-parchment-600 text-sm hover:text-parchment-800 mb-4 inline-block"
           >
             &larr; Back to app
@@ -197,7 +197,7 @@ export default function PricingClient() {
           <p className="text-sm text-parchment-500">
             Compare: nQuery costs $925-$7,495/year with no AI guidance.
             <br />
-            DAB Research provides AI-guided methodology for a fraction of the
+            Rexearch provides AI-guided methodology for a fraction of the
             cost.
           </p>
         </div>

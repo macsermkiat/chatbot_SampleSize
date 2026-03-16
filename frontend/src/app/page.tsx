@@ -1,30 +1,30 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
-import HomeClient from "./HomeClient";
+import LandingClient from "./LandingClient";
 
 export const metadata: Metadata = {
-  title: "Research Assistant",
+  title: "Rexearch - AI-Powered Research Methodology",
   description:
     "AI-powered medical research planning: gap analysis, study methodology design, and biostatistical analysis.",
   openGraph: {
-    title: "Research Assistant",
+    title: "Rexearch - AI-Powered Research Methodology",
     description:
-      "AI-powered medical research planning: gap analysis, study methodology design, and biostatistical analysis.",
+      "From research question to study protocol, guided by AI. Gap analysis, methodology design, and biostatistics.",
     url: "https://research-assistant.app",
     type: "website",
   },
   twitter: {
     card: "summary",
-    title: "Research Assistant",
+    title: "Rexearch - AI-Powered Research Methodology",
     description:
-      "AI-powered medical research planning: gap analysis, study methodology design, and biostatistical analysis.",
+      "From research question to study protocol, guided by AI.",
   },
 };
 
 export default function Home() {
   return (
     <Suspense>
-      <HomeClient />
+      <LandingClient />
     </Suspense>
   );
 }
