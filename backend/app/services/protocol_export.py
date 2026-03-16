@@ -224,20 +224,60 @@ def generate_pdf(
     messages: list[dict[str, str]],
     session_id: str,
 ) -> bytes:
-    """Generate a PDF protocol document using WeasyPrint and return the file bytes."""
-    try:
-        from weasyprint import HTML
-    except ImportError:
-        _logger.error(
-            "WeasyPrint is not installed. Install with: uv add weasyprint"
-        )
-        raise RuntimeError(
-            "PDF export is not available. WeasyPrint is not installed."
-        )
+    """Generate a PDF protocol document using fpdf2 (pure Python) and return the file bytes."""
+    from fpdf import FPDF
 
-    html_content = _generate_html(summary_text, messages, session_id)
-    pdf_bytes = HTML(string=html_content).write_pdf()
-    return pdf_bytes
+    sections = _build_protocol_sections(summary_text, messages, session_id)
+    date_str = datetime.now().strftime("%B %d, %Y")
+
+    pdf = FPDF()
+    pdf.set_auto_page_break(auto=True, margin=25)
+    pdf.add_page()
+
+    # Title
+    pdf.set_font("Helvetica", "B", 22)
+    pdf.cell(0, 12, "Research Protocol", new_x="LMARGIN", new_y="NEXT", align="C")
+    pdf.ln(4)
+
+    # Metadata
+    pdf.set_font("Helvetica", "I", 9)
+    pdf.set_text_color(100, 100, 100)
+    pdf.cell(0, 5, f"Generated: {date_str}  |  Session: {session_id[:8]}", new_x="LMARGIN", new_y="NEXT", align="C")
+    pdf.cell(0, 5, "Rexearch", new_x="LMARGIN", new_y="NEXT", align="C")
+    pdf.set_text_color(0, 0, 0)
+    pdf.ln(8)
+
+    # Sections
+    for section in sections:
+        pdf.set_font("Helvetica", "B", 13)
+        pdf.set_text_color(44, 62, 80)
+        pdf.cell(0, 10, section["heading"], new_x="LMARGIN", new_y="NEXT")
+        # Separator line
+        pdf.set_draw_color(189, 195, 199)
+        pdf.line(pdf.l_margin, pdf.get_y(), pdf.w - pdf.r_margin, pdf.get_y())
+        pdf.ln(3)
+
+        pdf.set_font("Helvetica", "", 10)
+        pdf.set_text_color(26, 26, 26)
+        pdf.multi_cell(0, 5.5, section["content"])
+        pdf.ln(4)
+
+    # Disclaimer
+    pdf.ln(8)
+    pdf.set_draw_color(220, 220, 220)
+    pdf.line(pdf.l_margin, pdf.get_y(), pdf.w - pdf.r_margin, pdf.get_y())
+    pdf.ln(4)
+    pdf.set_font("Helvetica", "I", 8)
+    pdf.set_text_color(136, 136, 136)
+    pdf.multi_cell(
+        0, 4.5,
+        "Disclaimer: This protocol was generated with AI assistance. "
+        "All statistical recommendations and study design decisions should be "
+        "verified with a qualified biostatistician before submission to an IRB "
+        "or ethics committee.",
+    )
+
+    return pdf.output()
 
 
 def generate_protocol(
