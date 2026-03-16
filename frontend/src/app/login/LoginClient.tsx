@@ -40,17 +40,17 @@ function LoginForm() {
       <div className="w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="font-cormorant text-3xl font-semibold text-parchment-900 mb-2">
+          <h1 className="font-display text-display-lg font-semibold text-ink-900 mb-2">
             Rexearch
           </h1>
-          <p className="text-parchment-600 text-sm">
+          <p className="text-body-sm text-ink-500 font-body">
             AI-powered medical research methodology assistant
           </p>
         </div>
 
         {/* Card */}
-        <div className="bg-white/80 backdrop-blur-sm border border-parchment-300 rounded-xl p-8 shadow-sm">
-          <h2 className="font-cormorant text-xl font-semibold text-parchment-800 mb-6 text-center">
+        <div className="bg-parchment-50/80 border border-parchment-200 rounded-xl p-6 sm:p-8 shadow-sm">
+          <h2 className="font-display text-display-md font-semibold text-ink-800 mb-6 text-center">
             {isSignUp ? "Create Account" : "Sign In"}
           </h2>
 
@@ -70,7 +70,7 @@ function LoginForm() {
           <button
             onClick={handleGoogleLogin}
             disabled={loading}
-            className="w-full flex items-center justify-center gap-3 px-4 py-2.5 border border-parchment-300 rounded-lg bg-white hover:bg-parchment-50 transition-colors text-sm font-medium text-parchment-700 disabled:opacity-50"
+            className="w-full flex items-center justify-center gap-3 px-4 py-2.5 border border-parchment-200 rounded-xl bg-white hover:bg-parchment-50 transition-colors text-body-sm font-body font-medium text-ink-700 disabled:opacity-50"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path
@@ -106,7 +106,7 @@ function LoginForm() {
             <div>
               <label
                 htmlFor="email"
-                className="block text-sm font-medium text-parchment-700 mb-1"
+                className="block text-body-sm font-body font-medium text-ink-700 mb-1"
               >
                 Email
               </label>
@@ -115,7 +115,7 @@ function LoginForm() {
                 name="email"
                 type="email"
                 required
-                className="w-full px-3 py-2 border border-parchment-300 rounded-lg bg-white text-parchment-900 text-sm focus:outline-none focus:ring-2 focus:ring-parchment-500 focus:border-transparent"
+                className="w-full px-3 py-2.5 border border-parchment-200 rounded-xl bg-white text-ink-900 text-body-sm font-body focus:outline-none focus:border-gold-400 focus:shadow-[0_0_0_3px_oklch(0.85_0.12_85/0.15)] transition-all"
                 placeholder="you@institution.edu"
               />
             </div>
@@ -123,7 +123,7 @@ function LoginForm() {
             <div>
               <label
                 htmlFor="password"
-                className="block text-sm font-medium text-parchment-700 mb-1"
+                className="block text-body-sm font-body font-medium text-ink-700 mb-1"
               >
                 Password
               </label>
@@ -133,7 +133,7 @@ function LoginForm() {
                 type="password"
                 required
                 minLength={6}
-                className="w-full px-3 py-2 border border-parchment-300 rounded-lg bg-white text-parchment-900 text-sm focus:outline-none focus:ring-2 focus:ring-parchment-500 focus:border-transparent"
+                className="w-full px-3 py-2.5 border border-parchment-200 rounded-xl bg-white text-ink-900 text-body-sm font-body focus:outline-none focus:border-gold-400 focus:shadow-[0_0_0_3px_oklch(0.85_0.12_85/0.15)] transition-all"
                 placeholder={isSignUp ? "Min 6 characters" : ""}
               />
             </div>
@@ -141,7 +141,7 @@ function LoginForm() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2.5 bg-parchment-800 text-white rounded-lg text-sm font-medium hover:bg-parchment-900 transition-colors disabled:opacity-50"
+              className="w-full py-2.5 bg-ink-900 text-parchment-100 rounded-xl text-body-sm font-display font-medium hover:bg-ink-800 transition-colors disabled:opacity-50"
             >
               {loading
                 ? "Please wait..."
@@ -152,11 +152,11 @@ function LoginForm() {
           </form>
 
           {/* Toggle sign in / sign up */}
-          <p className="mt-6 text-center text-sm text-parchment-600">
+          <p className="mt-6 text-center text-body-sm text-ink-500 font-body">
             {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
             <button
               onClick={() => setIsSignUp(!isSignUp)}
-              className="text-parchment-800 font-medium hover:underline"
+              className="text-ink-800 font-medium hover:underline"
             >
               {isSignUp ? "Sign in" : "Create one"}
             </button>
@@ -164,7 +164,7 @@ function LoginForm() {
         </div>
 
         {/* Footer */}
-        <p className="mt-6 text-center text-xs text-parchment-500">
+        <p className="mt-6 text-center text-caption text-ink-400 font-display">
           By continuing, you agree to our terms of service.
         </p>
       </div>

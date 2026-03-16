@@ -1,7 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import FloatingParticles from "@/components/FloatingParticles";
 
 const fadeUp = {
@@ -72,6 +73,8 @@ const COMPARISONS = [
 ];
 
 export default function LandingClient() {
+  const [menuOpen, setMenuOpen] = useState(false);
+
   return (
     <div className="min-h-screen bg-parchment-100">
       {/* Navigation */}
@@ -80,7 +83,9 @@ export default function LandingClient() {
           <Link href="/" className="font-display text-display-md font-semibold text-ink-900 tracking-tight">
             Rexearch
           </Link>
-          <div className="flex items-center gap-6">
+
+          {/* Desktop nav */}
+          <div className="hidden sm:flex items-center gap-6">
             <Link href="/pricing" className="text-body-sm text-ink-600 hover:text-ink-900 transition-colors font-body">
               Pricing
             </Link>
@@ -107,7 +112,66 @@ export default function LandingClient() {
               Open App
             </Link>
           </div>
+
+          {/* Mobile menu button */}
+          <div className="flex items-center gap-3 sm:hidden">
+            <Link
+              href="/app"
+              className="
+                text-body-sm font-body font-medium px-3.5 py-1.5 rounded-lg
+                bg-ink-900 text-parchment-100
+                hover:bg-ink-800 transition-colors
+              "
+            >
+              Open App
+            </Link>
+            <button
+              onClick={() => setMenuOpen(!menuOpen)}
+              aria-label={menuOpen ? "Close menu" : "Open menu"}
+              aria-expanded={menuOpen}
+              className="w-10 h-10 flex items-center justify-center rounded-lg text-ink-700 hover:bg-parchment-200 transition-colors"
+            >
+              <svg className="w-5 h-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                {menuOpen ? (
+                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                ) : (
+                  <path fillRule="evenodd" d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+                )}
+              </svg>
+            </button>
+          </div>
         </div>
+
+        {/* Mobile dropdown */}
+        <AnimatePresence>
+          {menuOpen && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="sm:hidden overflow-hidden border-t border-parchment-200"
+            >
+              <div className="px-6 py-3 flex flex-col gap-1">
+                {[
+                  { href: "/pricing", label: "Pricing" },
+                  { href: "/benchmark", label: "Benchmark" },
+                  { href: "/blog", label: "Blog" },
+                  { href: "/login", label: "Sign In" },
+                ].map((link) => (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    onClick={() => setMenuOpen(false)}
+                    className="text-body-sm text-ink-600 hover:text-ink-900 font-body py-2 transition-colors"
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </nav>
 
       {/* Hero */}
@@ -148,7 +212,7 @@ export default function LandingClient() {
           <motion.div
             variants={fadeUp}
             transition={{ duration: 0.5 }}
-            className="flex items-center justify-center gap-4"
+            className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4"
           >
             <Link
               href="/app"
@@ -156,7 +220,7 @@ export default function LandingClient() {
                 font-body font-medium px-6 py-3 rounded-xl text-body-md
                 bg-ink-900 text-parchment-100
                 hover:bg-ink-800 transition-colors
-                shadow-sm
+                shadow-sm w-full sm:w-auto text-center
               "
             >
               Start Research
@@ -166,7 +230,7 @@ export default function LandingClient() {
               className="
                 font-body font-medium px-6 py-3 rounded-xl text-body-md
                 bg-parchment-50 text-ink-800 border border-parchment-300
-                hover:bg-parchment-200 transition-colors
+                hover:bg-parchment-200 transition-colors w-full sm:w-auto text-center
               "
             >
               View Pricing
@@ -240,14 +304,14 @@ export default function LandingClient() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-parchment-200">
-                  <th className="text-left px-6 py-3 text-caption text-ink-500 font-display uppercase tracking-wider">
+                  <th className="text-left px-4 sm:px-6 py-3 text-caption text-ink-500 font-display uppercase tracking-wider">
                     Tool
                   </th>
-                  <th className="text-left px-6 py-3 text-caption text-ink-500 font-display uppercase tracking-wider">
+                  <th className="text-left px-4 sm:px-6 py-3 text-caption text-ink-500 font-display uppercase tracking-wider">
                     Price
                   </th>
-                  <th className="text-center px-6 py-3 text-caption text-ink-500 font-display uppercase tracking-wider">
-                    AI Guidance
+                  <th className="text-center px-4 sm:px-6 py-3 text-caption text-ink-500 font-display uppercase tracking-wider">
+                    AI
                   </th>
                 </tr>
               </thead>
@@ -259,13 +323,13 @@ export default function LandingClient() {
                       item.ai ? "bg-gold-50/50" : ""
                     }`}
                   >
-                    <td className="px-6 py-3 text-body-sm font-body text-ink-800 font-medium">
+                    <td className="px-4 sm:px-6 py-3 text-body-sm font-body text-ink-800 font-medium">
                       {item.name}
                     </td>
-                    <td className="px-6 py-3 text-body-sm font-body text-ink-600">
+                    <td className="px-4 sm:px-6 py-3 text-body-sm font-body text-ink-600">
                       {item.price}
                     </td>
-                    <td className="px-6 py-3 text-center">
+                    <td className="px-4 sm:px-6 py-3 text-center">
                       {item.ai ? (
                         <span className="inline-flex items-center gap-1 text-body-sm text-green-700 font-medium">
                           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

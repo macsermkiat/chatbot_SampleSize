@@ -134,7 +134,7 @@ export default function HomeClient() {
         if (loaded.length > 0) {
           setMessages(loaded);
           // Restore the phase from the last message that has one
-          const lastPhase = [...loaded].reverse().find((m) => m.phase)?.phase;
+          const lastPhase = [...loaded].reverse().find((m) => m.phase)?.phase as Phase | undefined;
           if (lastPhase) {
             setPhase(lastPhase);
           }
@@ -399,18 +399,22 @@ export default function HomeClient() {
   const isEmpty = messages.length === 0;
 
   return (
-    <div className="flex flex-col h-screen">
+    <div className="flex flex-col h-dvh">
       {/* Header */}
       <header className="flex-none border-b border-parchment-200 bg-parchment-100/80 backdrop-blur-sm z-10">
-        <div className="max-w-chat mx-auto px-6 py-4 flex flex-col gap-4">
+        <div className="max-w-chat mx-auto px-4 sm:px-6 py-3 sm:py-4 flex flex-col gap-3 sm:gap-4">
           <div className="flex items-center justify-between">
-            <h1 className="font-display text-display-md font-semibold text-ink-900 tracking-tight">
-              {WELCOME_HEADING}
-            </h1>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <h1 className="font-display text-display-md font-semibold text-ink-900 tracking-tight">
+                {WELCOME_HEADING}
+              </h1>
+              <span className="block w-2 h-2 rounded-full bg-gold-500 animate-pulse-warm flex-none" />
+            </div>
+            <div className="flex items-center gap-2 sm:gap-3">
               <Link
                 href="/benchmark"
                 className="
+                  hidden sm:inline-block
                   text-caption font-display px-2.5 py-1 rounded-full
                   border border-gold-300 bg-gold-50
                   text-gold-700 hover:bg-gold-100
@@ -424,7 +428,7 @@ export default function HomeClient() {
                   onClick={() =>
                     setExpertiseLevel((prev) => {
                       const next = prev === "simple" ? "advanced" : "simple";
-                      expertiseSentRef.current = false; // resend on next message
+                      expertiseSentRef.current = false;
                       return next;
                     })
                   }
@@ -445,20 +449,20 @@ export default function HomeClient() {
                   onClick={() => setEndDialogOpen(true)}
                   aria-label="End session"
                   className="
-                    text-caption font-display font-medium px-3 py-1.5 rounded-full
+                    text-caption font-display font-medium rounded-full
                     border border-red-200 bg-red-50
                     text-red-600 hover:text-white hover:bg-red-500 hover:border-red-500
                     transition-all duration-200
                     cursor-pointer
+                    px-2 py-1 sm:px-3 sm:py-1.5
                   "
                 >
-                  End Session
+                  <span className="hidden sm:inline">End Session</span>
+                  <svg className="w-4 h-4 sm:hidden" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                    <path d="M4 4l8 8M12 4l-8 8" />
+                  </svg>
                 </button>
               )}
-              <span className="block w-2 h-2 rounded-full bg-gold-500 animate-pulse-warm" />
-              <span className="text-caption text-ink-500 font-display">
-                Active
-              </span>
               <UserMenu />
             </div>
           </div>
@@ -468,7 +472,7 @@ export default function HomeClient() {
 
       {/* Messages area */}
       <main ref={scrollRef} className="flex-1 overflow-y-auto">
-        <div className="max-w-chat mx-auto px-6">
+        <div className="max-w-chat mx-auto px-4 sm:px-6">
           <AnimatePresence mode="wait" initial={false}>
             {isEmpty ? (
               /* Empty state -- scholarly welcome with animations */
@@ -654,10 +658,10 @@ export default function HomeClient() {
       </main>
 
       {/* Input area */}
-      <footer className="flex-none border-t border-parchment-200 bg-parchment-100/80 backdrop-blur-sm">
+      <footer className="flex-none border-t border-parchment-200 bg-parchment-100/80 backdrop-blur-sm pb-[env(safe-area-inset-bottom)]">
         <form
           onSubmit={handleSubmit}
-          className="max-w-chat mx-auto px-6 py-4"
+          className="max-w-chat mx-auto px-4 sm:px-6 py-3 sm:py-4"
         >
           <div
             className="

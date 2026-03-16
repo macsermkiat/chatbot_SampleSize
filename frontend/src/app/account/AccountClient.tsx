@@ -92,32 +92,32 @@ export default function AccountClient() {
       : null;
 
   return (
-    <div className="min-h-screen bg-parchment-100 py-16 px-4">
-      <div className="max-w-2xl mx-auto space-y-8">
+    <div className="min-h-screen bg-parchment-100 py-10 sm:py-16 px-4 sm:px-6">
+      <div className="max-w-2xl mx-auto space-y-6 sm:space-y-8">
         {/* Back link */}
         <Link
           href="/app"
-          className="text-parchment-600 text-sm hover:text-parchment-800 inline-block"
+          className="text-body-sm text-ink-500 hover:text-ink-800 font-body inline-block transition-colors"
         >
           &larr; Back to app
         </Link>
 
-        <h1 className="font-display text-3xl font-semibold text-ink-900">
+        <h1 className="font-display text-display-lg font-semibold text-ink-900">
           Account & Billing
         </h1>
 
         {/* Profile */}
-        <section className="bg-white/80 backdrop-blur-sm border border-parchment-200 rounded-xl p-6">
+        <section className="bg-parchment-50/80 border border-parchment-200 rounded-xl p-5 sm:p-6">
           <h2 className="font-display text-lg font-semibold text-ink-800 mb-3">
             Profile
           </h2>
           <dl className="space-y-2 text-sm">
             <div className="flex justify-between">
-              <dt className="text-parchment-500">Email</dt>
+              <dt className="text-ink-400 font-body">Email</dt>
               <dd className="text-ink-800 font-medium">{user?.email}</dd>
             </div>
             <div className="flex justify-between">
-              <dt className="text-parchment-500">User ID</dt>
+              <dt className="text-ink-400 font-body">User ID</dt>
               <dd className="text-ink-600 font-mono text-xs">
                 {user?.id.slice(0, 12)}...
               </dd>
@@ -126,7 +126,7 @@ export default function AccountClient() {
         </section>
 
         {/* Subscription */}
-        <section className="bg-white/80 backdrop-blur-sm border border-parchment-200 rounded-xl p-6">
+        <section className="bg-parchment-50/80 border border-parchment-200 rounded-xl p-5 sm:p-6">
           <h2 className="font-display text-lg font-semibold text-ink-800 mb-3">
             Subscription
           </h2>
@@ -169,7 +169,7 @@ export default function AccountClient() {
             {subscription?.tier === "free" ? (
               <Link
                 href="/pricing"
-                className="px-4 py-2 bg-parchment-800 text-white text-sm rounded-lg hover:bg-parchment-900 transition-colors"
+                className="px-4 py-2 bg-ink-900 text-parchment-100 text-body-sm font-display rounded-xl hover:bg-ink-800 transition-colors"
               >
                 Upgrade Plan
               </Link>
@@ -180,7 +180,7 @@ export default function AccountClient() {
                     href={subscription.urls.customer_portal}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="px-4 py-2 bg-parchment-800 text-white text-sm rounded-lg hover:bg-parchment-900 transition-colors"
+                    className="px-4 py-2 bg-ink-900 text-parchment-100 text-body-sm font-display rounded-xl hover:bg-ink-800 transition-colors"
                   >
                     Manage Subscription
                   </a>
@@ -190,7 +190,7 @@ export default function AccountClient() {
                     href={subscription.urls.update_payment_method}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="px-4 py-2 border border-parchment-300 text-parchment-700 text-sm rounded-lg hover:bg-parchment-50 transition-colors"
+                    className="px-4 py-2 border border-parchment-200 text-ink-700 text-body-sm font-display rounded-xl hover:bg-parchment-100 transition-colors"
                   >
                     Update Payment
                   </a>
@@ -201,7 +201,7 @@ export default function AccountClient() {
         </section>
 
         {/* Usage */}
-        <section className="bg-white/80 backdrop-blur-sm border border-parchment-200 rounded-xl p-6">
+        <section className="bg-parchment-50/80 border border-parchment-200 rounded-xl p-5 sm:p-6">
           <h2 className="font-display text-lg font-semibold text-ink-800 mb-3">
             Usage This Period
           </h2>

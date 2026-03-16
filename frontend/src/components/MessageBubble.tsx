@@ -88,7 +88,7 @@ export default function MessageBubble({ message }: MessageBubbleProps) {
       <div
         className={`
           max-w-[85%] sm:max-w-[75%] min-w-0
-          ${isUser ? "ml-8" : "mr-8"}
+          ${isUser ? "ml-4 sm:ml-8" : "mr-4 sm:mr-8"}
         `}
       >
         {/* Agent label + confidence badge */}

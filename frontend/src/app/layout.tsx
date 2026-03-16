@@ -25,6 +25,12 @@ const jetbrains = JetBrains_Mono({
 });
 
 // Note: poweredByHeader: false is configured in next.config.js
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover" as const,
+};
+
 export const metadata: Metadata = {
   metadataBase: new URL("https://research-assistant.app"),
   title: "Rexearch",

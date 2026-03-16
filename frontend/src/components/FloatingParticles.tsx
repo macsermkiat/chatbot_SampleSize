@@ -1,7 +1,7 @@
 "use client";
 
 import { memo } from "react";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 
 interface FloatingParticlesProps {
   count?: number;
@@ -37,6 +37,13 @@ function getParticleProps(index: number, total: number) {
 function FloatingParticles({
   count = 12,
 }: FloatingParticlesProps) {
+  const prefersReduced = useReducedMotion();
+
+  if (prefersReduced) return null;
+
+  // Fewer particles on mobile (< 640px approximated by count cap)
+  const mobileCount = Math.min(count, 6);
+
   return (
     <div
       className="absolute inset-0 overflow-hidden pointer-events-none"
@@ -50,7 +57,7 @@ function FloatingParticles({
         return (
           <motion.span
             key={i}
-            className="absolute rounded-full"
+            className={`absolute rounded-full ${i >= mobileCount ? "hidden sm:block" : ""}`}
             style={{
               left: `${left}%`,
               top: `${top}%`,

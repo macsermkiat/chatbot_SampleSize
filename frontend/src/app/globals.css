@@ -242,7 +242,6 @@
     border-bottom: 1px solid #ddd3b8;
     padding: 0.5em 0.75em;
     text-align: left;
-    white-space: nowrap;
   }
 
   .prose-research th {
@@ -256,5 +255,15 @@
   .text-balance {
     text-wrap: balance;
   }
+}
 
+/* Respect reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

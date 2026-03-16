@@ -117,7 +117,7 @@ export default function ProjectsClient() {
     <div className="flex flex-col min-h-screen bg-parchment-50">
       {/* Header */}
       <header className="border-b border-parchment-200 bg-parchment-100/80 backdrop-blur-sm">
-        <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Link
               href="/"
@@ -148,7 +148,7 @@ export default function ProjectsClient() {
       </header>
 
       {/* Main content */}
-      <main className="flex-1 max-w-4xl mx-auto px-6 py-8 w-full">
+      <main className="flex-1 max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8 w-full">
         {/* Search bar */}
         <div className="mb-6">
           <input
