@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.billing import router as billing_router
 from app.api.chat import router as chat_router
 from app.api.files import router as files_router
+from app.api.projects import router as projects_router
 from app.api.sessions import router as sessions_router
 from app.config import settings, validate_required_keys
 from app.db import check_db, close_pool, get_pool
@@ -79,6 +80,7 @@ app.add_middleware(
 app.include_router(billing_router)
 app.include_router(chat_router)
 app.include_router(files_router)
+app.include_router(projects_router)
 app.include_router(sessions_router)
 
 

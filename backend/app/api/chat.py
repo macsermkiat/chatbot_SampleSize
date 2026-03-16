@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import uuid
@@ -50,22 +51,46 @@ def _get_compiled_graph():
     return _compiled_graph
 
 
-async def _ensure_session_exists(session_id: str) -> None:
+async def _ensure_session_exists(session_id: str, user_id: str | None = None) -> None:
     """Upsert session row so FK constraints on message_logs/token_logs won't fail."""
     try:
         pool = await get_pool()
         async with pool.acquire(timeout=5) as conn:
             await conn.execute(
                 """
-                INSERT INTO sessions (session_id, current_phase)
-                VALUES ($1, $2)
-                ON CONFLICT (session_id) DO NOTHING
+                INSERT INTO sessions (session_id, current_phase, user_id)
+                VALUES ($1, $2, $3)
+                ON CONFLICT (session_id) DO UPDATE
+                  SET user_id = COALESCE(sessions.user_id, EXCLUDED.user_id)
                 """,
                 session_id,
                 "orchestrator",
+                user_id,
             )
     except Exception:
         _logger.warning("Failed to upsert session %s", session_id, exc_info=True)
+
+
+async def _auto_name_session(session_id: str, user_message: str) -> None:
+    """Set a short name from the first user message if not already named."""
+    try:
+        pool = await get_pool()
+        name = user_message[:100].strip()
+        if not name:
+            return
+        async with pool.acquire(timeout=5) as conn:
+            await conn.execute(
+                """
+                UPDATE sessions
+                SET name = $1,
+                    updated_at = (now() AT TIME ZONE 'Asia/Bangkok')
+                WHERE session_id = $2 AND name IS NULL
+                """,
+                name,
+                session_id,
+            )
+    except Exception:
+        _logger.warning("Failed to auto-name session %s", session_id, exc_info=True)
 
 
 async def _stream_graph(
@@ -74,6 +99,7 @@ async def _stream_graph(
     request: Request,
     expertise_level: str = "advanced",
     uploaded_files: list[dict] | None = None,
+    user_id: str | None = None,
 ) -> AsyncGenerator[dict, None]:
     """Run the graph and yield SSE events for each node output."""
 
@@ -88,7 +114,10 @@ async def _stream_graph(
         return
 
     # Ensure the session row exists before any FK-dependent writes
-    await _ensure_session_exists(session_id)
+    await _ensure_session_exists(session_id, user_id=user_id)
+
+    # Auto-name the session from the first user message (fire-and-forget)
+    asyncio.create_task(_auto_name_session(session_id, message))
 
     config = {"configurable": {"thread_id": session_id}}
     last_emitted_phase = ""
@@ -231,10 +260,13 @@ async def chat(
 
     uploaded_files = [f.model_dump() for f in body.uploaded_files] if body.uploaded_files else None
 
+    user_id = user.id if user is not None else None
+
     async def event_generator():
         try:
             async for event in _stream_graph(
                 body.message, session_id, request, body.expertise_level, uploaded_files,
+                user_id=user_id,
             ):
                 yield event
         except Exception as exc:

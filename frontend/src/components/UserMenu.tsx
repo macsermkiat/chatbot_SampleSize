@@ -63,6 +63,12 @@ export default function UserMenu() {
             </p>
           </div>
           <a
+            href="/projects"
+            className="block px-4 py-2 text-sm text-parchment-700 hover:bg-parchment-50"
+          >
+            My Projects
+          </a>
+          <a
             href="/account"
             className="block px-4 py-2 text-sm text-parchment-700 hover:bg-parchment-50"
           >

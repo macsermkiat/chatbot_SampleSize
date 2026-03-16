@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import HomeClient from "./HomeClient";
 
@@ -21,5 +22,9 @@ export const metadata: Metadata = {
 };
 
 export default function Home() {
-  return <HomeClient />;
+  return (
+    <Suspense>
+      <HomeClient />
+    </Suspense>
+  );
 }

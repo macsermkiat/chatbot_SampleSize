@@ -8,13 +8,16 @@ import uuid
 from datetime import datetime, timezone
 from typing import Literal
 
-from fastapi import APIRouter, HTTPException, Path, Query
+from fastapi import APIRouter, Depends, HTTPException, Path, Query
 from fastapi.responses import Response
 
+from app.auth import AuthUser, get_current_user
 from app.db import get_pool
 from app.models import (
     EvaluationRequest,
     EvaluationResponse,
+    MessageItem,
+    MessageListResponse,
     SessionEndResponse,
     SessionResponse,
     SummaryResponse,
@@ -252,6 +255,61 @@ async def evaluate_session(session_id: str, body: EvaluationRequest):
         comment=row["comment"],
         created_at=row["created_at"],
     )
+
+
+@router.get(
+    "/sessions/{session_id}/messages",
+    response_model=MessageListResponse,
+)
+async def get_session_messages(
+    session_id: str,
+    user: AuthUser = Depends(get_current_user),
+):
+    """Return the full message history for a session (for resuming)."""
+    _validate_session_id(session_id)
+    try:
+        pool = await get_pool()
+    except Exception as exc:
+        _logger.error("Database unavailable: %s", exc)
+        raise HTTPException(status_code=503, detail="Database unavailable.") from exc
+
+    try:
+        async with pool.acquire(timeout=5) as conn:
+            session = await conn.fetchrow(
+                "SELECT session_id, user_id FROM sessions WHERE session_id = $1",
+                session_id,
+            )
+            if not session:
+                raise HTTPException(status_code=404, detail="Session not found.")
+            if session["user_id"] != user.id:
+                raise HTTPException(status_code=404, detail="Session not found.")
+
+            rows = await conn.fetch(
+                """
+                SELECT role, content, node, phase, created_at
+                FROM message_logs
+                WHERE session_id = $1
+                ORDER BY created_at ASC
+                """,
+                session_id,
+            )
+    except HTTPException:
+        raise
+    except Exception as exc:
+        _logger.exception("Failed to fetch messages for session %s", session_id)
+        raise HTTPException(status_code=503, detail="Database operation failed.") from exc
+
+    messages = [
+        MessageItem(
+            role=r["role"],
+            content=r["content"],
+            node=r.get("node"),
+            phase=r.get("phase"),
+            created_at=r["created_at"],
+        )
+        for r in rows
+    ]
+    return MessageListResponse(messages=messages)
 
 
 @router.get("/sessions/{session_id}/export")

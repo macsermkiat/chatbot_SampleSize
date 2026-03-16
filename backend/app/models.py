@@ -88,3 +88,45 @@ class HealthResponse(BaseModel):
     status: str  # "ok" | "degraded"
     db: bool
     version: str = "0.1.0"
+
+
+# --- Saved Projects (session metadata) ---
+
+
+class ProjectListItem(BaseModel):
+    session_id: str
+    name: str | None = None
+    description: str | None = None
+    current_phase: str = "orchestrator"
+    created_at: datetime
+    updated_at: datetime | None = None
+    ended_at: datetime | None = None
+
+
+class ProjectListResponse(BaseModel):
+    items: list[ProjectListItem]
+    total: int
+
+
+class ProjectUpdateRequest(BaseModel):
+    name: str = Field(..., max_length=200)
+    description: str | None = Field(default=None, max_length=2000)
+
+
+class ProjectUpdateResponse(BaseModel):
+    session_id: str
+    name: str
+    description: str | None = None
+    updated_at: datetime
+
+
+class MessageItem(BaseModel):
+    role: str
+    content: str
+    node: str | None = None
+    phase: str | None = None
+    created_at: datetime
+
+
+class MessageListResponse(BaseModel):
+    messages: list[MessageItem]

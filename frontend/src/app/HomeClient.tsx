@@ -18,9 +18,11 @@ import TypingIndicator from "@/components/TypingIndicator";
 import {
   streamChat,
   uid,
+  getSessionMessages,
   type ChatMessage,
   type FileUploadResult,
 } from "@/lib/api";
+import { useSearchParams } from "next/navigation";
 import {
   presenceVariants,
   welcomeVariants,
@@ -52,7 +54,16 @@ function isNetworkError(err: unknown): boolean {
 }
 
 export default function HomeClient() {
+  const searchParams = useSearchParams();
+  const resumeSessionId = searchParams.get("session");
+
   const [sessionId] = useState(() => {
+    if (resumeSessionId) {
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem("research_session_id", resumeSessionId);
+      }
+      return resumeSessionId;
+    }
     if (typeof window !== "undefined") {
       const stored = sessionStorage.getItem("research_session_id");
       if (stored) return stored;
@@ -102,6 +113,33 @@ export default function HomeClient() {
     sessionStorage.setItem("research_session_id", uid());
     window.location.reload();
   }, []);
+
+  // Load existing messages when resuming a session
+  useEffect(() => {
+    if (!resumeSessionId) return;
+    let cancelled = false;
+    getSessionMessages(resumeSessionId)
+      .then((msgs) => {
+        if (cancelled) return;
+        const loaded: ChatMessage[] = msgs.map((m) => ({
+          id: uid(),
+          role: m.role as "user" | "assistant" | "system",
+          content: m.content,
+          node: m.node ?? undefined,
+          phase: m.phase ?? undefined,
+          timestamp: new Date(m.created_at).getTime(),
+        }));
+        if (loaded.length > 0) {
+          setMessages(loaded);
+        }
+      })
+      .catch(() => {
+        // Silently fail -- user can still send new messages
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [resumeSessionId]);
 
   // Warm up the backend on page load (fire-and-forget)
   useEffect(() => {

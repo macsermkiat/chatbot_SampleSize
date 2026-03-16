@@ -386,6 +386,117 @@ export async function createCheckout(
   return response.json();
 }
 
+// --- Saved Projects ---
+
+export interface ProjectListItem {
+  session_id: string;
+  name: string | null;
+  description: string | null;
+  current_phase: string;
+  created_at: string;
+  updated_at: string | null;
+  ended_at: string | null;
+}
+
+export interface ProjectListResponse {
+  items: ProjectListItem[];
+  total: number;
+}
+
+export interface ProjectUpdateResponse {
+  session_id: string;
+  name: string;
+  description: string | null;
+  updated_at: string;
+}
+
+export interface MessageItem {
+  role: string;
+  content: string;
+  node: string | null;
+  phase: string | null;
+  created_at: string;
+}
+
+/**
+ * List the current user's research projects (sessions).
+ */
+export async function getProjects(
+  q?: string,
+  limit?: number,
+  offset?: number,
+): Promise<ProjectListResponse> {
+  const params = new URLSearchParams();
+  if (q) params.set("q", q);
+  if (limit !== undefined) params.set("limit", String(limit));
+  if (offset !== undefined) params.set("offset", String(offset));
+
+  const qs = params.toString();
+  const url = `${API_BASE}/projects${qs ? `?${qs}` : ""}`;
+  const headers = await authHeaders();
+  const response = await fetchWithRetry(url, { headers });
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({ detail: "Failed to load projects" }));
+    throw new Error(err.detail || "Failed to load projects");
+  }
+  return response.json();
+}
+
+/**
+ * Update a project's name and/or description.
+ */
+export async function updateProject(
+  sessionId: string,
+  name: string,
+  description?: string | null,
+): Promise<ProjectUpdateResponse> {
+  const headers = await authHeaders({ "Content-Type": "application/json" });
+  const response = await fetchWithRetry(`${API_BASE}/projects/${sessionId}`, {
+    method: "PATCH",
+    headers,
+    body: JSON.stringify({ name, description: description ?? null }),
+  });
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({ detail: "Failed to update project" }));
+    throw new Error(err.detail || "Failed to update project");
+  }
+  return response.json();
+}
+
+/**
+ * Soft-delete a project (session).
+ */
+export async function deleteProject(sessionId: string): Promise<void> {
+  const headers = await authHeaders();
+  const response = await fetchWithRetry(`${API_BASE}/projects/${sessionId}`, {
+    method: "DELETE",
+    headers,
+  });
+  if (!response.ok && response.status !== 204) {
+    const err = await response.json().catch(() => ({ detail: "Failed to delete project" }));
+    throw new Error(err.detail || "Failed to delete project");
+  }
+}
+
+/**
+ * Get message history for a session (for resuming).
+ */
+export async function getSessionMessages(
+  sessionId: string,
+): Promise<MessageItem[]> {
+  const headers = await authHeaders();
+  const response = await fetchWithRetry(
+    `${API_BASE}/sessions/${sessionId}/messages`,
+    { headers },
+  );
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({ detail: "Failed to load messages" }));
+    throw new Error(err.detail || "Failed to load messages");
+  }
+  const data = await response.json();
+  return data.messages;
+}
+
 /**
  * Generate a client-side unique ID.
  */
