@@ -100,24 +100,25 @@ export default function PricingClient() {
         {/* Annual toggle */}
         <div className="flex items-center justify-center gap-3 mb-10">
           <span
-            className={`text-sm ${!annual ? "text-parchment-900 font-medium" : "text-parchment-500"}`}
+            className={`text-sm transition-colors ${!annual ? "text-parchment-900 font-medium" : "text-parchment-500"}`}
           >
             Monthly
           </span>
           <button
             onClick={() => setAnnual(!annual)}
-            className={`relative w-12 h-6 rounded-full transition-colors ${
-              annual ? "bg-parchment-700" : "bg-parchment-300"
+            aria-pressed={annual}
+            className={`relative w-12 h-7 rounded-full transition-colors ${
+              annual ? "bg-parchment-700" : "bg-parchment-600"
             }`}
           >
             <span
-              className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
-                annual ? "translate-x-6" : "translate-x-0.5"
+              className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full shadow-sm transition-transform duration-200 ${
+                annual ? "translate-x-5" : "translate-x-0"
               }`}
             />
           </button>
           <span
-            className={`text-sm ${annual ? "text-parchment-900 font-medium" : "text-parchment-500"}`}
+            className={`text-sm transition-colors ${annual ? "text-parchment-900 font-medium" : "text-parchment-500"}`}
           >
             Annual{" "}
             <span className="text-green-600 font-medium">(Save 20%)</span>
