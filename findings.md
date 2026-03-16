@@ -1,96 +1,69 @@
-# Findings: Simple vs Advanced Expertise Level Feature
+# Findings
 
-## Architecture Analysis
+## Codebase Analysis for Market Analysis Implementation (2026-03-15)
 
-### Current Prompt Injection Pattern
-All 7 agent nodes follow this identical pattern:
-```python
-llm = get_chat_model("agent_name").with_structured_output(OutputSchema)
-messages = [
-    SystemMessage(content=PROMPT_CONSTANT),   # <-- injection point
-    *trim_messages(state["messages"]),
-    HumanMessage(content=build_input_text(state)),
-]
-result = await llm.ainvoke(messages)
-```
+### What Already Exists
+- **Evaluation framework:** Comprehensive benchmark suite in `evaluation/` with test cases, collectors, judges, and analysis. Phase 4 (validation) is partially done.
+- **Summary export:** Basic .txt download via `downloadSummary()` in `frontend/src/lib/api.ts`. Phase 3 (protocol export) will replace this with DOCX/PDF.
+- **Token logging:** `token_logs` table tracks prompt/completion tokens per node per session. Can be repurposed for usage metering.
+- **Session evaluation:** Star rating (1-5) + comment already implemented (`session_evaluations` table, `EvaluationDialog.tsx`).
+- **File processing:** PDF/DOCX/image upload with text extraction already works. Not persisted to DB.
+- **`python-docx` already in deps:** Can be used for DOCX export without new dependency.
+- **Supabase already in stack:** Auth can be enabled without infrastructure changes.
 
-**Key insight**: The `SystemMessage(content=PROMPT_CONSTANT)` is the single point where we inject expertise-level-aware prompts. No other code changes needed per-node beyond selecting the right prompt.
+### Architecture Constraints
+- **No user identity:** Sessions are anonymous UUIDs. Auth (Phase 1) must come first before billing, projects, or collaboration.
+- **Fire-and-forget logging:** `log_message()` and `log_tokens()` use `asyncio.create_task`. Usage metering needs guaranteed persistence (not fire-and-forget).
+- **20-message sliding window:** Session memory is limited. Saved projects (Phase 6) need full history access.
+- **Frontend is 900+ lines (HomeClient.tsx):** Will need refactoring as features grow. Extract into smaller components.
+- **No SSR auth:** Currently pure client-side. Adding Supabase Auth will need middleware for protected routes.
 
-### Prompt File
-- `backend/app/agents/prompts.py` -- 7 prompt constants: `ORCHESTRATOR_PROMPT`, `GAP_SEARCH_PROMPT`, `GAP_SUMMARIZE_PROMPT`, `METHODOLOGY_PROMPT`, `BIOSTATS_PROMPT`, `DIAGNOSTIC_PROMPT`, `CODING_PROMPT`, `WELCOME_MESSAGE`
+### Decisions Made
+1. **Auth:** Supabase Auth (email + Google OAuth)
+2. **Billing:** LemonSqueezy (handles tax/compliance automatically)
+3. **DOCX library:** `python-docx` (already installed)
+4. **PDF library:** WeasyPrint (HTML->PDF, good formatting)
+5. **i18n approach:** next-intl (App Router native) — for future Phase 7
 
-### State Definition
-- `backend/app/agents/state.py` -- `ResearchState(TypedDict)` has **no** `expertise_level` field
-- State flows through all nodes; adding a field makes it available everywhere
-- LangGraph checkpointer persists state per session -- expertise_level survives across turns
+### Integration Research (2026-03-15)
 
-### API Contract
-- `backend/app/models.py` -- `ChatRequest` has `message` and `session_id` only
-- `backend/app/api/chat.py` -- `_stream_graph()` builds initial state with hardcoded defaults
-- Frontend sends `{ message, session_id }` via POST /api/chat
+#### Supabase Auth
+- **Frontend packages:** `@supabase/supabase-js` + `@supabase/ssr`
+- **Backend packages:** `PyJWT` (HS256 local validation, zero latency)
+- **Pattern:** Client components use `createBrowserClient`, server components use `createServerClient`
+- **Critical rule:** Never trust `getSession()` in server code, always use `getUser()`
+- **JWT claims:** `sub` = user UUID, `email`, `role` = "authenticated", `aud` = "authenticated"
+- **Middleware:** `middleware.ts` guards all routes except /login, /signup, /auth
+- **OAuth flow:** PKCE via `/auth/callback/route.ts` that calls `exchangeCodeForSession()`
+- **Backend:** `PyJWT` decodes with `audience="authenticated"`, extracts `sub` as user_id
+- **Future:** Supabase migrating to ES256/JWKS (mandatory late 2026), plan upgrade later
 
-### Frontend
-- `frontend/src/app/page.tsx` -- single React component, no state management library
-- No settings UI exists
-- Welcome screen: decorative landing with 3 starter prompt buttons
-- `frontend/src/lib/api.ts` -- `streamChat(message, sessionId)` sends 2-field JSON
+#### LemonSqueezy Billing
+- **Frontend:** Load `lemon.js` script, use overlay checkout or redirect
+- **Backend packages:** `httpx` for API calls
+- **User mapping:** Pass `user_id` via `checkout_data.custom.user_id`, arrives in `meta.custom_data.user_id` in webhooks
+- **Webhook verification:** HMAC-SHA256 on raw body bytes, `X-Signature` header, `X-Event-Name` header
+- **Key events:** subscription_created, subscription_updated, subscription_cancelled, subscription_payment_failed
+- **Customer portal:** `urls.customer_portal` from subscription object — hosted by LemonSqueezy, no custom UI
+- **Env vars needed:** `LEMONSQUEEZY_API_KEY`, `LEMONSQUEEZY_STORE_ID`, `LEMONSQUEEZY_WEBHOOK_SECRET`
 
----
+#### WeasyPrint for PDF Export
+- Converts HTML -> PDF with CSS support
+- Install: `uv add weasyprint` (has system deps: cairo, pango, gdk-pixbuf)
+- Pattern: Generate HTML template with Jinja2, convert to PDF bytes
+- Good for: formatted protocol sections with tables, headings, citations
 
-## Design Decisions
-
-### D1: Prompt Strategy -- Style Directive Prefix
-Instead of maintaining two full copies of each prompt, prepend a **style directive** that adjusts tone and depth:
-
-```python
-def get_prompt(base_prompt: str, expertise_level: str) -> str:
-    prefix = SIMPLE_STYLE_DIRECTIVE if expertise_level == "simple" else ADVANCED_STYLE_DIRECTIVE
-    return f"{prefix}\n\n{base_prompt}"
-```
-
-For agents needing heavier customization (methodology, gap_summarize), provide agent-specific simple-mode addenda appended after the base prompt.
-
-**Rationale**: Single source of truth for domain logic; style is an overlay.
-
-### D2: Per-Agent Simple Mode Behavior
-
-| Agent | Simple Mode Changes |
-|-------|-------------------|
-| Orchestrator | Warmer tone, simpler routing explanations ("Let me connect you with our statistics helper") |
-| Gap Search | No change (internal search terms, user doesn't see) |
-| Gap Summarize | Plain English gap types, skip GRADE, use analogies, shorter output, question format instead of PICO syntax |
-| Methodology | Skip DAG/TTE/Helsinki jargon, focus on "what kind of study fits", use analogies, avoid STROBE/CONSORT labels |
-| Biostatistics | Amplify existing EL12 protocol, "how many patients" not "power analysis", analogies throughout |
-| Coding | More inline comments, plain variable names, section explanations |
-| Diagnostic | Plain English recommendations, brief "why", no decision tree jargon |
-
-### D3: UI Selection Point
-Two clickable cards on the welcome screen:
-- "I'm new to research" (simple mode) -- with subtitle explaining the experience
-- "I'm experienced with research" (advanced mode)
-
-Once selected: stored in React state, sent with the first API call, persisted in backend state.
-Header shows current mode with option to toggle mid-conversation.
-
-### D4: API Transport
-- Add optional `expertise_level: Literal["simple", "advanced"]` to `ChatRequest`
-- Only meaningful on first message; backend stores in `ResearchState`
-- Subsequent messages: backend reads from persisted state
-- For mid-conversation changes: frontend sends updated value, backend overwrites
-
-### D5: Backward Compatibility
-- Default `expertise_level = "advanced"` everywhere
-- Existing sessions without the field behave exactly as today
-- No migration needed -- LangGraph state defaults handle missing keys
+### Market Analysis Key Numbers
+- TAM: $1.2B-$1.9B (all medical researchers)
+- SAM: $120M-$240M (junior clinical researchers)
+- SOM Year 1: $120K-$480K (500-2,000 paying users)
+- Target ARPU: ~$20/month
+- LLM COGS: $0.05-0.30 per query
+- Competitor pricing: Elicit $12-79/mo, nQuery $925-7,495/yr
 
 ---
 
-## Risk Assessment
+## Previous Findings: Expertise Level Feature (preserved)
 
-| Risk | Severity | Mitigation |
-|------|----------|------------|
-| Routing breaks in simple mode | HIGH | Keep routing instructions identical in both modes; style directive only changes tone/depth |
-| Backward compat (existing sessions) | MEDIUM | Default "advanced" when field missing |
-| Prompt length increase | LOW | Style directives are ~150-200 tokens |
-| Mid-conversation mode switch | LOW | Allow but new messages use new mode; old messages unchanged |
-| LLM ignores style directive | LOW | Place directive at top of system message (highest attention) |
+### Architecture Analysis
+All 7 agent nodes follow identical pattern with `SystemMessage(content=PROMPT_CONSTANT)` as the injection point for expertise-level-aware prompts. Style directive prefix approach chosen over duplicate prompts.
