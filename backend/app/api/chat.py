@@ -188,15 +188,22 @@ async def _stream_graph(
             }
             continue
 
-        # Capture token usage from LLM call completions
-        if kind == "on_llm_end":
+        # Capture token usage from LLM call completions.
+        # LangGraph v2 emits on_chat_model_end for ChatModel calls
+        # (on_llm_end is only for the legacy LLM interface).
+        if kind in ("on_chat_model_end", "on_llm_end"):
             data = event.get("data", {})
             llm_output = data.get("output", None)
             if llm_output is not None:
                 usage = extract_token_usage(llm_output)
                 if usage["total_tokens"] > 0:
+                    # Find the graph node name from tags (filter out internal tags)
                     tags = event.get("tags") or []
-                    parent_node = tags[0] if tags else "unknown"
+                    graph_nodes = _graph.nodes
+                    parent_node = next(
+                        (t for t in tags if t in graph_nodes),
+                        event.get("name", "unknown"),
+                    )
                     log_tokens(
                         session_id,
                         node=parent_node,
@@ -207,8 +214,8 @@ async def _stream_graph(
                     )
                 else:
                     _logger.debug(
-                        "on_llm_end: zero tokens for session=%s output_type=%s",
-                        session_id, type(llm_output).__name__,
+                        "%s: zero tokens for session=%s output_type=%s",
+                        kind, session_id, type(llm_output).__name__,
                     )
 
         # Stream node completions as SSE events
@@ -268,7 +275,11 @@ async def chat(
 
     # Usage metering: check and increment query count for authenticated users
     if user is not None:
-        allowed = await increment_usage(user.id)
+        try:
+            allowed = await increment_usage(user.id)
+        except Exception:
+            _logger.exception("Usage metering failed for user %s -- allowing request", user.id)
+            allowed = True
         if not allowed:
             return EventSourceResponse(
                 _limit_reached_generator(),
