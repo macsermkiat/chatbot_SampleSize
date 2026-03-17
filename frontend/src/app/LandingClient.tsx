@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import FloatingParticles from "@/components/FloatingParticles";
 
 const fadeUp = {
   initial: { opacity: 0, y: 24 },
@@ -85,24 +84,24 @@ const PAIN_POINTS = [
 ];
 
 const COMPARISONS = [
-  { name: "nQuery", price: "$925 - $7,495/yr", ai: false },
-  { name: "PASS", price: "$1,095 - $2,995/yr", ai: false },
-  { name: "G*Power", price: "Free", ai: false },
-  { name: "ProtoCol", price: "From $0/mo", ai: true },
+  { name: "nQuery", price: "$925\u2013$7,495/yr", guided: false, codeGen: false, litSearch: false, highlight: false },
+  { name: "PASS", price: "$1,095\u2013$2,995/yr", guided: false, codeGen: false, litSearch: false, highlight: false },
+  { name: "G*Power", price: "Free", guided: false, codeGen: false, litSearch: false, highlight: false },
+  { name: "ProtoCol", price: "From $0/mo", guided: true, codeGen: true, litSearch: true, highlight: true },
 ];
 
 const FAQS = [
   {
     q: "Can I trust AI for sample size calculations?",
-    a: "ProtoCol uses deterministic statistical formulas -- the same math behind G*Power and PASS. The AI guides you through selecting the right parameters (effect size, alpha, power), then runs validated calculations. Every result includes the formula used and generated R/Python code so you can verify independently.",
+    a: "ProtoCol uses deterministic statistical formulas \u2014 the same math behind G*Power and PASS. The AI guides you through selecting the right parameters (effect size, alpha, power), then runs validated calculations. Every result includes the formula used and generated R/Python code so you can verify independently.",
   },
   {
     q: "Will this be accepted by my IRB or ethics committee?",
-    a: "ProtoCol generates documentation following EQUATOR reporting guidelines (CONSORT, STROBE, PRISMA). The output is a starting point for your protocol -- you review and refine it with your team before submission, just as you would with any statistical consultation.",
+    a: "ProtoCol generates documentation following EQUATOR reporting guidelines (CONSORT, STROBE, PRISMA). The output is a starting point for your protocol \u2014 you review and refine it with your team before submission, just as you would with any statistical consultation.",
   },
   {
     q: "How is this different from just using ChatGPT?",
-    a: "General-purpose chatbots hallucinate statistical methods and fabricate references. ProtoCol uses a structured multi-agent pipeline: separate specialized agents for literature search, methodology design, and biostatistics -- each with domain-specific validation. In blinded evaluation against GPT-5, ProtoCol scored significantly higher on statistical accuracy, ethical awareness, and code generation.",
+    a: "General-purpose chatbots hallucinate statistical methods and fabricate references. ProtoCol uses a structured multi-agent pipeline: separate specialized agents for literature search, methodology design, and biostatistics \u2014 each with domain-specific validation. In blinded evaluation against GPT-5, ProtoCol scored significantly higher on statistical accuracy, ethical awareness, and code generation.",
   },
   {
     q: "What study designs are supported?",
@@ -224,14 +223,25 @@ export default function LandingClient() {
         animate="animate"
         variants={stagger}
       >
-        <FloatingParticles count={20} />
+        {/* Subtle formula watermark reinforcing the statistics theme */}
+        <div className="absolute inset-0 pointer-events-none select-none overflow-hidden" aria-hidden="true">
+          <span className="absolute top-[18%] left-[8%] text-parchment-300/40 font-mono text-body-sm rotate-[-12deg]">
+            n = (Z&#178; &middot; p(1-p)) / e&#178;
+          </span>
+          <span className="absolute top-[72%] right-[6%] text-parchment-300/30 font-mono text-caption rotate-[8deg]">
+            1 &minus; &beta;
+          </span>
+          <span className="absolute top-[35%] right-[12%] text-parchment-300/25 font-mono text-caption rotate-[-4deg]">
+            &alpha; = 0.05
+          </span>
+        </div>
         <div className="max-w-3xl mx-auto text-center relative z-10">
           <motion.h1
             variants={fadeUp}
             transition={{ duration: 0.5 }}
             className="font-display text-display-xl font-semibold text-ink-900 mb-6 text-balance"
           >
-            Design your study methodology and calculate sample size -- powered by AI
+            Design your study methodology and calculate sample size — powered by AI
           </motion.h1>
 
           <motion.p
@@ -241,7 +251,7 @@ export default function LandingClient() {
           >
             From research question to IRB-ready protocol in one session.
             Gap analysis, methodology design, power analysis, and code generation
-            -- without waiting weeks for a biostatistician.
+            — without waiting weeks for a biostatistician.
           </motion.p>
 
           <motion.div
@@ -258,7 +268,7 @@ export default function LandingClient() {
                 shadow-sm w-full sm:w-auto text-center
               "
             >
-              Start Your Research Plan -- Free
+              Start Your Research Plan — Free
             </Link>
           </motion.div>
 
@@ -312,17 +322,17 @@ export default function LandingClient() {
                 key={item.problem}
                 variants={fadeUp}
                 transition={{ duration: 0.4 }}
-                className="bg-white/60 backdrop-blur-sm border border-parchment-200 rounded-xl p-6"
+                className="bg-white border border-parchment-200 rounded-xl p-6"
               >
-                <p className="text-body-md text-ink-800 font-body font-medium mb-3 flex items-start gap-2">
-                  <svg className="w-5 h-5 text-red-400 flex-none mt-0.5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                  </svg>
+                <p className="text-body-md text-ink-700 font-body mb-3 flex items-start gap-2.5">
+                  <span className="flex-none w-5 h-5 mt-0.5 rounded-full border border-parchment-400 flex items-center justify-center">
+                    <span className="w-1.5 h-1.5 rounded-full bg-parchment-500" />
+                  </span>
                   {item.problem}
                 </p>
-                <p className="text-body-sm text-ink-600 font-body flex items-start gap-2 pl-7">
-                  <svg className="w-4 h-4 text-green-600 flex-none mt-0.5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                <p className="text-body-sm text-ink-600 font-body font-medium flex items-start gap-2.5 pl-[1.875rem]">
+                  <svg className="w-4 h-4 text-gold-600 flex-none mt-0.5" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 10l3 3 5-5" />
                   </svg>
                   {item.solution}
                 </p>
@@ -337,7 +347,7 @@ export default function LandingClient() {
         <div className="divider">How It Works</div>
       </div>
 
-      {/* Features */}
+      {/* How It Works -- numbered vertical steps */}
       <motion.section
         className="py-20 px-6"
         initial="initial"
@@ -345,34 +355,40 @@ export default function LandingClient() {
         viewport={{ once: true, margin: "-100px" }}
         variants={stagger}
       >
-        <div className="max-w-5xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {FEATURES.map((feature) => (
+        <div className="max-w-2xl mx-auto">
+          <div className="space-y-0">
+            {FEATURES.map((feature, i) => (
               <motion.div
                 key={feature.title}
                 variants={fadeUp}
                 transition={{ duration: 0.4 }}
-                className="
-                  bg-white/60 backdrop-blur-sm border border-parchment-200
-                  rounded-xl p-6 hover:border-gold-300
-                  transition-colors duration-200
-                "
+                className="relative flex gap-5 sm:gap-6 pb-10 last:pb-0"
               >
-                <div className="w-10 h-10 rounded-lg bg-gold-50 border border-gold-200 flex items-center justify-center text-gold-700 mb-4">
-                  {feature.icon}
+                {/* Vertical connector line */}
+                {i < FEATURES.length - 1 && (
+                  <div className="absolute left-[1.1875rem] top-10 bottom-0 w-px bg-parchment-300" />
+                )}
+
+                {/* Step number */}
+                <div className="flex-none w-[2.375rem] h-[2.375rem] rounded-full border border-gold-300 bg-gold-50 flex items-center justify-center text-gold-700 font-display text-body-md font-semibold">
+                  {i + 1}
                 </div>
-                <h3 className="font-display text-display-md font-semibold text-ink-900 mb-2">
-                  {feature.title}
-                </h3>
-                <p className="text-body-sm text-ink-600 font-body leading-relaxed">
-                  {feature.description}
-                </p>
+
+                {/* Content */}
+                <div className="pt-1">
+                  <h3 className="font-display text-display-md font-semibold text-ink-900 mb-1.5">
+                    {feature.title}
+                  </h3>
+                  <p className="text-body-sm text-ink-600 font-body leading-relaxed">
+                    {feature.description}
+                  </p>
+                </div>
               </motion.div>
             ))}
           </div>
 
           {/* Mid-page CTA */}
-          <div className="mt-12 text-center">
+          <div className="mt-14 text-center">
             <Link
               href="/app"
               className="
@@ -387,6 +403,19 @@ export default function LandingClient() {
         </div>
       </motion.section>
 
+      {/* Benchmark callout -- social proof */}
+      <section className="py-10 px-6">
+        <div className="max-w-2xl mx-auto text-center">
+          <p className="text-body-sm text-ink-500 font-body leading-relaxed">
+            In blinded evaluation against GPT-5, ProtoCol scored significantly higher
+            on statistical accuracy, ethical awareness, and code generation.{" "}
+            <Link href="/benchmark" className="text-gold-600 hover:text-gold-700 underline underline-offset-2 transition-colors">
+              See benchmark results
+            </Link>
+          </p>
+        </div>
+      </section>
+
       {/* Comparison */}
       <section className="py-20 px-6 bg-parchment-50/50">
         <div className="max-w-3xl mx-auto">
@@ -397,49 +426,55 @@ export default function LandingClient() {
             Traditional statistical software charges thousands per year with no AI guidance.
           </p>
 
-          <div className="bg-white/80 backdrop-blur-sm border border-parchment-200 rounded-xl overflow-hidden">
-            <table className="w-full">
+          <div className="bg-white/80 border border-parchment-200 rounded-xl overflow-x-auto">
+            <table className="w-full min-w-[28rem]">
               <thead>
                 <tr className="border-b border-parchment-200">
-                  <th className="text-left px-4 sm:px-6 py-3 text-caption text-ink-500 font-display uppercase tracking-wider">
+                  <th className="text-left px-4 sm:px-5 py-3 text-caption text-ink-500 font-display uppercase tracking-wider">
                     Tool
                   </th>
-                  <th className="text-left px-4 sm:px-6 py-3 text-caption text-ink-500 font-display uppercase tracking-wider">
+                  <th className="text-left px-4 sm:px-5 py-3 text-caption text-ink-500 font-display uppercase tracking-wider">
                     Price
                   </th>
-                  <th className="text-center px-4 sm:px-6 py-3 text-caption text-ink-500 font-display uppercase tracking-wider">
-                    AI
+                  <th className="text-center px-3 sm:px-4 py-3 text-caption text-ink-500 font-display uppercase tracking-wider">
+                    AI Guidance
+                  </th>
+                  <th className="text-center px-3 sm:px-4 py-3 text-caption text-ink-500 font-display uppercase tracking-wider">
+                    Code Gen
+                  </th>
+                  <th className="text-center px-3 sm:px-4 py-3 text-caption text-ink-500 font-display uppercase tracking-wider">
+                    Lit Search
                   </th>
                 </tr>
               </thead>
               <tbody>
-                {COMPARISONS.map((item) => (
-                  <tr
-                    key={item.name}
-                    className={`border-b border-parchment-100 last:border-b-0 ${
-                      item.ai ? "bg-gold-50/50" : ""
-                    }`}
-                  >
-                    <td className="px-4 sm:px-6 py-3 text-body-sm font-body text-ink-800 font-medium">
-                      {item.name}
-                    </td>
-                    <td className="px-4 sm:px-6 py-3 text-body-sm font-body text-ink-600">
-                      {item.price}
-                    </td>
-                    <td className="px-4 sm:px-6 py-3 text-center">
-                      {item.ai ? (
-                        <span className="inline-flex items-center gap-1 text-body-sm text-green-700 font-medium">
-                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                          </svg>
-                          Yes
-                        </span>
-                      ) : (
-                        <span className="text-body-sm text-ink-400">No</span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
+                {COMPARISONS.map((item) => {
+                  const check = (
+                    <svg className="w-4 h-4 text-gold-600 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  );
+                  const dash = <span className="block text-center text-ink-300">&mdash;</span>;
+
+                  return (
+                    <tr
+                      key={item.name}
+                      className={`border-b border-parchment-100 last:border-b-0 ${
+                        item.highlight ? "bg-gold-50/60 border-gold-200" : ""
+                      }`}
+                    >
+                      <td className="px-4 sm:px-5 py-3 text-body-sm font-body text-ink-800 font-medium">
+                        {item.name}
+                      </td>
+                      <td className="px-4 sm:px-5 py-3 text-body-sm font-body text-ink-600">
+                        {item.price}
+                      </td>
+                      <td className="px-3 sm:px-4 py-3">{item.guided ? check : dash}</td>
+                      <td className="px-3 sm:px-4 py-3">{item.codeGen ? check : dash}</td>
+                      <td className="px-3 sm:px-4 py-3">{item.litSearch ? check : dash}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -467,7 +502,7 @@ export default function LandingClient() {
             transition={{ duration: 0.4 }}
             className="text-body-md text-ink-500 font-body text-center mb-12"
           >
-            The short answer: yes, the calculations are real math -- not AI guessing.
+            The short answer: yes, the calculations are real math — not AI guessing.
           </motion.p>
 
           <div className="space-y-3">
@@ -476,7 +511,7 @@ export default function LandingClient() {
                 key={i}
                 variants={fadeUp}
                 transition={{ duration: 0.3 }}
-                className="bg-white/60 backdrop-blur-sm border border-parchment-200 rounded-xl overflow-hidden"
+                className="bg-white border border-parchment-200 rounded-xl overflow-hidden"
               >
                 <button
                   onClick={() => setOpenFaq(openFaq === i ? null : i)}
