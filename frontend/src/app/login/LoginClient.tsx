@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useState, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { login, signup } from "./actions";
@@ -12,6 +12,13 @@ function LoginForm() {
   const message = searchParams.get("message");
   const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  // Reset loading state after server-action redirect lands back with error/message
+  useEffect(() => {
+    if (error || message) {
+      setLoading(false);
+    }
+  }, [error, message]);
 
   async function handleGoogleLogin() {
     setLoading(true);
