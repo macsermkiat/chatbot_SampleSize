@@ -108,26 +108,28 @@ async def _ensure_session_exists(session_id: str, user_id: str | None = None) ->
     return True
 
 
-async def _auto_name_session(session_id: str, user_message: str) -> None:
-    """Set a short name from the first user message if not already named."""
+async def _touch_session(session_id: str, user_message: str) -> None:
+    """Auto-name (first message only) and bump updated_at on every message.
+
+    Keeping updated_at fresh ensures the session appears near the top of
+    "My Projects" even if the user never clicks "End Session".
+    """
     try:
         pool = await get_pool()
-        name = user_message[:100].strip()
-        if not name:
-            return
+        name = user_message[:100].strip() or None
         async with pool.acquire(timeout=5) as conn:
             await conn.execute(
                 """
                 UPDATE sessions
-                SET name = $1,
+                SET name = COALESCE(name, $1),
                     updated_at = (now() AT TIME ZONE 'Asia/Bangkok')
-                WHERE session_id = $2 AND name IS NULL
+                WHERE session_id = $2
                 """,
                 name,
                 session_id,
             )
     except Exception:
-        _logger.warning("Failed to auto-name session %s", session_id, exc_info=True)
+        _logger.warning("Failed to touch session %s", session_id, exc_info=True)
 
 
 async def _stream_graph(
@@ -155,8 +157,8 @@ async def _stream_graph(
     if not session_ensured:
         await _ensure_session_exists(session_id, user_id=user_id)
 
-    # Auto-name the session from the first user message (fire-and-forget)
-    asyncio.create_task(_auto_name_session(session_id, message))
+    # Auto-name + bump updated_at (fire-and-forget)
+    asyncio.create_task(_touch_session(session_id, message))
 
     config = {"configurable": {"thread_id": session_id}}
     last_emitted_phase = ""

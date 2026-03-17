@@ -61,19 +61,11 @@ export default function HomeClient() {
   const resumeSessionId = rawResumeId && UUID_RE.test(rawResumeId) ? rawResumeId : null;
 
   const [sessionId] = useState(() => {
-    if (resumeSessionId) {
-      if (typeof window !== "undefined") {
-        sessionStorage.setItem("research_session_id", resumeSessionId);
-      }
-      return resumeSessionId;
-    }
-    if (typeof window !== "undefined") {
-      const stored = sessionStorage.getItem("research_session_id");
-      if (stored) return stored;
-      const fresh = uid();
-      sessionStorage.setItem("research_session_id", fresh);
-      return fresh;
-    }
+    // Explicit resume from URL (?session=<id>) -- reuse that session
+    if (resumeSessionId) return resumeSessionId;
+    // Fresh page load -- always start a new session to avoid stale
+    // LangGraph checkpoint state routing to the wrong phase.
+    // Users can resume old sessions via "My Projects" -> Resume.
     return uid();
   });
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -112,8 +104,7 @@ export default function HomeClient() {
 
   const handleEvaluationComplete = useCallback(() => {
     setEvalDialogOpen(false);
-    // Generate new session ID and reload to reset all state
-    sessionStorage.setItem("research_session_id", uid());
+    // Reload to reset all state (fresh session ID generated on mount)
     window.location.reload();
   }, []);
 

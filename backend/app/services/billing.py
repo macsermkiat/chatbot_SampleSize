@@ -224,8 +224,12 @@ async def get_current_usage(user_id: str) -> dict[str, Any]:
             period_end = sub["renews_at"]
             period_start = period_end - timedelta(days=30)
         else:
-            period_start = now - timedelta(days=30)
-            period_end = now
+            # Free tier: anchor to calendar month so period_start is stable
+            # across requests (avoids creating a new usage_tracking row each call)
+            period_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+            period_end = (period_start + timedelta(days=32)).replace(
+                day=1, hour=0, minute=0, second=0, microsecond=0,
+            )
 
         count = await conn.fetchval(
             """

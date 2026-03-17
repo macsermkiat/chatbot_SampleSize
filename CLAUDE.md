@@ -1,52 +1,5 @@
 # CLAUDE.md
 
-## Workflow Orchestration
-
-### 1. Plan Node Default
-- Enter plan mode for ANY non-trivial task (3+ steps or architectural decisions)
-- If something goes sideways, STOP and re-plan immediately - don't keep pushing
-- Use plan mode for verification steps, not just building
-- Write detailed specs upfront to reduce ambiguity
-
-### 2. Subagent Strategy
-- Use subagents liberally to keep main context window clean
-- Offload research, exploration, and parallel analysis to subagents
-- For complex problems, throw more compute at it via subagents
-- One tack per subagent for focused execution
-
-### 3. Self-Improvement Loop
-- After ANY correction from the user: update `tasks/lessons.md` with the pattern
-- Write rules for yourself that prevent the same mistake
-- Ruthlessly iterate on these lessons until mistake rate drops
-- Review lessons at session start for relevant project
-
-### 4. Verification Before Done
-- Never mark a task complete without proving it works
-- Diff behavior between main and your changes when relevant
-- Ask yourself: "Would a staff engineer approve this?"
-- Run tests, check logs, demonstrate correctness
-
-### 5. Demand Elegance (Balanced)
-- For non-trivial changes: pause and ask "is there a more elegant way?"
-- If a fix feels hacky: "Knowing everything I know now, implement the elegant solution"
-- Skip this for simple, obvious fixes - don't over-engineer
-- Challenge your own work before presenting it
-
-### 6. Autonomous Bug Fixing
-- When given a bug report: just fix it. Don't ask for hand-holding
-- Point at logs, errors, failing tests - then resolve them
-- Zero context switching required from the user
-- Go fix failing CI tests without being told how
-
-## Task Management
-
-1. **Plan First**: Write plan to `tasks/todo.md` with checkable items
-2. **Verify Plan**: Check in before starting implementation
-3. **Track Progress**: Mark items complete as you go
-4. **Explain Changes**: High-level summary at each step
-5. **Document Results**: Add review section to `tasks/todo.md`
-6. **Capture Lessons**: Update `tasks/lessons.md` after corrections
-
 ## Core Principles
 
 - **Simplicity First**: Make every change as simple as possible. Impact minimal code.
@@ -63,6 +16,8 @@ Medical research assistant chatbot -- ported from n8n workflow (`Research Handof
 This project uses uv (not conda/anaconda) for Python package management. Backend is FastAPI/uvicorn. Frontend is Next.js on Vercel. Backend deploys to Render.
 - **Backend:** Python, FastAPI, LangGraph (multi-agent orchestration)
 - **Frontend:** Next.js (React)
+- **Auth:** Supabase Auth (JWT, ES256/HS256) -- `backend/app/auth.py`
+- **Billing:** LemonSqueezy (checkout, subscriptions, webhooks) -- `backend/app/api/billing.py`, `backend/app/services/billing.py`
 - **LLM:** OpenAI (primary), Google Gemini (fallback)
 - **Database:** Supabase PostgreSQL
 - **Search:** Tavily API
@@ -75,9 +30,8 @@ This project uses uv (not conda/anaconda) for Python package management. Backend
 - asyncpg binary protocol ignores session timezone for `TIMESTAMPTZ` columns -- use `TIMESTAMP` (no tz) with `DEFAULT (now() AT TIME ZONE 'Asia/Bangkok')` instead
 - Migrations in `backend/migrations/` run in sorted order on startup via `_run_migrations()` in `main.py`
 - `CREATE TABLE IF NOT EXISTS` silently skips if table exists with different schema -- verify columns match when debugging
-- Tables: `sessions` (PK: session_id TEXT), `message_logs` (FK: session_id), `token_logs` (FK: session_id)
+- Tables: `sessions` (PK: session_id TEXT, has `user_id`, `name`, `description`, `ended_at`, `deleted_at`, `updated_at`), `message_logs`, `token_logs`, `session_evaluations`, `subscriptions` (LemonSqueezy), `usage_tracking`, `webhook_events`
 - LangGraph auto-creates `checkpoints`, `checkpoint_blobs`, `checkpoint_writes` tables
-- Session IDs are client-generated UUIDs (no server auth) -- `createSession()` in api.ts is dead code
 - `log_message()` and `log_tokens()` are fire-and-forget (asyncio.create_task) -- failures don't break chat
 
 ## Commands
@@ -131,6 +85,14 @@ cd backend && .venv/bin/pytest
 - Supabase PgBouncer on port 6543 needs `statement_cache_size=0`
 - Frontend pages split into server component (page.tsx exports metadata) + client component (HomeClient.tsx / BenchmarkClient.tsx) for SEO
 
+## Frontend Routes
+
+`/` (landing), `/app` (chat), `/projects` (saved sessions), `/pricing`, `/blog`, `/benchmark`, `/login`, `/auth/callback`, `/account`
+
+## Backend Services
+
+Key services in `backend/app/services/`: `billing.py` (LemonSqueezy checkout/subscriptions), `citation_extractor.py`, `code_executor.py`, `protocol_export.py`, `summary.py`, `file_processor.py`, `memory.py`, `tavily.py`
+
 ## Task Tracking
 
 - Plans: `tasks/todo.md`
@@ -144,9 +106,7 @@ Always check `../../Context-hub/openai.md` for correct OpenAI model names before
 
 ## Known Production Gaps
 
-- No authentication / user identity (sessions are anonymous UUIDs)
 - File uploads not persisted to DB (processed in-memory only)
-- No `updated_at` on sessions table
 - `createSession()` in `frontend/src/lib/api.ts` is dead code (never called)
 
 ## Architecture Details
