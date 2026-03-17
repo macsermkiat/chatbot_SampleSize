@@ -65,6 +65,25 @@ const FEATURES = [
   },
 ];
 
+const PAIN_POINTS = [
+  {
+    problem: "Waiting weeks for a biostatistician consultation",
+    solution: "Get sample size calculations in minutes, not weeks",
+  },
+  {
+    problem: "Guessing which statistical test fits your design",
+    solution: "AI recommends the right test based on your study parameters",
+  },
+  {
+    problem: "Reviewer comments that your methodology is weak",
+    solution: "Structured methodology with EQUATOR checklist compliance",
+  },
+  {
+    problem: "Underpowered studies that waste months of work",
+    solution: "Validated power analysis with generated code you can verify",
+  },
+];
+
 const COMPARISONS = [
   { name: "nQuery", price: "$925 - $7,495/yr", ai: false },
   { name: "PASS", price: "$1,095 - $2,995/yr", ai: false },
@@ -72,8 +91,32 @@ const COMPARISONS = [
   { name: "ProtoCol", price: "From $0/mo", ai: true },
 ];
 
+const FAQS = [
+  {
+    q: "Can I trust AI for sample size calculations?",
+    a: "ProtoCol uses deterministic statistical formulas -- the same math behind G*Power and PASS. The AI guides you through selecting the right parameters (effect size, alpha, power), then runs validated calculations. Every result includes the formula used and generated R/Python code so you can verify independently.",
+  },
+  {
+    q: "Will this be accepted by my IRB or ethics committee?",
+    a: "ProtoCol generates documentation following EQUATOR reporting guidelines (CONSORT, STROBE, PRISMA). The output is a starting point for your protocol -- you review and refine it with your team before submission, just as you would with any statistical consultation.",
+  },
+  {
+    q: "How is this different from just using ChatGPT?",
+    a: "General-purpose chatbots hallucinate statistical methods and fabricate references. ProtoCol uses a structured multi-agent pipeline: separate specialized agents for literature search, methodology design, and biostatistics -- each with domain-specific validation. In blinded evaluation against GPT-5, ProtoCol scored significantly higher on statistical accuracy, ethical awareness, and code generation.",
+  },
+  {
+    q: "What study designs are supported?",
+    a: "RCTs (parallel, crossover, cluster, non-inferiority, equivalence), cohort studies, case-control, cross-sectional, diagnostic accuracy, survival analysis, and more. The methodology agent handles Target Trial Emulation for observational studies and DAG-based confounding analysis.",
+  },
+  {
+    q: "Do I need to know statistics to use this?",
+    a: "No. ProtoCol adapts to your expertise level. In \"simple\" mode, it explains concepts in plain language and walks you through each decision. In \"advanced\" mode, it assumes familiarity with statistical frameworks and focuses on technical details.",
+  },
+];
+
 export default function LandingClient() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   return (
     <div className="min-h-screen bg-parchment-100">
@@ -109,7 +152,7 @@ export default function LandingClient() {
                 hover:bg-ink-800 transition-colors
               "
             >
-              Open App
+              Try Free
             </Link>
           </div>
 
@@ -123,7 +166,7 @@ export default function LandingClient() {
                 hover:bg-ink-800 transition-colors
               "
             >
-              Open App
+              Try Free
             </Link>
             <button
               onClick={() => setMenuOpen(!menuOpen)}
@@ -174,29 +217,21 @@ export default function LandingClient() {
         </AnimatePresence>
       </nav>
 
-      {/* Hero */}
+      {/* Hero -- Core Offer */}
       <motion.section
-        className="relative py-24 px-6 overflow-hidden"
+        className="relative py-24 sm:py-32 px-6 overflow-hidden"
         initial="initial"
         animate="animate"
         variants={stagger}
       >
         <FloatingParticles count={20} />
         <div className="max-w-3xl mx-auto text-center relative z-10">
-          <motion.p
-            variants={fadeUp}
-            transition={{ duration: 0.5 }}
-            className="text-caption text-gold-600 font-display tracking-wider uppercase mb-4"
-          >
-            AI-Powered Research Methodology
-          </motion.p>
-
           <motion.h1
             variants={fadeUp}
             transition={{ duration: 0.5 }}
             className="font-display text-display-xl font-semibold text-ink-900 mb-6 text-balance"
           >
-            From research question to study protocol, guided by AI
+            Design your study methodology and calculate sample size -- powered by AI
           </motion.h1>
 
           <motion.p
@@ -204,9 +239,9 @@ export default function LandingClient() {
             transition={{ duration: 0.5 }}
             className="text-body-lg text-ink-600 font-body max-w-2xl mx-auto mb-10 leading-relaxed"
           >
-            ProtoCol walks you through gap analysis, study methodology design,
-            and biostatistical analysis -- producing publication-ready protocols
-            at a fraction of the cost of legacy statistical software.
+            From research question to IRB-ready protocol in one session.
+            Gap analysis, methodology design, power analysis, and code generation
+            -- without waiting weeks for a biostatistician.
           </motion.p>
 
           <motion.div
@@ -217,25 +252,23 @@ export default function LandingClient() {
             <Link
               href="/app"
               className="
-                font-body font-medium px-6 py-3 rounded-xl text-body-md
+                font-body font-medium px-8 py-3.5 rounded-xl text-body-md
                 bg-ink-900 text-parchment-100
                 hover:bg-ink-800 transition-colors
                 shadow-sm w-full sm:w-auto text-center
               "
             >
-              Start Research
-            </Link>
-            <Link
-              href="/pricing"
-              className="
-                font-body font-medium px-6 py-3 rounded-xl text-body-md
-                bg-parchment-50 text-ink-800 border border-parchment-300
-                hover:bg-parchment-200 transition-colors w-full sm:w-auto text-center
-              "
-            >
-              View Pricing
+              Start Your Research Plan -- Free
             </Link>
           </motion.div>
+
+          <motion.p
+            variants={fadeUp}
+            transition={{ duration: 0.5 }}
+            className="mt-4 text-body-sm text-ink-400 font-body"
+          >
+            5 free queries per month. No credit card required.
+          </motion.p>
 
           {/* Decorative glow */}
           <div
@@ -249,9 +282,59 @@ export default function LandingClient() {
         </div>
       </motion.section>
 
+      {/* Pain Points */}
+      <section className="py-20 px-6 bg-parchment-50/50">
+        <motion.div
+          className="max-w-4xl mx-auto"
+          initial="initial"
+          whileInView="animate"
+          viewport={{ once: true, margin: "-100px" }}
+          variants={stagger}
+        >
+          <motion.h2
+            variants={fadeUp}
+            transition={{ duration: 0.4 }}
+            className="font-display text-display-lg font-semibold text-ink-900 text-center mb-4"
+          >
+            Sound familiar?
+          </motion.h2>
+          <motion.p
+            variants={fadeUp}
+            transition={{ duration: 0.4 }}
+            className="text-body-md text-ink-500 font-body text-center mb-12 max-w-2xl mx-auto"
+          >
+            These problems cost researchers months of work and thousands in wasted funding.
+          </motion.p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {PAIN_POINTS.map((item) => (
+              <motion.div
+                key={item.problem}
+                variants={fadeUp}
+                transition={{ duration: 0.4 }}
+                className="bg-white/60 backdrop-blur-sm border border-parchment-200 rounded-xl p-6"
+              >
+                <p className="text-body-md text-ink-800 font-body font-medium mb-3 flex items-start gap-2">
+                  <svg className="w-5 h-5 text-red-400 flex-none mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                  {item.problem}
+                </p>
+                <p className="text-body-sm text-ink-600 font-body flex items-start gap-2 pl-7">
+                  <svg className="w-4 h-4 text-green-600 flex-none mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                  {item.solution}
+                </p>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+      </section>
+
       {/* Divider */}
-      <div className="max-w-xs mx-auto">
-        <div className="divider">Three Phases</div>
+      <div className="max-w-xs mx-auto py-4">
+        <div className="divider">How It Works</div>
       </div>
 
       {/* Features */}
@@ -286,6 +369,20 @@ export default function LandingClient() {
                 </p>
               </motion.div>
             ))}
+          </div>
+
+          {/* Mid-page CTA */}
+          <div className="mt-12 text-center">
+            <Link
+              href="/app"
+              className="
+                inline-block font-body font-medium px-8 py-3.5 rounded-xl text-body-md
+                bg-ink-900 text-parchment-100
+                hover:bg-ink-800 transition-colors shadow-sm
+              "
+            >
+              Try Free
+            </Link>
           </div>
         </div>
       </motion.section>
@@ -349,14 +446,85 @@ export default function LandingClient() {
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="py-24 px-6">
+      {/* FAQ / Objection Handling */}
+      <section className="py-20 px-6">
+        <motion.div
+          className="max-w-3xl mx-auto"
+          initial="initial"
+          whileInView="animate"
+          viewport={{ once: true, margin: "-100px" }}
+          variants={stagger}
+        >
+          <motion.h2
+            variants={fadeUp}
+            transition={{ duration: 0.4 }}
+            className="font-display text-display-lg font-semibold text-ink-900 text-center mb-4"
+          >
+            Common questions
+          </motion.h2>
+          <motion.p
+            variants={fadeUp}
+            transition={{ duration: 0.4 }}
+            className="text-body-md text-ink-500 font-body text-center mb-12"
+          >
+            The short answer: yes, the calculations are real math -- not AI guessing.
+          </motion.p>
+
+          <div className="space-y-3">
+            {FAQS.map((faq, i) => (
+              <motion.div
+                key={i}
+                variants={fadeUp}
+                transition={{ duration: 0.3 }}
+                className="bg-white/60 backdrop-blur-sm border border-parchment-200 rounded-xl overflow-hidden"
+              >
+                <button
+                  onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                  className="w-full text-left px-6 py-4 flex items-center justify-between gap-4 cursor-pointer"
+                  aria-expanded={openFaq === i}
+                >
+                  <span className="text-body-md font-body font-medium text-ink-800">
+                    {faq.q}
+                  </span>
+                  <svg
+                    className={`w-5 h-5 text-ink-400 flex-none transition-transform duration-200 ${
+                      openFaq === i ? "rotate-180" : ""
+                    }`}
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                </button>
+                <AnimatePresence>
+                  {openFaq === i && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="overflow-hidden"
+                    >
+                      <p className="px-6 pb-5 text-body-sm text-ink-600 font-body leading-relaxed">
+                        {faq.a}
+                      </p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+      </section>
+
+      {/* Final CTA */}
+      <section className="py-24 px-6 bg-parchment-50/50">
         <div className="max-w-2xl mx-auto text-center">
           <h2 className="font-display text-display-lg font-semibold text-ink-900 mb-4">
-            Ready to streamline your research?
+            Stop guessing. Start designing.
           </h2>
           <p className="text-body-md text-ink-500 font-body mb-8">
-            Start with 5 free queries per month. No credit card required.
+            5 free queries per month. No credit card. No biostatistician waitlist.
           </p>
           <Link
             href="/app"
@@ -367,30 +535,53 @@ export default function LandingClient() {
               shadow-sm
             "
           >
-            Get Started Free
+            Start Your Research Plan
           </Link>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-parchment-200 py-8 px-6">
-        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-caption text-ink-400 font-display">
-            ProtoCol -- AI-powered research methodology
-          </p>
-          <div className="flex items-center gap-6">
-            <Link href="/pricing" className="text-caption text-ink-400 hover:text-ink-600 transition-colors font-display">
-              Pricing
-            </Link>
-            <Link href="/blog" className="text-caption text-ink-400 hover:text-ink-600 transition-colors font-display">
-              Blog
-            </Link>
-            <Link href="/login" className="text-caption text-ink-400 hover:text-ink-600 transition-colors font-display">
-              Sign In
-            </Link>
-            <Link href="/app" className="text-caption text-ink-400 hover:text-ink-600 transition-colors font-display">
-              App
-            </Link>
+      <footer className="border-t border-parchment-200 py-10 px-6">
+        <div className="max-w-5xl mx-auto">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+            <div>
+              <p className="font-display text-body-md font-semibold text-ink-800 mb-1">
+                ProtoCol
+              </p>
+              <p className="text-body-sm text-ink-400 font-body">
+                AI-powered research methodology assistant
+              </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
+              <Link href="/pricing" className="text-body-sm text-ink-500 hover:text-ink-700 transition-colors font-body">
+                Pricing
+              </Link>
+              <Link href="/benchmark" className="text-body-sm text-ink-500 hover:text-ink-700 transition-colors font-body">
+                Benchmark
+              </Link>
+              <Link href="/blog" className="text-body-sm text-ink-500 hover:text-ink-700 transition-colors font-body">
+                Blog
+              </Link>
+              <Link href="/login" className="text-body-sm text-ink-500 hover:text-ink-700 transition-colors font-body">
+                Sign In
+              </Link>
+            </div>
+          </div>
+
+          <div className="mt-8 pt-6 border-t border-parchment-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <p className="text-caption text-ink-400 font-body">
+              Questions? Contact us at{" "}
+              <a
+                href="mailto:contact@protocol-research.com"
+                className="text-ink-600 hover:text-ink-800 underline underline-offset-2 transition-colors"
+              >
+                contact@protocol-research.com
+              </a>
+            </p>
+            <p className="text-caption text-ink-400 font-body">
+              Not for clinical decision-making. All protocols require expert review.
+            </p>
           </div>
         </div>
       </footer>
