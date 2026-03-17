@@ -33,20 +33,20 @@ export const viewport = {
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://research-assistant.app"),
-  title: "Rexearch",
+  title: "ProtoCol",
   description:
     "AI-powered medical research planning: gap analysis, methodology design, biostatistics",
   openGraph: {
-    title: "Rexearch",
+    title: "ProtoCol",
     description:
       "AI-powered medical research planning: gap analysis, study methodology design, and biostatistical analysis.",
     url: "https://research-assistant.app",
-    siteName: "Rexearch",
+    siteName: "ProtoCol",
     type: "website",
   },
   twitter: {
     card: "summary",
-    title: "Rexearch",
+    title: "ProtoCol",
     description:
       "AI-powered medical research planning: gap analysis, study methodology design, and biostatistical analysis.",
   },

@@ -69,7 +69,7 @@ const COMPARISONS = [
   { name: "nQuery", price: "$925 - $7,495/yr", ai: false },
   { name: "PASS", price: "$1,095 - $2,995/yr", ai: false },
   { name: "G*Power", price: "Free", ai: false },
-  { name: "Rexearch", price: "From $0/mo", ai: true },
+  { name: "ProtoCol", price: "From $0/mo", ai: true },
 ];
 
 export default function LandingClient() {
@@ -81,7 +81,7 @@ export default function LandingClient() {
       <nav className="border-b border-parchment-200 bg-parchment-100/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link href="/" className="font-display text-display-md font-semibold text-ink-900 tracking-tight">
-            Rexearch
+            ProtoCol
           </Link>
 
           {/* Desktop nav */}
@@ -204,7 +204,7 @@ export default function LandingClient() {
             transition={{ duration: 0.5 }}
             className="text-body-lg text-ink-600 font-body max-w-2xl mx-auto mb-10 leading-relaxed"
           >
-            Rexearch walks you through gap analysis, study methodology design,
+            ProtoCol walks you through gap analysis, study methodology design,
             and biostatistical analysis -- producing publication-ready protocols
             at a fraction of the cost of legacy statistical software.
           </motion.p>
@@ -376,7 +376,7 @@ export default function LandingClient() {
       <footer className="border-t border-parchment-200 py-8 px-6">
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-caption text-ink-400 font-display">
-            Rexearch -- AI-powered research methodology
+            ProtoCol -- AI-powered research methodology
           </p>
           <div className="flex items-center gap-6">
             <Link href="/pricing" className="text-caption text-ink-400 hover:text-ink-600 transition-colors font-display">

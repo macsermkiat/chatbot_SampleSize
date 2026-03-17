@@ -41,7 +41,7 @@ function LoginForm() {
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="font-display text-display-lg font-semibold text-ink-900 mb-2">
-            Rexearch
+            ProtoCol
           </h1>
           <p className="text-body-sm text-ink-500 font-body">
             AI-powered medical research methodology assistant

@@ -414,7 +414,7 @@ export default function BenchmarkClient() {
   const barData = filteredDimensions.map((d) => ({
     name: d.id,
     fullName: d.name,
-    "Rexearch": d.chatbot,
+    "ProtoCol": d.chatbot,
     "GPT-5": d.gpt5,
     significant: d.significant,
   }));
@@ -424,13 +424,13 @@ export default function BenchmarkClient() {
 
   const radarBioData = biostatsDims.map((d) => ({
     dimension: d.shortName,
-    "Rexearch": d.chatbot,
+    "ProtoCol": d.chatbot,
     "GPT-5": d.gpt5,
   }));
 
   const radarMethData = methDims.map((d) => ({
     dimension: d.shortName,
-    "Rexearch": d.chatbot,
+    "ProtoCol": d.chatbot,
     "GPT-5": d.gpt5,
   }));
 
@@ -447,7 +447,7 @@ export default function BenchmarkClient() {
             href="/"
             className="font-display text-display-md font-semibold text-ink-900 hover:text-gold-700 transition-colors"
           >
-            Rexearch
+            ProtoCol
           </Link>
           <div className="flex items-center gap-4">
             <span className="text-caption font-display text-ink-500 uppercase tracking-wider hidden sm:block">
@@ -485,7 +485,7 @@ export default function BenchmarkClient() {
             </h1>
             <p className="text-body-lg text-ink-600 max-w-2xl mx-auto mb-8 font-body">
               In a rigorous, blinded evaluation across 40 medical research scenarios,
-              Rexearch achieved a{" "}
+              ProtoCol achieved a{" "}
               <span className="font-semibold text-gold-700">+{compositeAdvantage}% higher composite score</span>{" "}
               than GPT-5 -- with statistically significant advantages
               in ethical awareness, code generation, reporting standards, and bias identification.
@@ -654,7 +654,7 @@ export default function BenchmarkClient() {
                   <Legend
                     wrapperStyle={{ fontFamily: "var(--font-inter)", fontSize: 13 }}
                   />
-                  <Bar dataKey="Rexearch" fill={COLORS.chatbot} radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="ProtoCol" fill={COLORS.chatbot} radius={[4, 4, 0, 0]} />
                   <Bar dataKey="GPT-5" fill={COLORS.gpt5} radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
@@ -693,8 +693,8 @@ export default function BenchmarkClient() {
                   />
                   <PolarRadiusAxis domain={[0, 5]} tick={false} axisLine={false} />
                   <Radar
-                    name="Rexearch"
-                    dataKey="Rexearch"
+                    name="ProtoCol"
+                    dataKey="ProtoCol"
                     stroke={COLORS.chatbot}
                     fill={COLORS.chatbotLight}
                     fillOpacity={0.4}
@@ -735,8 +735,8 @@ export default function BenchmarkClient() {
                   />
                   <PolarRadiusAxis domain={[0, 5]} tick={false} axisLine={false} />
                   <Radar
-                    name="Rexearch"
-                    dataKey="Rexearch"
+                    name="ProtoCol"
+                    dataKey="ProtoCol"
                     stroke={COLORS.chatbot}
                     fill={COLORS.chatbotLight}
                     fillOpacity={0.4}
@@ -986,7 +986,7 @@ export default function BenchmarkClient() {
       <footer className="border-t border-parchment-200 bg-parchment-100/80">
         <div className="max-w-5xl mx-auto px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-caption text-ink-400 font-display">
-            Rexearch -- Independent benchmark evaluation
+            ProtoCol -- Independent benchmark evaluation
           </p>
           <div className="flex items-center gap-4">
             <Link href="/app" className="text-body-sm text-ink-600 hover:text-gold-700 transition-colors font-body">

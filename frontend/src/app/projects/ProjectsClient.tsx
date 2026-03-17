@@ -140,7 +140,7 @@ export default function ProjectsClient() {
               href="/"
               className="font-display text-display-md font-semibold text-ink-900 tracking-tight hover:text-ink-700 transition-colors"
             >
-              Rexearch
+              ProtoCol
             </Link>
             <span className="text-ink-300">/</span>
             <h1 className="font-display text-body-lg font-medium text-ink-700">

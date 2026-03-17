@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import PricingClient from "./PricingClient";
 
 export const metadata: Metadata = {
-  title: "Pricing - Rexearch",
+  title: "Pricing - ProtoCol",
   description: "Choose a plan for AI-powered medical research methodology assistance.",
 };
 

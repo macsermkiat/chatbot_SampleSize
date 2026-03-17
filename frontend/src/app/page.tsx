@@ -3,11 +3,11 @@ import type { Metadata } from "next";
 import LandingClient from "./LandingClient";
 
 export const metadata: Metadata = {
-  title: "Rexearch - AI-Powered Research Methodology",
+  title: "ProtoCol - AI-Powered Research Methodology",
   description:
     "AI-powered medical research planning: gap analysis, study methodology design, and biostatistical analysis.",
   openGraph: {
-    title: "Rexearch - AI-Powered Research Methodology",
+    title: "ProtoCol - AI-Powered Research Methodology",
     description:
       "From research question to study protocol, guided by AI. Gap analysis, methodology design, and biostatistics.",
     url: "https://research-assistant.app",
@@ -15,7 +15,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary",
-    title: "Rexearch - AI-Powered Research Methodology",
+    title: "ProtoCol - AI-Powered Research Methodology",
     description:
       "From research question to study protocol, guided by AI.",
   },

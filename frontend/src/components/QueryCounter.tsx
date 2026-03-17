@@ -22,7 +22,7 @@ const TIER_UPGRADE: Record<string, { next: string; label: string }> = {
  * Custom event name for triggering a usage data refresh.
  * Dispatched by HomeClient after each completed query.
  */
-const REFRESH_EVENT = "rexearch:refresh-usage";
+const REFRESH_EVENT = "protocol:refresh-usage";
 
 /** Dispatch a refresh event to update all usage-aware components. */
 export function dispatchUsageRefresh(): void {

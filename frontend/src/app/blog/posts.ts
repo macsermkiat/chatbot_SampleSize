@@ -58,7 +58,7 @@ These pitfalls share a common root: treating sample size calculation as a bureau
 
 Tools like G*Power and PASS handle the arithmetic, but they cannot tell you whether your inputs are reasonable. That is where domain expertise -- and increasingly, AI-assisted methodology review -- becomes essential. An AI system that understands both the statistical framework and the clinical context can flag unrealistic assumptions before they become expensive mistakes.
 
-At Rexearch, our biostatistics phase walks researchers through each assumption, challenges questionable inputs, and generates the code to verify calculations independently. The goal is not to replace statistical thinking, but to make sure it happens rigorously every time.
+At ProtoCol, our biostatistics phase walks researchers through each assumption, challenges questionable inputs, and generates the code to verify calculations independently. The goal is not to replace statistical thinking, but to make sure it happens rigorously every time.
     `,
   },
   {

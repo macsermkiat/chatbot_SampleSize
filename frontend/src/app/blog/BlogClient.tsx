@@ -36,7 +36,7 @@ export default function BlogClient() {
             href="/"
             className="font-display text-display-md font-semibold text-ink-900 tracking-tight"
           >
-            Rexearch
+            ProtoCol
           </Link>
 
           {/* Desktop nav */}
@@ -211,7 +211,7 @@ export default function BlogClient() {
       <section className="py-16 px-6 bg-parchment-50/50">
         <div className="max-w-2xl mx-auto text-center">
           <h2 className="font-display text-display-lg font-semibold text-ink-900 mb-4">
-            Try Rexearch for your next study
+            Try ProtoCol for your next study
           </h2>
           <p className="text-body-md text-ink-500 font-body mb-8">
             AI-guided research planning from gap analysis to sample size
@@ -235,7 +235,7 @@ export default function BlogClient() {
       <footer className="border-t border-parchment-200 py-8 px-6">
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-caption text-ink-400 font-display">
-            Rexearch -- AI-powered research methodology
+            ProtoCol -- AI-powered research methodology
           </p>
           <div className="flex items-center gap-6">
             <Link

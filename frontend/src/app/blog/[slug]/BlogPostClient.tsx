@@ -113,7 +113,7 @@ export default function BlogPostClient({ post }: { readonly post: BlogPost }) {
             href="/"
             className="font-display text-display-md font-semibold text-ink-900 tracking-tight"
           >
-            Rexearch
+            ProtoCol
           </Link>
           <div className="flex items-center gap-6">
             <Link
@@ -195,7 +195,7 @@ export default function BlogPostClient({ post }: { readonly post: BlogPost }) {
             Put these ideas into practice
           </h2>
           <p className="text-body-md text-ink-500 font-body mb-8">
-            Rexearch guides you through gap analysis, methodology design, and
+            ProtoCol guides you through gap analysis, methodology design, and
             biostatistical planning -- step by step.
           </p>
           <div className="flex items-center justify-center gap-4">
@@ -228,7 +228,7 @@ export default function BlogPostClient({ post }: { readonly post: BlogPost }) {
       <footer className="border-t border-parchment-200 py-8 px-6">
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-caption text-ink-400 font-display">
-            Rexearch -- AI-powered research methodology
+            ProtoCol -- AI-powered research methodology
           </p>
           <div className="flex items-center gap-6">
             <Link

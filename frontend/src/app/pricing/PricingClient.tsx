@@ -202,7 +202,7 @@ export default function PricingClient() {
           <p className="text-body-sm text-ink-400 font-body">
             Compare: nQuery costs $925-$7,495/year with no AI guidance.
             <br className="hidden sm:block" />
-            {" "}Rexearch provides AI-guided methodology for a fraction of the cost.
+            {" "}ProtoCol provides AI-guided methodology for a fraction of the cost.
           </p>
         </div>
       </div>
