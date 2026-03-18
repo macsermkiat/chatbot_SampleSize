@@ -37,7 +37,7 @@ class TestGenerateSummary:
         # Verify the call used gpt-5-mini
         call_kwargs = mock_client.chat.completions.create.call_args
         assert call_kwargs.kwargs["model"] == "gpt-5-mini"
-        assert call_kwargs.kwargs["max_completion_tokens"] == 4000
+        assert call_kwargs.kwargs["max_completion_tokens"] == 16000
 
     async def test_includes_all_messages_in_transcript(self):
         messages = [
