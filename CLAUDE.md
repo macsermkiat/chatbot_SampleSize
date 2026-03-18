@@ -13,7 +13,7 @@ Medical research assistant chatbot -- ported from n8n workflow (`Research Handof
 `Research Handoff agent.json` is the reference spec. Do not modify it.
 
 ## Tech Stack
-This project uses uv (not conda/anaconda) for Python package management. Backend is FastAPI/uvicorn. Frontend is Next.js on Vercel. Backend deploys to Render.
+This project uses uv (not conda/anaconda) for Python package management. Backend is FastAPI/uvicorn. Frontend is Next.js on Vercel. Backend deploys to Render. Production domain: `www.protocol.med`
 - **Backend:** Python, FastAPI, LangGraph (multi-agent orchestration)
 - **Frontend:** Next.js (React)
 - **Auth:** Supabase Auth (JWT, ES256/HS256) -- `backend/app/auth.py`
@@ -77,7 +77,6 @@ cd backend && .venv/bin/pytest
 
 ## Gotchas
 
-- **NEVER run bare `uvicorn` or `pytest`** -- Anaconda shadows the venv. Always use `make backend` / `make test` or explicit `.venv/bin/` paths
 - Use `uv` not `pip` for package management
 - `timeout` unavailable on macOS -- use `gtimeout` or Python httpx ASGITransport
 - Build backend uses `setuptools.build_meta`, not `setuptools.backends._legacy:_Backend`
@@ -91,12 +90,12 @@ cd backend && .venv/bin/pytest
 
 ## Backend Services
 
-Key services in `backend/app/services/`: `billing.py` (LemonSqueezy checkout/subscriptions), `citation_extractor.py`, `code_executor.py`, `protocol_export.py`, `summary.py`, `file_processor.py`, `memory.py`, `tavily.py`
+Key services in `backend/app/services/`: `billing.py` (LemonSqueezy checkout/subscriptions), `citation_extractor.py`, `code_executor.py`, `protocol_export.py`, `summary.py`, `file_processor.py`, `llm.py` (model routing), `memory.py`, `message_logger.py`, `tavily.py`
 
 ## Task Tracking
 
-- Plans: `tasks/todo.md`
 - Lessons: `tasks/lessons.md` (update after corrections)
+- QA findings: `tasks/qa-findings.md`
 
 ## OpenAI Model Reference
 

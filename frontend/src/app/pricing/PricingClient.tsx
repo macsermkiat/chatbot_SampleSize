@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { createCheckout } from "@/lib/api";
 
 interface PricingTier {
   name: string;
@@ -11,7 +13,7 @@ interface PricingTier {
   features: string[];
   cta: string;
   highlighted?: boolean;
-  variantId?: string;
+  variantId?: { monthly: string; annual: string };
 }
 
 const TIERS: PricingTier[] = [
@@ -41,6 +43,7 @@ const TIERS: PricingTier[] = [
     ],
     cta: "Subscribe",
     highlighted: true,
+    variantId: { monthly: "1417266", annual: "1417333" },
   },
   {
     name: "Pro",
@@ -55,6 +58,7 @@ const TIERS: PricingTier[] = [
       "Citation generation",
     ],
     cta: "Subscribe",
+    variantId: { monthly: "1417323", annual: "1417270" },
   },
   {
     name: "Institutional",
@@ -75,6 +79,26 @@ const TIERS: PricingTier[] = [
 
 export default function PricingClient() {
   const [annual, setAnnual] = useState(false);
+  const [loading, setLoading] = useState<string | null>(null);
+  const router = useRouter();
+
+  async function handleSubscribe(tier: PricingTier) {
+    if (!tier.variantId) {
+      if (tier.name === "Free") {
+        router.push("/app");
+      }
+      return;
+    }
+    const variantId = annual ? tier.variantId.annual : tier.variantId.monthly;
+    setLoading(tier.name);
+    try {
+      const { checkout_url } = await createCheckout(variantId);
+      window.location.href = checkout_url;
+    } catch {
+      alert("Failed to start checkout. Please log in first.");
+      setLoading(null);
+    }
+  }
 
   return (
     <div className="min-h-screen bg-parchment-100 py-12 sm:py-16 px-4 sm:px-6">
@@ -183,15 +207,17 @@ export default function PricingClient() {
               </ul>
 
               <button
+                onClick={() => handleSubscribe(tier)}
+                disabled={loading === tier.name}
                 className={`
-                  w-full py-2.5 rounded-xl text-body-sm font-display font-medium transition-colors
+                  w-full py-2.5 rounded-xl text-body-sm font-display font-medium transition-colors disabled:opacity-50
                   ${tier.highlighted
                     ? "bg-ink-900 text-parchment-100 hover:bg-ink-800"
                     : "bg-parchment-100 text-ink-800 hover:bg-parchment-200 border border-parchment-300"
                   }
                 `}
               >
-                {tier.cta}
+                {loading === tier.name ? "Loading..." : tier.cta}
               </button>
             </div>
           ))}
