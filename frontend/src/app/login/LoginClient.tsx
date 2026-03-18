@@ -12,6 +12,7 @@ function LoginForm() {
   const message = searchParams.get("message");
   const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [oauthError, setOauthError] = useState<string | null>(null);
 
   // Reset loading state after server-action redirect lands back with error/message
   useEffect(() => {
@@ -22,14 +23,31 @@ function LoginForm() {
 
   async function handleGoogleLogin() {
     setLoading(true);
-    const supabase = createClient();
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
-    });
-    if (error) {
+    setOauthError(null);
+    try {
+      const supabase = createClient();
+      const { data, error: oauthErr } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+      if (oauthErr) {
+        setOauthError(oauthErr.message);
+        setLoading(false);
+      } else if (!data?.url) {
+        setOauthError("No redirect URL returned. Check Supabase configuration.");
+        setLoading(false);
+      } else {
+        // Safety timeout: if the browser hasn't navigated away after 5s,
+        // something went wrong (e.g. popup blocker, blocked redirect).
+        setTimeout(() => {
+          setLoading(false);
+          setOauthError("Redirect timed out. Please try again.");
+        }, 5000);
+      }
+    } catch (err) {
+      setOauthError(err instanceof Error ? err.message : "Unexpected error");
       setLoading(false);
     }
   }
@@ -71,6 +89,12 @@ function LoginForm() {
           {message && (
             <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm">
               {decodeURIComponent(message)}
+            </div>
+          )}
+
+          {oauthError && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+              {oauthError}
             </div>
           )}
 
@@ -175,6 +199,14 @@ function LoginForm() {
         <p className="mt-6 text-center text-caption text-ink-400 font-display">
           By continuing, you agree to our terms of service.
         </p>
+
+        {/* Temporary debug — remove after fixing */}
+        {process.env.NODE_ENV === "production" && (
+          <p className="mt-2 text-center text-xs text-ink-300 font-mono">
+            SB: {process.env.NEXT_PUBLIC_SUPABASE_URL ? "set" : "MISSING"} |
+            Key: {process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? "set" : "MISSING"}
+          </p>
+        )}
       </div>
     </div>
   );

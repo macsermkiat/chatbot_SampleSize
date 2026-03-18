@@ -608,10 +608,10 @@ export default function LandingClient() {
             <p className="text-caption text-ink-400 font-body">
               Questions? Contact us at{" "}
               <a
-                href="mailto:contact@protocol-research.com"
+                href="mailto:contact@protocol.med"
                 className="text-ink-600 hover:text-ink-800 underline underline-offset-2 transition-colors"
               >
-                contact@protocol-research.com
+                contact@protocol.med
               </a>
             </p>
             <p className="text-caption text-ink-400 font-body">

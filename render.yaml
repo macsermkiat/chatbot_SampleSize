@@ -25,4 +25,4 @@ services:
       - key: APP_ENV
         value: production
       - key: CORS_ORIGINS
-        value: https://frontend-kcmh-do-dd.vercel.app
+        value: https://www.protocol.med,https://protocol.med
