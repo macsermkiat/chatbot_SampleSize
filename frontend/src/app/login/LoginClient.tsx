@@ -199,14 +199,6 @@ function LoginForm() {
         <p className="mt-6 text-center text-caption text-ink-400 font-display">
           By continuing, you agree to our terms of service.
         </p>
-
-        {/* Temporary debug — remove after fixing */}
-        {process.env.NODE_ENV === "production" && (
-          <p className="mt-2 text-center text-xs text-ink-300 font-mono">
-            SB: {process.env.NEXT_PUBLIC_SUPABASE_URL ? "set" : "MISSING"} |
-            Key: {process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? "set" : "MISSING"}
-          </p>
-        )}
       </div>
     </div>
   );
