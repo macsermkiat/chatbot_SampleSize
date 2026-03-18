@@ -110,7 +110,7 @@ async def create_checkout(variant_id: str, user_id: str, user_email: str) -> str
     async with httpx.AsyncClient(timeout=30) as client:
         resp = await client.post(f"{_LS_API}/checkouts", json=body, headers=_ls_headers())
 
-    if resp.status_code != 200:
+    if resp.status_code not in (200, 201):
         _logger.error("LemonSqueezy checkout creation failed: %s %s", resp.status_code, resp.text)
         raise RuntimeError("Failed to create checkout")
 
