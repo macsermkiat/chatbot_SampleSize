@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
+import { createClient } from "@/lib/supabase/client";
 
 const fadeUp = {
   initial: { opacity: 0, y: 24 },
@@ -116,6 +117,14 @@ const FAQS = [
 export default function LandingClient() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getSession().then(({ data }) => {
+      setIsLoggedIn(!!data.session);
+    });
+  }, []);
 
   return (
     <div className="min-h-screen bg-parchment-100">
@@ -137,22 +146,37 @@ export default function LandingClient() {
             <Link href="/blog" className="text-body-sm text-ink-600 hover:text-ink-900 transition-colors font-body">
               Blog
             </Link>
-            <Link
-              href="/login"
-              className="text-body-sm text-ink-600 hover:text-ink-900 transition-colors font-body"
-            >
-              Sign In
-            </Link>
-            <Link
-              href="/app"
-              className="
-                text-body-sm font-body font-medium px-4 py-2 rounded-lg
-                bg-ink-900 text-parchment-100
-                hover:bg-ink-800 transition-colors
-              "
-            >
-              Try Free
-            </Link>
+            {isLoggedIn ? (
+              <Link
+                href="/app"
+                className="
+                  text-body-sm font-body font-medium px-4 py-2 rounded-lg
+                  bg-ink-900 text-parchment-100
+                  hover:bg-ink-800 transition-colors
+                "
+              >
+                Go to App
+              </Link>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  className="text-body-sm text-ink-600 hover:text-ink-900 transition-colors font-body"
+                >
+                  Sign In
+                </Link>
+                <Link
+                  href="/app"
+                  className="
+                    text-body-sm font-body font-medium px-4 py-2 rounded-lg
+                    bg-ink-900 text-parchment-100
+                    hover:bg-ink-800 transition-colors
+                  "
+                >
+                  Try Free
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -165,7 +189,7 @@ export default function LandingClient() {
                 hover:bg-ink-800 transition-colors
               "
             >
-              Try Free
+              {isLoggedIn ? "Go to App" : "Try Free"}
             </Link>
             <button
               onClick={() => setMenuOpen(!menuOpen)}
@@ -199,7 +223,9 @@ export default function LandingClient() {
                   { href: "/pricing", label: "Pricing" },
                   { href: "/benchmark", label: "Benchmark" },
                   { href: "/blog", label: "Blog" },
-                  { href: "/login", label: "Sign In" },
+                  ...(isLoggedIn
+                    ? [{ href: "/app", label: "Go to App" }]
+                    : [{ href: "/login", label: "Sign In" }]),
                 ].map((link) => (
                   <Link
                     key={link.href}
@@ -598,8 +624,8 @@ export default function LandingClient() {
               <Link href="/blog" className="text-body-sm text-ink-500 hover:text-ink-700 transition-colors font-body">
                 Blog
               </Link>
-              <Link href="/login" className="text-body-sm text-ink-500 hover:text-ink-700 transition-colors font-body">
-                Sign In
+              <Link href={isLoggedIn ? "/app" : "/login"} className="text-body-sm text-ink-500 hover:text-ink-700 transition-colors font-body">
+                {isLoggedIn ? "Go to App" : "Sign In"}
               </Link>
             </div>
           </div>
