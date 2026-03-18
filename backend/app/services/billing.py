@@ -31,10 +31,10 @@ def _ls_headers() -> dict[str, str]:
 # Map LemonSqueezy variant IDs to tier names.
 # Update these after creating products in the LemonSqueezy dashboard.
 VARIANT_TIER_MAP: dict[str, str] = {
-    # "123456": "researcher",
-    # "123457": "researcher_annual",
-    # "123458": "pro",
-    # "123459": "pro_annual",
+     "1417266": "researcher",
+     "1417333": "researcher_annual",
+     "1417323": "pro_monthly",
+     "1417270": "pro_annual",
     # "123460": "institutional",
 }
 
