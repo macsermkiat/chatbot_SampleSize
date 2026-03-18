@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createCheckout } from "@/lib/api";
+import { createClient } from "@/lib/supabase/client";
 
 interface PricingTier {
   name: string;
@@ -89,13 +90,23 @@ export default function PricingClient() {
       }
       return;
     }
+
+    // Check auth before attempting checkout
+    const supabase = createClient();
+    const { data } = await supabase.auth.getSession();
+    if (!data.session) {
+      router.push(`/login?next=/pricing`);
+      return;
+    }
+
     const variantId = annual ? tier.variantId.annual : tier.variantId.monthly;
     setLoading(tier.name);
     try {
       const { checkout_url } = await createCheckout(variantId);
       window.location.href = checkout_url;
-    } catch {
-      alert("Failed to start checkout. Please log in first.");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Checkout failed";
+      alert(message);
       setLoading(null);
     }
   }
