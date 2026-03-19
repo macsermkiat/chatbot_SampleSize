@@ -277,6 +277,20 @@ async def handle_lemonsqueezy_webhook(request: Request) -> dict[str, str]:
 # ---------------------------------------------------------------------------
 
 
+def _parse_ls_datetime(value: str | None):
+    """Parse a LemonSqueezy ISO 8601 datetime string into a Python datetime."""
+    if not value:
+        return None
+    from datetime import datetime as _dt, timezone as _tz
+    try:
+        # Handle "2026-04-19T22:50:43.000000Z" and similar formats
+        cleaned = value.replace("Z", "+00:00")
+        return _dt.fromisoformat(cleaned).astimezone(_tz.utc).replace(tzinfo=None)
+    except (ValueError, TypeError):
+        _logger.warning("Could not parse datetime: %s", value)
+        return None
+
+
 async def _handle_subscription_created(payload: dict[str, Any]) -> None:
     data = payload["data"]
     attrs = data["attributes"]
@@ -292,8 +306,8 @@ async def _handle_subscription_created(payload: dict[str, Any]) -> None:
     variant_id = str(attrs["variant_id"])
     status = attrs["status"]
     email = attrs.get("user_email", "")
-    renews_at = attrs.get("renews_at")
-    ends_at = attrs.get("ends_at")
+    renews_at = _parse_ls_datetime(attrs.get("renews_at"))
+    ends_at = _parse_ls_datetime(attrs.get("ends_at"))
 
     pool = await get_pool()
     async with pool.acquire(timeout=5) as conn:
@@ -343,8 +357,8 @@ async def _handle_subscription_updated(payload: dict[str, Any]) -> None:
             """,
             attrs["status"],
             str(attrs["variant_id"]),
-            attrs.get("renews_at"),
-            attrs.get("ends_at"),
+            _parse_ls_datetime(attrs.get("renews_at")),
+            _parse_ls_datetime(attrs.get("ends_at")),
             attrs.get("pause") is not None,
             ls_subscription_id,
         )
@@ -365,7 +379,7 @@ async def _handle_subscription_cancelled(payload: dict[str, Any]) -> None:
                 updated_at = now() AT TIME ZONE 'Asia/Bangkok'
             WHERE ls_subscription_id = $2
             """,
-            attrs.get("ends_at"),
+            _parse_ls_datetime(attrs.get("ends_at")),
             ls_subscription_id,
         )
 
@@ -385,6 +399,51 @@ async def _handle_payment_failed(payload: dict[str, Any]) -> None:
             """,
             ls_subscription_id,
         )
+
+
+@router.post("/billing/reprocess-webhooks")
+async def reprocess_webhooks():
+    """Reprocess all unprocessed webhook events (for recovery after bug fixes)."""
+    pool = await get_pool()
+    async with pool.acquire(timeout=10) as conn:
+        rows = await conn.fetch(
+            """
+            SELECT id, event_name, body
+            FROM webhook_events
+            WHERE processed = false
+            ORDER BY created_at ASC
+            """,
+        )
+
+    results = []
+    for row in rows:
+        event_name = row["event_name"]
+        payload = json.loads(row["body"]) if isinstance(row["body"], str) else row["body"]
+        handler = _EVENT_HANDLERS.get(event_name)
+        status = "skipped"
+        error_msg = None
+        if handler is not None:
+            try:
+                await handler(payload)
+                status = "ok"
+                # Mark as processed
+                async with pool.acquire(timeout=5) as conn:
+                    await conn.execute(
+                        "UPDATE webhook_events SET processed = true WHERE id = $1",
+                        row["id"],
+                    )
+            except Exception as exc:
+                status = "error"
+                error_msg = str(exc)
+                _logger.exception("Reprocess failed for webhook %s", row["id"])
+        results.append({
+            "id": row["id"],
+            "event_name": event_name,
+            "status": status,
+            "error": error_msg,
+        })
+
+    return {"reprocessed": len(results), "results": results}
 
 
 _EVENT_HANDLERS: dict[str, Any] = {
