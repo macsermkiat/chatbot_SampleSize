@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { updateProject, exportProtocol, type ProjectListItem } from "@/lib/api";
 
 const PHASE_LABELS: Record<string, string> = {
@@ -26,7 +26,10 @@ export default function ProjectCard({
   const [editing, setEditing] = useState(false);
   const [nameValue, setNameValue] = useState(project.name ?? "");
   const [saving, setSaving] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [exportMenuOpen, setExportMenuOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const exportMenuRef = useRef<HTMLDivElement>(null);
 
   const displayName = project.name || "Untitled Research";
   const isCompleted = !!project.ended_at;
@@ -70,13 +73,28 @@ export default function ProjectCard({
     [handleSaveName, project.name],
   );
 
+  // Close export menu on outside click
+  useEffect(() => {
+    if (!exportMenuOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (exportMenuRef.current && !exportMenuRef.current.contains(e.target as Node)) {
+        setExportMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [exportMenuOpen]);
+
   const handleExport = useCallback(
-    async (e: React.MouseEvent) => {
-      e.stopPropagation();
+    async (format: "docx" | "pdf") => {
+      setExportMenuOpen(false);
+      setExporting(true);
       try {
-        await exportProtocol(project.session_id);
+        await exportProtocol(project.session_id, format);
       } catch (err) {
         alert(err instanceof Error ? err.message : "Export failed. Please try again.");
+      } finally {
+        setExporting(false);
       }
     },
     [project.session_id],
@@ -166,18 +184,65 @@ export default function ProjectCard({
         >
           Resume
         </button>
-        <button
-          onClick={handleExport}
-          className="
-            text-caption font-display px-3 py-1.5 rounded-lg
-            border border-parchment-300
-            text-ink-600 hover:text-ink-800 hover:border-parchment-400
-            transition-colors duration-200
-          "
-          title="Export protocol"
-        >
-          Export
-        </button>
+        <div className="relative" ref={exportMenuRef}>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              if (!exporting) setExportMenuOpen((prev) => !prev);
+            }}
+            disabled={exporting}
+            className="
+              text-caption font-display px-3 py-1.5 rounded-lg
+              border border-parchment-300
+              text-ink-600 hover:text-ink-800 hover:border-parchment-400
+              transition-colors duration-200
+              disabled:opacity-50 disabled:cursor-wait
+            "
+            title="Export protocol"
+          >
+            {exporting ? (
+              <span className="flex items-center gap-1.5">
+                <span className="w-3 h-3 border-2 border-ink-300 border-t-ink-700 rounded-full animate-spin" />
+                Exporting...
+              </span>
+            ) : (
+              "Export"
+            )}
+          </button>
+          {exportMenuOpen && (
+            <div
+              className="
+                absolute right-0 top-full mt-1 z-10 py-1
+                bg-white border border-parchment-200 rounded-lg shadow-lg
+                min-w-[120px]
+              "
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                onClick={() => handleExport("docx")}
+                className="
+                  w-full text-left px-3 py-1.5
+                  text-caption font-display text-ink-600
+                  hover:bg-parchment-50 hover:text-ink-800
+                  transition-colors
+                "
+              >
+                DOCX
+              </button>
+              <button
+                onClick={() => handleExport("pdf")}
+                className="
+                  w-full text-left px-3 py-1.5
+                  text-caption font-display text-ink-600
+                  hover:bg-parchment-50 hover:text-ink-800
+                  transition-colors
+                "
+              >
+                PDF
+              </button>
+            </div>
+          )}
+        </div>
         <button
           onClick={(e) => {
             e.stopPropagation();
