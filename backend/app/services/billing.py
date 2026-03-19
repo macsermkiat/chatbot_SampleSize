@@ -28,37 +28,65 @@ def _ls_headers() -> dict[str, str]:
 # Tier mapping — populate variant IDs from LemonSqueezy dashboard
 # ---------------------------------------------------------------------------
 
-# Map LemonSqueezy variant IDs to tier names.
-# Update these after creating products in the LemonSqueezy dashboard.
-VARIANT_TIER_MAP: dict[str, str] = {
-     "1417266": "researcher",
-     "1417333": "researcher_annual",
-     "1417323": "pro_monthly",
-     "1417270": "pro_annual",
+# Map LemonSqueezy variant IDs to canonical tier names.
+# Supports both production and test mode IDs.
+# Override via env: LEMONSQUEEZY_VARIANT_MAP="variant_id:tier,variant_id:tier"
+_DEFAULT_VARIANT_MAP: dict[str, str] = {
+    # Production variant IDs
+    "1417266": "researcher",
+    "1417333": "researcher",   # annual
+    "1417323": "pro",          # monthly
+    "1417270": "pro",          # annual
     # "123460": "institutional",
 }
+
+# Variants that use annual billing cycle
+_ANNUAL_VARIANTS: set[str] = {"1417333", "1417270"}
+
+
+def get_billing_cycle(variant_id: str) -> str:
+    """Return 'annual' or 'monthly' based on variant ID."""
+    return "annual" if str(variant_id) in _ANNUAL_VARIANTS else "monthly"
+
+
+def _build_variant_map() -> dict[str, str]:
+    """Build variant map from defaults + optional env override."""
+    import os
+
+    result = dict(_DEFAULT_VARIANT_MAP)
+    override = os.environ.get("LEMONSQUEEZY_VARIANT_MAP", "")
+    for entry in override.split(","):
+        entry = entry.strip()
+        if ":" in entry:
+            vid, tier = entry.split(":", 1)
+            result[vid.strip()] = tier.strip()
+    return result
+
+
+VARIANT_TIER_MAP: dict[str, str] = _build_variant_map()
 
 TIER_LIMITS: dict[str, int | None] = {
     "free": 5,
     "researcher": 50,
-    "researcher_annual": 50,
     "pro": None,  # unlimited
-    "pro_annual": None,
     "institutional": None,
 }
 
 PROJECT_LIMITS: dict[str, int | None] = {
     "free": 1,
     "researcher": 3,
-    "researcher_annual": 3,
     "pro": 10,
-    "pro_annual": 10,
     "institutional": None,  # unlimited
 }
 
 
 def get_tier_for_variant(variant_id: str) -> str:
-    return VARIANT_TIER_MAP.get(str(variant_id), "free")
+    tier = VARIANT_TIER_MAP.get(str(variant_id))
+    if tier is None:
+        _logger.warning("Unknown LemonSqueezy variant_id=%s — defaulting to free. "
+                        "Add it to LEMONSQUEEZY_VARIANT_MAP env var.", variant_id)
+        return "free"
+    return tier
 
 
 def get_limit_for_tier(tier: str) -> int | None:

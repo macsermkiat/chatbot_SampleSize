@@ -400,7 +400,7 @@ export default function HomeClient() {
     <div className="flex flex-col h-dvh">
       {/* Header */}
       <header className="flex-none border-b border-parchment-200 bg-parchment-100/80 backdrop-blur-sm z-10">
-        <div className="max-w-chat mx-auto px-4 sm:px-6 py-3 sm:py-4 flex flex-col gap-3 sm:gap-4">
+        <div className="max-w-chat mx-auto px-4 sm:px-6 py-3 sm:py-4 flex flex-col gap-3 sm:gap-4 short-landscape:py-1.5 short-landscape:gap-1">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <h1 className="font-display text-display-md font-semibold text-ink-900 tracking-tight">
@@ -465,7 +465,9 @@ export default function HomeClient() {
               <UserMenu />
             </div>
           </div>
-          <PhaseIndicator currentPhase={phase} />
+          <div className="short-landscape:hidden">
+            <PhaseIndicator currentPhase={phase} />
+          </div>
         </div>
       </header>
 
@@ -662,7 +664,7 @@ export default function HomeClient() {
       <footer className="flex-none border-t border-parchment-200 bg-parchment-100/80 backdrop-blur-sm pb-[env(safe-area-inset-bottom)]">
         <form
           onSubmit={handleSubmit}
-          className="max-w-chat mx-auto px-4 sm:px-6 py-3 sm:py-4"
+          className="max-w-chat mx-auto px-4 sm:px-6 py-3 sm:py-4 short-landscape:py-1.5"
         >
           <div
             className="
@@ -697,7 +699,7 @@ export default function HomeClient() {
                 focus:outline-none
                 disabled:opacity-50
                 font-body
-                max-h-40
+                max-h-40 short-landscape:max-h-20
               "
             />
 
@@ -766,7 +768,7 @@ export default function HomeClient() {
             )}
           </div>
 
-          <p className="text-center mt-2.5 text-caption text-ink-400 font-display">
+          <p className="text-center mt-2.5 text-caption text-ink-400 font-display short-landscape:hidden">
             Research planning assistant -- not for clinical advice
           </p>
         </form>

@@ -2,16 +2,31 @@
 
 import { useState, useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { getSubscription } from "@/lib/api";
 import type { User } from "@supabase/supabase-js";
+
+const TIER_LABELS: Record<string, string> = {
+  researcher: "Researcher",
+  pro: "Pro",
+  institutional: "Institutional",
+};
 
 export default function UserMenu() {
   const [user, setUser] = useState<User | null>(null);
+  const [tier, setTier] = useState<string>("free");
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const supabase = createClient();
-    supabase.auth.getUser().then(({ data }) => setUser(data.user));
+    supabase.auth.getUser().then(({ data }) => {
+      setUser(data.user);
+      if (data.user) {
+        getSubscription()
+          .then((sub) => setTier(sub.tier))
+          .catch(() => {});
+      }
+    });
 
     const {
       data: { subscription },
@@ -61,6 +76,11 @@ export default function UserMenu() {
             <p className="text-sm font-medium text-parchment-800 truncate">
               {user.email}
             </p>
+            {TIER_LABELS[tier] && (
+              <p className="text-xs text-gold-700 font-display mt-0.5">
+                {TIER_LABELS[tier]} Plan
+              </p>
+            )}
           </div>
           <a
             href="/projects"

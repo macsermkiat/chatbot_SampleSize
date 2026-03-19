@@ -9,6 +9,7 @@ import type { User } from "@supabase/supabase-js";
 interface SubscriptionInfo {
   tier: string;
   status?: string;
+  billing_cycle?: string;
   renews_at?: string;
   ends_at?: string;
   urls?: { customer_portal?: string; update_payment_method?: string };
@@ -29,7 +30,10 @@ interface UsageInfo {
 const TIER_LABELS: Record<string, string> = {
   free: "Free",
   researcher: "Researcher",
+  researcher_annual: "Researcher",
   pro: "Pro",
+  pro_monthly: "Pro",
+  pro_annual: "Pro",
   institutional: "Institutional",
 };
 
@@ -137,6 +141,11 @@ export default function AccountClient() {
             <span className="text-xl font-semibold text-ink-900">
               {tierLabel}
             </span>
+            {subscription?.billing_cycle && subscription.tier !== "free" && (
+              <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-parchment-200 text-parchment-700 capitalize">
+                {subscription.billing_cycle}
+              </span>
+            )}
             {statusInfo && (
               <span
                 className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusInfo.className}`}

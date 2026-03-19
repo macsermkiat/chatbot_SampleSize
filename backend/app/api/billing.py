@@ -16,6 +16,7 @@ from app.config import settings
 from app.db import get_pool
 from app.services.billing import (
     create_checkout,
+    get_billing_cycle,
     get_current_usage,
     get_project_usage,
     get_subscription_portal_urls,
@@ -45,6 +46,7 @@ class SubscriptionResponse(BaseModel):
     tier: str
     status: str | None = None
     variant_id: str | None = None
+    billing_cycle: str | None = None
     renews_at: str | None = None
     ends_at: str | None = None
     urls: dict[str, str] = Field(default_factory=dict)
@@ -96,10 +98,12 @@ async def api_get_subscription(user: AuthUser = Depends(get_current_user)):
 
     urls = await get_subscription_portal_urls(sub["ls_subscription_id"])
 
+    variant_id = str(sub["variant_id"])
     return SubscriptionResponse(
-        tier=get_tier_for_variant(str(sub["variant_id"])),
+        tier=get_tier_for_variant(variant_id),
         status=sub["status"],
-        variant_id=str(sub["variant_id"]),
+        variant_id=variant_id,
+        billing_cycle=get_billing_cycle(variant_id),
         renews_at=sub["renews_at"].isoformat() if sub["renews_at"] else None,
         ends_at=sub["ends_at"].isoformat() if sub["ends_at"] else None,
         urls=urls,

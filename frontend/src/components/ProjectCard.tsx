@@ -84,7 +84,7 @@ export default function ProjectCard({
 
   return (
     <div className="
-      group flex items-start gap-4 p-4 rounded-xl
+      group flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4 p-4 rounded-xl
       bg-white border border-parchment-200
       hover:border-gold-300 hover:shadow-sm
       transition-all duration-200
@@ -125,7 +125,7 @@ export default function ProjectCard({
         )}
 
         {/* Metadata row */}
-        <div className="flex items-center gap-3 mt-1.5">
+        <div className="flex items-center gap-3 mt-1.5 flex-wrap">
           {isCompleted && (
             <span className="
               text-caption font-display px-2 py-0.5 rounded-full
@@ -154,7 +154,7 @@ export default function ProjectCard({
       </div>
 
       {/* Actions */}
-      <div className="flex items-center gap-2 flex-none opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity">
+      <div className="flex items-center gap-2 flex-none sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 sm:transition-opacity">
         <button
           onClick={() => onResume(project.session_id)}
           className="

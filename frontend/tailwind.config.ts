@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import plugin from "tailwindcss/plugin";
 
 const config: Config = {
   content: ["./src/**/*.{js,ts,jsx,tsx,mdx}"],
@@ -81,7 +82,12 @@ const config: Config = {
       },
     },
   },
-  plugins: [],
+  plugins: [
+    plugin(function ({ addVariant }) {
+      // Targets mobile landscape: short viewport + landscape orientation
+      addVariant("short-landscape", "@media (orientation: landscape) and (max-height: 500px)");
+    }),
+  ],
 };
 
 export default config;

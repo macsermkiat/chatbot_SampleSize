@@ -18,6 +18,7 @@ from app.services.billing import (
     PROJECT_LIMITS,
     TIER_LIMITS,
     VARIANT_TIER_MAP,
+    get_billing_cycle,
     get_current_usage,
     get_limit_for_tier,
     get_project_limit_for_tier,
@@ -68,20 +69,21 @@ class TestTierMapping:
     def test_unknown_variant_returns_free(self):
         assert get_tier_for_variant("unknown-id") == "free"
 
+    def test_known_production_variants(self):
+        """Production variant IDs should map to correct tiers."""
+        assert get_tier_for_variant("1417266") == "researcher"
+        assert get_tier_for_variant("1417333") == "researcher"  # annual
+        assert get_tier_for_variant("1417323") == "pro"          # monthly
+        assert get_tier_for_variant("1417270") == "pro"          # annual
+
     def test_free_tier_limit(self):
         assert get_limit_for_tier("free") == 5
 
     def test_researcher_tier_limit(self):
         assert get_limit_for_tier("researcher") == 50
 
-    def test_researcher_annual_tier_limit(self):
-        assert get_limit_for_tier("researcher_annual") == 50
-
     def test_pro_tier_unlimited(self):
         assert get_limit_for_tier("pro") is None
-
-    def test_pro_annual_unlimited(self):
-        assert get_limit_for_tier("pro_annual") is None
 
     def test_institutional_unlimited(self):
         assert get_limit_for_tier("institutional") is None
@@ -93,6 +95,25 @@ class TestTierMapping:
         assert get_limit_for_tier("") == 5
 
 
+class TestBillingCycle:
+    """Billing cycle detection from variant IDs."""
+
+    def test_monthly_researcher_variant(self):
+        assert get_billing_cycle("1417266") == "monthly"
+
+    def test_annual_researcher_variant(self):
+        assert get_billing_cycle("1417333") == "annual"
+
+    def test_monthly_pro_variant(self):
+        assert get_billing_cycle("1417323") == "monthly"
+
+    def test_annual_pro_variant(self):
+        assert get_billing_cycle("1417270") == "annual"
+
+    def test_unknown_variant_defaults_to_monthly(self):
+        assert get_billing_cycle("unknown-id") == "monthly"
+
+
 class TestProjectLimitMapping:
     """Project limit tier mapping."""
 
@@ -102,14 +123,8 @@ class TestProjectLimitMapping:
     def test_researcher_tier_project_limit(self):
         assert get_project_limit_for_tier("researcher") == 3
 
-    def test_researcher_annual_tier_project_limit(self):
-        assert get_project_limit_for_tier("researcher_annual") == 3
-
     def test_pro_tier_project_limit(self):
         assert get_project_limit_for_tier("pro") == 10
-
-    def test_pro_annual_tier_project_limit(self):
-        assert get_project_limit_for_tier("pro_annual") == 10
 
     def test_institutional_unlimited_projects(self):
         assert get_project_limit_for_tier("institutional") is None

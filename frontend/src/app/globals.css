@@ -237,17 +237,33 @@
     overflow-x: auto;
   }
 
+  .prose-research thead,
+  .prose-research tbody {
+    display: table;
+    width: 100%;
+    table-layout: auto;
+  }
+
   .prose-research th,
   .prose-research td {
     border-bottom: 1px solid #ddd3b8;
     padding: 0.5em 0.75em;
     text-align: left;
+    min-width: 6rem;
+    white-space: normal;
+    word-break: normal;
+  }
+
+  .prose-research th:first-child,
+  .prose-research td:first-child {
+    min-width: 8rem;
   }
 
   .prose-research th {
     font-weight: 600;
     color: #514940;
     border-bottom-width: 2px;
+    white-space: nowrap;
   }
 }
 

@@ -15,7 +15,21 @@ interface UsageData {
 const TIER_UPGRADE: Record<string, { next: string; label: string }> = {
   free: { next: "Researcher", label: "50 queries/month" },
   researcher: { next: "Pro", label: "unlimited queries" },
-  researcher_annual: { next: "Pro", label: "unlimited queries" },
+};
+
+const TIER_BADGE: Record<string, { label: string; className: string }> = {
+  researcher: {
+    label: "Researcher",
+    className: "bg-gold-100 text-gold-700 border-gold-300",
+  },
+  pro: {
+    label: "Pro",
+    className: "bg-ink-900 text-parchment-100 border-ink-800",
+  },
+  institutional: {
+    label: "Institutional",
+    className: "bg-ink-900 text-parchment-100 border-ink-800",
+  },
 };
 
 /**
@@ -69,22 +83,37 @@ function useQueryUsage() {
 }
 
 /**
- * Subtle inline counter for the header: "12 remaining"
- * Returns null for unlimited tiers or when not loaded.
+ * Subtle inline counter for the header: tier badge + "12 remaining"
+ * Shows tier badge for paid plans. Shows remaining count for capped plans.
  */
 export function QueryBadge() {
   const { usage } = useQueryUsage();
 
-  if (!usage || usage.query_limit === null) return null;
+  if (!usage) return null;
 
-  const remaining = Math.max(0, usage.query_limit - usage.query_count);
+  const badge = TIER_BADGE[usage.tier];
+  const remaining =
+    usage.query_limit !== null
+      ? Math.max(0, usage.query_limit - usage.query_count)
+      : null;
 
   return (
-    <span
-      className="text-caption text-ink-400 font-display tabular-nums"
-      title={`${remaining} of ${usage.query_limit} queries remaining this month`}
-    >
-      {remaining} remaining
+    <span className="flex items-center gap-1.5">
+      {badge && (
+        <span
+          className={`text-caption font-display px-2 py-0.5 rounded-full border ${badge.className}`}
+        >
+          {badge.label}
+        </span>
+      )}
+      {remaining !== null && (
+        <span
+          className="text-caption text-ink-400 font-display tabular-nums"
+          title={`${remaining} of ${usage.query_limit} queries remaining this month`}
+        >
+          {remaining} remaining
+        </span>
+      )}
     </span>
   );
 }
