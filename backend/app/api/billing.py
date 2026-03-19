@@ -8,10 +8,10 @@ import json
 import logging
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel, Field
 
-from app.auth import AuthUser, get_current_user
+from app.auth import AuthUser, get_current_user, get_optional_user
 from app.config import settings
 from app.db import get_pool
 from app.services.billing import (
@@ -134,23 +134,47 @@ async def api_get_usage(user: AuthUser = Depends(get_current_user)):
 
 
 @router.get("/billing/debug")
-async def api_billing_debug(user: AuthUser = Depends(get_current_user)):
-    """Show subscription rows, recent webhook events, and variant map for debugging."""
+async def api_billing_debug(
+    user_id: str = Query(default=None, description="User ID to check (optional)"),
+    current_user: AuthUser | None = Depends(get_optional_user),
+):
+    """Show subscription rows, recent webhook events, and variant map for debugging.
+
+    Works without auth for quick diagnostics. Pass ?user_id=xxx to check a
+    specific user, or call while authenticated to auto-detect.
+    """
     from app.services.billing import VARIANT_TIER_MAP
+
+    target_user_id = user_id or (current_user.id if current_user else None)
 
     pool = await get_pool()
     async with pool.acquire(timeout=5) as conn:
-        subs = await conn.fetch(
-            """
-            SELECT ls_subscription_id, variant_id, status, renews_at, ends_at,
-                   is_paused, created_at, updated_at
-            FROM subscriptions
-            WHERE user_id = $1
-            ORDER BY created_at DESC
-            LIMIT 5
-            """,
-            user.id,
-        )
+        subs = []
+        if target_user_id:
+            subs = await conn.fetch(
+                """
+                SELECT user_id, ls_subscription_id, variant_id, status,
+                       renews_at, ends_at, is_paused, created_at, updated_at
+                FROM subscriptions
+                WHERE user_id = $1
+                ORDER BY created_at DESC
+                LIMIT 5
+                """,
+                target_user_id,
+            )
+
+        # Show all subscriptions if no user specified
+        if not subs and not target_user_id:
+            subs = await conn.fetch(
+                """
+                SELECT user_id, ls_subscription_id, variant_id, status,
+                       renews_at, ends_at, is_paused, created_at, updated_at
+                FROM subscriptions
+                ORDER BY created_at DESC
+                LIMIT 10
+                """,
+            )
+
         webhooks = await conn.fetch(
             """
             SELECT id, event_name, processed, created_at,
@@ -162,13 +186,14 @@ async def api_billing_debug(user: AuthUser = Depends(get_current_user)):
         )
 
     return {
-        "user_id": user.id,
+        "target_user_id": target_user_id,
         "variant_map": VARIANT_TIER_MAP,
         "subscriptions": [
             {
+                "user_id": str(r["user_id"]) if r["user_id"] else None,
                 "ls_subscription_id": str(r["ls_subscription_id"]),
                 "variant_id": str(r["variant_id"]),
-                "tier": get_tier_for_variant(str(r["variant_id"])),
+                "resolved_tier": get_tier_for_variant(str(r["variant_id"])),
                 "status": r["status"],
                 "renews_at": str(r["renews_at"]) if r["renews_at"] else None,
                 "ends_at": str(r["ends_at"]) if r["ends_at"] else None,
