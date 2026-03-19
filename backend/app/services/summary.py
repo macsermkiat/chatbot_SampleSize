@@ -80,7 +80,8 @@ async def generate_summary(messages: list[dict]) -> str:
     transcript = "\n\n".join(transcript_parts)
 
     # Use GPT-5-mini for summarization (nano is too constrained for this task)
-    client = AsyncOpenAI(api_key=settings.openai_api_key)
+    # Set a 25-second timeout so it completes within Vercel's proxy window
+    client = AsyncOpenAI(api_key=settings.openai_api_key, timeout=25.0)
 
     try:
         response = await client.chat.completions.create(

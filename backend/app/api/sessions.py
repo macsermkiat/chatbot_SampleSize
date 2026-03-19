@@ -171,9 +171,9 @@ async def get_session_summary(session_id: str):
 
     try:
         async with pool.acquire(timeout=5) as conn:
-            # Verify session exists
+            # Verify session exists and check for cached summary
             session = await conn.fetchrow(
-                "SELECT session_id FROM sessions WHERE session_id = $1",
+                "SELECT session_id, summary_cache FROM sessions WHERE session_id = $1",
                 session_id,
             )
             if not session:
@@ -195,6 +195,15 @@ async def get_session_summary(session_id: str):
         _logger.exception("Failed to fetch messages for session %s", session_id)
         raise HTTPException(status_code=503, detail="Database operation failed.") from exc
 
+    # Use cached summary if available
+    cached_summary = session.get("summary_cache")
+    if cached_summary:
+        return SummaryResponse(
+            session_id=session_id,
+            summary_text=cached_summary,
+            generated_at=datetime.now(tz=timezone.utc),
+        )
+
     messages = [{"role": r["role"], "content": r["content"]} for r in rows]
 
     try:
@@ -205,6 +214,17 @@ async def get_session_summary(session_id: str):
             status_code=502,
             detail="Summary generation failed. Please try again later.",
         ) from exc
+
+    # Cache the summary for future requests (fire-and-forget)
+    try:
+        async with pool.acquire(timeout=5) as conn:
+            await conn.execute(
+                "UPDATE sessions SET summary_cache = $1 WHERE session_id = $2",
+                summary_text,
+                session_id,
+            )
+    except Exception:
+        _logger.warning("Failed to cache summary for session %s", session_id)
 
     return SummaryResponse(
         session_id=session_id,
@@ -331,7 +351,7 @@ async def export_session_protocol(
     try:
         async with pool.acquire(timeout=5) as conn:
             session = await conn.fetchrow(
-                "SELECT session_id, user_id FROM sessions WHERE session_id = $1",
+                "SELECT session_id, user_id, summary_cache FROM sessions WHERE session_id = $1",
                 session_id,
             )
             if not session:
@@ -359,11 +379,27 @@ async def export_session_protocol(
         for r in rows
     ]
 
-    # Generate summary for the protocol header
-    try:
-        summary_text = await generate_summary(messages)
-    except RuntimeError:
-        summary_text = "(Summary generation unavailable)"
+    # Use cached summary if available; otherwise generate and cache it
+    cached_summary = session.get("summary_cache")
+    if cached_summary:
+        summary_text = cached_summary
+    else:
+        try:
+            summary_text = await generate_summary(messages)
+        except RuntimeError:
+            summary_text = "(Summary generation unavailable)"
+
+        # Cache the summary for future exports (fire-and-forget)
+        if summary_text != "(Summary generation unavailable)":
+            try:
+                async with pool.acquire(timeout=5) as conn:
+                    await conn.execute(
+                        "UPDATE sessions SET summary_cache = $1 WHERE session_id = $2",
+                        summary_text,
+                        session_id,
+                    )
+            except Exception:
+                _logger.warning("Failed to cache summary for session %s", session_id)
 
     try:
         file_bytes, content_type, filename = generate_protocol(

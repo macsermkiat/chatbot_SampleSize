@@ -108,6 +108,39 @@ async def _ensure_session_exists(session_id: str, user_id: str | None = None) ->
     return True
 
 
+async def _generate_session_title(user_message: str) -> str | None:
+    """Use a lightweight LLM to produce a short topic title from the first message."""
+    try:
+        from openai import AsyncOpenAI
+        from app.config import settings
+
+        client = AsyncOpenAI(api_key=settings.openai_api_key)
+        response = await client.chat.completions.create(
+            model="gpt-5-nano",
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "You generate a brief project title (3-8 words) from a user's "
+                        "research query. Return ONLY the title, no quotes, no punctuation "
+                        "at the end. Examples:\n"
+                        "- AI-Assisted Colonoscopy Screening Gaps\n"
+                        "- Statin Use and Dementia Risk Cohort\n"
+                        "- RCT Sample Size for Hypertension Drug"
+                    ),
+                },
+                {"role": "user", "content": user_message[:500]},
+            ],
+            max_completion_tokens=30,
+            temperature=0.3,
+        )
+        title = (response.choices[0].message.content or "").strip().rstrip(".")
+        return title[:200] if title else None
+    except Exception:
+        _logger.warning("LLM title generation failed, falling back to truncation")
+        return user_message[:100].strip() or None
+
+
 async def _touch_session(session_id: str, user_message: str) -> None:
     """Auto-name (first message only) and bump updated_at on every message.
 
@@ -116,13 +149,25 @@ async def _touch_session(session_id: str, user_message: str) -> None:
     """
     try:
         pool = await get_pool()
-        name = user_message[:100].strip() or None
         async with pool.acquire(timeout=5) as conn:
+            # Check if session already has a name
+            existing_name = await conn.fetchval(
+                "SELECT name FROM sessions WHERE session_id = $1",
+                session_id,
+            )
+
+            if existing_name is None:
+                # First message -- generate a brief topic title
+                name = await _generate_session_title(user_message)
+            else:
+                name = existing_name
+
             await conn.execute(
                 """
                 UPDATE sessions
                 SET name = COALESCE(name, $1),
-                    updated_at = (now() AT TIME ZONE 'Asia/Bangkok')
+                    updated_at = (now() AT TIME ZONE 'Asia/Bangkok'),
+                    summary_cache = NULL
                 WHERE session_id = $2
                 """,
                 name,
