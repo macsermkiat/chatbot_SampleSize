@@ -446,6 +446,20 @@ async def reprocess_webhooks():
     return {"reprocessed": len(results), "results": results}
 
 
+async def _handle_payment_success(payload: dict[str, Any]) -> None:
+    """Handle subscription_payment_success -- payload is an invoice, not a subscription.
+
+    Just log it; the subscription state is already updated by subscription_updated.
+    """
+    data = payload["data"]
+    attrs = data["attributes"]
+    _logger.info(
+        "Payment success: subscription_id=%s, billing_reason=%s",
+        attrs.get("subscription_id"),
+        attrs.get("billing_reason"),
+    )
+
+
 _EVENT_HANDLERS: dict[str, Any] = {
     "subscription_created": _handle_subscription_created,
     "subscription_updated": _handle_subscription_updated,
@@ -454,7 +468,7 @@ _EVENT_HANDLERS: dict[str, Any] = {
     "subscription_expired": _handle_subscription_cancelled,
     "subscription_paused": _handle_subscription_updated,
     "subscription_unpaused": _handle_subscription_updated,
-    "subscription_payment_success": _handle_subscription_updated,
+    "subscription_payment_success": _handle_payment_success,
     "subscription_payment_failed": _handle_payment_failed,
     "subscription_payment_recovered": _handle_subscription_updated,
 }
