@@ -1,7 +1,7 @@
 """LLM factory -- returns a ChatModel for any agent by name.
 
 Supports three providers:
-  - OpenAI (gpt-5-mini for lightweight tasks)
+  - OpenAI (gpt-5.4-mini for lightweight tasks)
   - Anthropic (Claude Sonnet 4.6 for complex reasoning / structured synthesis)
   - Google Gemini (fallback for all agents)
 
@@ -27,12 +27,12 @@ _logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 
 AGENT_MODEL_MAP: dict[str, tuple[str, str]] = {
-    "orchestrator":  ("openai",    "gpt-5-mini"),
-    "gap_search":    ("openai",    "gpt-5-mini"),
+    "orchestrator":  ("openai",    "gpt-5.4-mini"),
+    "gap_search":    ("openai",    "gpt-5.4-mini"),
     "gap_summarize": ("anthropic", "claude-sonnet-4-6"),
     "methodology":   ("anthropic", "claude-sonnet-4-6"),
     "biostatistics": ("anthropic", "claude-sonnet-4-6"),
-    "diagnostic":    ("openai",    "gpt-5-mini"),
+    "diagnostic":    ("openai",    "gpt-5.4-mini"),
     "coding":        ("anthropic", "claude-sonnet-4-6"),
 }
 

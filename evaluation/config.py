@@ -18,7 +18,7 @@ class EvalConfig(BaseSettings):
 
     # -- GPT-5 Comparison --
     openai_api_key: str = Field(default="", description="OpenAI API key for GPT-5 comparison")
-    comparison_model: str = "gpt-5"
+    comparison_model: str = "gpt-5.4"
     comparison_temperature: float = 0.7
 
     # -- LLM Judge --
@@ -40,7 +40,7 @@ class EvalConfig(BaseSettings):
 
     # -- Simulated User --
     use_simulated_user: bool = True
-    simulated_user_model: str = "gpt-5-nano"
+    simulated_user_model: str = "gpt-5.4-nano"
     max_conversation_turns: int = 10
 
     # -- Timeouts --

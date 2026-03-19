@@ -51,63 +51,68 @@ def _sanitize_for_pdf(text: str) -> str:
     return text.encode("latin-1", errors="replace").decode("latin-1")
 
 
+def _parse_summary_sections(summary_text: str) -> list[dict[str, Any]]:
+    """Parse a markdown-formatted summary into heading/content pairs.
+
+    The LLM summary uses ``## Heading`` markdown headings.  We split on those
+    and return each as a separate section.  Content between the start of the
+    text and the first heading (if any) is returned under a generic heading.
+    """
+    import re as _re
+
+    # Split on markdown H2 lines (## Heading)
+    parts = _re.split(r"^##\s+", summary_text, flags=_re.MULTILINE)
+
+    sections: list[dict[str, Any]] = []
+
+    # Text before the first ## heading (if any)
+    preamble = parts[0].strip()
+    if preamble:
+        sections.append({"heading": "Overview", "content": preamble})
+
+    for part in parts[1:]:
+        # First line is the heading, rest is content
+        lines = part.split("\n", 1)
+        heading = lines[0].strip().rstrip("#").strip()
+        content = lines[1].strip() if len(lines) > 1 else ""
+        if heading and content:
+            sections.append({"heading": heading, "content": content})
+
+    return sections
+
+
 def _build_protocol_sections(
     summary_text: str,
     messages: list[dict[str, str]],
     session_id: str,
 ) -> list[dict[str, Any]]:
-    """Parse summary and messages into structured protocol sections."""
-    sections: list[dict[str, Any]] = []
+    """Build structured protocol sections from the LLM-generated summary.
 
-    sections.append({
-        "heading": "Research Protocol Summary",
-        "content": summary_text,
-    })
+    The summary is already formatted with ``## Section`` headings by the LLM
+    (Background, Research Question, Study Design, Statistical Analysis, etc.).
+    We parse those into proper document sections.  Raw conversation messages
+    are only used to extract citations for a bibliography -- the body text
+    comes entirely from the synthesised summary.
+    """
+    # Try to parse structured sections from the summary
+    parsed = _parse_summary_sections(summary_text)
 
-    # Extract phase-specific content from messages
-    research_gap_content: list[str] = []
-    methodology_content: list[str] = []
-    biostatistics_content: list[str] = []
+    if len(parsed) >= 2:
+        # Successfully parsed structured summary -- use it directly
+        sections = list(parsed)
+    else:
+        # Fallback: summary wasn't structured (shouldn't happen with current
+        # prompt, but be defensive) -- put it under a single heading
+        sections = [{"heading": "Research Protocol Summary", "content": summary_text}]
 
-    for msg in messages:
-        if msg.get("role") != "assistant":
-            continue
-        content = msg.get("content", "")
-        phase = msg.get("phase", "")
-
-        if phase == "research_gap" and content:
-            research_gap_content.append(content)
-        elif phase == "methodology" and content:
-            methodology_content.append(content)
-        elif phase == "biostatistics" and content:
-            biostatistics_content.append(content)
-
-    if research_gap_content:
-        sections.append({
-            "heading": "Research Gap Analysis",
-            "content": "\n\n".join(research_gap_content),
-        })
-
-    if methodology_content:
-        sections.append({
-            "heading": "Study Methodology",
-            "content": "\n\n".join(methodology_content),
-        })
-
-    if biostatistics_content:
-        sections.append({
-            "heading": "Biostatistical Analysis & Sample Size",
-            "content": "\n\n".join(biostatistics_content),
-        })
-
-    # References section -- extract citations from all messages
+    # Append a bibliography from extracted citations (links in the messages)
     citations = extract_citations_from_messages(messages)
     bibliography = format_vancouver_bibliography(citations)
     if bibliography:
-        sections.append({
-            "heading": "References",
-            "content": bibliography,
-        })
+        # Avoid duplicate references section if the summary already has one
+        existing_headings = {s["heading"].lower() for s in sections}
+        if "references" not in existing_headings:
+            sections.append({"heading": "References", "content": bibliography})
 
     return sections
 

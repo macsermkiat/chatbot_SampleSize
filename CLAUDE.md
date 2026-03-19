@@ -100,8 +100,8 @@ Key services in `backend/app/services/`: `billing.py` (LemonSqueezy checkout/sub
 ## OpenAI Model Reference
 
 Always check `../../Context-hub/openai.md` for correct OpenAI model names before using or changing them. Current models used in this project:
-- **Comparison model:** `gpt-5`
-- **Simulated user:** `gpt-5-nano`
+- **Comparison model:** `gpt-5.4`
+- **Simulated user:** `gpt-5.4-nano`
 
 ## Known Production Gaps
 

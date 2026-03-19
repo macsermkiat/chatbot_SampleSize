@@ -2,7 +2,7 @@
 
 The chatbot often asks clarification questions before giving substantive
 answers. This module classifies chatbot responses (routing / clarification /
-substantive) and generates contextual user replies using gpt-5-nano, drawing
+substantive) and generates contextual user replies using gpt-5.4-nano, drawing
 on the test case ground truth to provide realistic answers.
 """
 
@@ -59,7 +59,7 @@ _CLARIFICATION_PATTERNS: tuple[re.Pattern[str], ...] = tuple(
     )
 )
 
-_SIMULATED_USER_MODEL = "gpt-5-nano"
+_SIMULATED_USER_MODEL = "gpt-5.4-nano"
 _MAX_CONVERSATION_TURNS = 10
 
 
@@ -177,7 +177,7 @@ async def generate_user_response(
 ) -> str:
     """Generate a simulated user reply to a chatbot clarification question.
 
-    Uses gpt-5-nano to produce a brief, natural response that answers the
+    Uses gpt-5.4-nano to produce a brief, natural response that answers the
     chatbot's question using information from the test case ground truth.
     """
     ground_truth_context = _build_ground_truth_context(case)

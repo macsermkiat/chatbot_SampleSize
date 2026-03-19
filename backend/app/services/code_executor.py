@@ -41,7 +41,7 @@ async def _get_or_create_assistant(client: AsyncOpenAI) -> str:
         assistant = await client.beta.assistants.create(
             name="Biostats Code Runner",
             instructions="Execute the provided Python script and return the printed output verbatim.",
-            model="gpt-4o-mini",
+            model="gpt-5.4-mini",
             tools=[{"type": "code_interpreter"}],
         )
         _ASSISTANT_ID = assistant.id
