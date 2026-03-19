@@ -129,6 +129,68 @@ async def api_get_usage(user: AuthUser = Depends(get_current_user)):
 
 
 # ---------------------------------------------------------------------------
+# Debug — subscription & webhook diagnostics (auth-protected)
+# ---------------------------------------------------------------------------
+
+
+@router.get("/billing/debug")
+async def api_billing_debug(user: AuthUser = Depends(get_current_user)):
+    """Show subscription rows, recent webhook events, and variant map for debugging."""
+    from app.services.billing import VARIANT_TIER_MAP
+
+    pool = await get_pool()
+    async with pool.acquire(timeout=5) as conn:
+        subs = await conn.fetch(
+            """
+            SELECT ls_subscription_id, variant_id, status, renews_at, ends_at,
+                   is_paused, created_at, updated_at
+            FROM subscriptions
+            WHERE user_id = $1
+            ORDER BY created_at DESC
+            LIMIT 5
+            """,
+            user.id,
+        )
+        webhooks = await conn.fetch(
+            """
+            SELECT id, event_name, processed, created_at,
+                   substring(body::text from 1 for 500) AS body_preview
+            FROM webhook_events
+            ORDER BY created_at DESC
+            LIMIT 10
+            """,
+        )
+
+    return {
+        "user_id": user.id,
+        "variant_map": VARIANT_TIER_MAP,
+        "subscriptions": [
+            {
+                "ls_subscription_id": str(r["ls_subscription_id"]),
+                "variant_id": str(r["variant_id"]),
+                "tier": get_tier_for_variant(str(r["variant_id"])),
+                "status": r["status"],
+                "renews_at": str(r["renews_at"]) if r["renews_at"] else None,
+                "ends_at": str(r["ends_at"]) if r["ends_at"] else None,
+                "is_paused": r["is_paused"],
+                "created_at": str(r["created_at"]),
+            }
+            for r in subs
+        ],
+        "recent_webhooks": [
+            {
+                "id": r["id"],
+                "event_name": r["event_name"],
+                "processed": r["processed"],
+                "created_at": str(r["created_at"]),
+                "body_preview": r["body_preview"],
+            }
+            for r in webhooks
+        ],
+    }
+
+
+# ---------------------------------------------------------------------------
 # LemonSqueezy Webhooks (no auth — verified by signature)
 # ---------------------------------------------------------------------------
 
