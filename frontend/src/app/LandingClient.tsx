@@ -630,6 +630,18 @@ export default function LandingClient() {
                 {isLoggedIn ? "Go to App" : "Sign In"}
               </Link>
             </div>
+
+            <div className="flex items-center gap-4 sm:gap-6">
+              <Link href="/privacy" className="text-caption text-ink-400 hover:text-ink-600 transition-colors font-body">
+                Privacy
+              </Link>
+              <Link href="/terms" className="text-caption text-ink-400 hover:text-ink-600 transition-colors font-body">
+                Terms
+              </Link>
+              <Link href="/refund" className="text-caption text-ink-400 hover:text-ink-600 transition-colors font-body">
+                Refund Policy
+              </Link>
+            </div>
           </div>
 
           <div className="mt-8 pt-6 border-t border-parchment-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">

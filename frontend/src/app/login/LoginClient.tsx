@@ -380,7 +380,10 @@ function LoginForm() {
 
         {/* Footer */}
         <p className="mt-6 text-center text-caption text-ink-400 font-display">
-          By continuing, you agree to our terms of service.
+          By continuing, you agree to our{" "}
+          <a href="/terms" className="underline underline-offset-2 hover:text-ink-600 transition-colors">Terms of Service</a>
+          {" "}and{" "}
+          <a href="/privacy" className="underline underline-offset-2 hover:text-ink-600 transition-colors">Privacy Policy</a>.
         </p>
       </div>
     </div>
