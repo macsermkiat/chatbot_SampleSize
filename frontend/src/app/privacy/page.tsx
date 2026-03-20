@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 
 export const metadata: Metadata = {
@@ -13,8 +14,9 @@ export default function PrivacyPolicy() {
     <div className="min-h-screen bg-parchment-50 text-ink-800 font-body">
       <nav className="border-b border-parchment-200 px-6 py-4">
         <div className="max-w-3xl mx-auto flex items-center justify-between">
-          <Link href="/" className="font-display text-body-md font-semibold text-ink-800 hover:text-ink-600 transition-colors">
-            ProtoCol
+          <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+            <Image src="/logo_protocol.png" alt="ProtoCol" width={28} height={28} className="h-7 w-auto" />
+            <span className="font-display text-body-md font-semibold text-ink-800">ProtoCol</span>
           </Link>
           <Link href="/" className="text-body-sm text-ink-500 hover:text-ink-700 transition-colors">
             Back to Home
