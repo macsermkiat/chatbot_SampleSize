@@ -1,4 +1,4 @@
-"""Execute Python code via OpenAI Assistants API (Code Interpreter).
+"""Execute Python code via OpenAI Responses API (Code Interpreter).
 
 Single responsibility: run a Python script in a sandboxed environment
 and return the textual output.
@@ -6,9 +6,7 @@ and return the textual output.
 
 from __future__ import annotations
 
-import asyncio
 import logging
-import time
 from dataclasses import dataclass
 
 from openai import AsyncOpenAI
@@ -17,8 +15,7 @@ from app.config import settings
 
 _logger = logging.getLogger(__name__)
 
-_ASSISTANT_ID: str | None = None
-_ASSISTANT_LOCK = asyncio.Lock()
+_CODE_INTERPRETER_MODEL = "gpt-5.4-mini"
 
 
 @dataclass(frozen=True)
@@ -30,27 +27,10 @@ class ExecutionResult:
     error_message: str
 
 
-async def _get_or_create_assistant(client: AsyncOpenAI) -> str:
-    """Lazy-create a code-interpreter assistant, caching the ID in-process."""
-    global _ASSISTANT_ID  # noqa: PLW0603
-
-    async with _ASSISTANT_LOCK:
-        if _ASSISTANT_ID is not None:
-            return _ASSISTANT_ID
-
-        assistant = await client.beta.assistants.create(
-            name="Biostats Code Runner",
-            instructions="Execute the provided Python script and return the printed output verbatim.",
-            model="gpt-5.4-mini",
-            tools=[{"type": "code_interpreter"}],
-        )
-        _ASSISTANT_ID = assistant.id
-        return _ASSISTANT_ID
-
-
 async def execute_python(script: str, timeout: int = 300) -> ExecutionResult:
     """Run *script* in a sandboxed Code Interpreter and return output.
 
+    Uses the Responses API with the code_interpreter tool.
     Returns an ``ExecutionResult`` -- never raises.
     """
     if not settings.openai_api_key:
@@ -60,54 +40,31 @@ async def execute_python(script: str, timeout: int = 300) -> ExecutionResult:
             error_message="OpenAI API key not configured -- cannot execute code.",
         )
 
-    thread_id: str | None = None
-    client: AsyncOpenAI | None = None
-
     try:
-        client = AsyncOpenAI(api_key=settings.openai_api_key)
-        assistant_id = await _get_or_create_assistant(client)
-
-        thread = await client.beta.threads.create()
-        thread_id = thread.id
-        await client.beta.threads.messages.create(
-            thread_id=thread_id,
-            role="user",
-            content=f"Run this Python script and return only the printed output:\n\n```python\n{script}\n```",
+        client = AsyncOpenAI(
+            api_key=settings.openai_api_key,
+            timeout=float(timeout),
         )
 
-        run = await client.beta.threads.runs.create(
-            thread_id=thread_id,
-            assistant_id=assistant_id,
+        response = await client.responses.create(
+            model=_CODE_INTERPRETER_MODEL,
+            instructions="Execute the provided Python script and return the printed output verbatim.",
+            tools=[
+                {
+                    "type": "code_interpreter",
+                    "container": {"type": "auto"},
+                },
+            ],
+            input=f"Run this Python script and return only the printed output:\n\n```python\n{script}\n```",
         )
 
-        # Poll for completion with wall-clock timeout
-        start = time.monotonic()
-        poll_interval = 2
-        while run.status in ("queued", "in_progress"):
-            if time.monotonic() - start >= timeout:
-                return ExecutionResult(
-                    success=False,
-                    stdout="",
-                    error_message=f"Code execution timed out after {timeout}s.",
-                )
-            await asyncio.sleep(poll_interval)
-            run = await client.beta.threads.runs.retrieve(
-                thread_id=thread_id,
-                run_id=run.id,
-            )
-
-        if run.status == "failed":
-            error_msg = getattr(run.last_error, "message", "Unknown execution error")
-            return ExecutionResult(success=False, stdout="", error_message=error_msg)
-
-        # Extract text from assistant messages
-        messages = await client.beta.threads.messages.list(thread_id=thread_id)
+        # Extract text output from response
         output_parts: list[str] = []
-        for msg in messages.data:
-            if msg.role == "assistant":
-                for block in msg.content:
-                    if block.type == "text":
-                        output_parts.append(block.text.value)
+        for item in response.output:
+            if item.type == "message":
+                for block in item.content:
+                    if block.type == "output_text":
+                        output_parts.append(block.text)
 
         stdout = "\n".join(output_parts).strip()
         return ExecutionResult(success=True, stdout=stdout, error_message="")
@@ -117,13 +74,5 @@ async def execute_python(script: str, timeout: int = 300) -> ExecutionResult:
         return ExecutionResult(
             success=False,
             stdout="",
-            error_message="An internal error occurred during code execution.",
+            error_message=f"Code execution error: {exc}",
         )
-
-    finally:
-        # Clean up the thread to avoid resource leaks
-        if thread_id is not None and client is not None:
-            try:
-                await client.beta.threads.delete(thread_id)
-            except Exception:
-                _logger.debug("Failed to delete thread %s", thread_id, exc_info=True)
