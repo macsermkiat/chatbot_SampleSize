@@ -3,7 +3,13 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import { getSubscription, getUsage } from "@/lib/api";
+import {
+  getSubscription,
+  getUsage,
+  getProfile,
+  updateProfile,
+  type UserProfile,
+} from "@/lib/api";
 import type { User } from "@supabase/supabase-js";
 
 interface SubscriptionInfo {
@@ -44,11 +50,40 @@ const STATUS_LABELS: Record<string, { label: string; className: string }> = {
   paused: { label: "Paused", className: "bg-parchment-200 text-parchment-700" },
 };
 
+const ROLE_LABELS: Record<string, string> = {
+  medical_student: "Medical Student",
+  resident_fellow: "Resident / Fellow",
+  junior_faculty: "Junior Faculty",
+  senior_faculty: "Senior Faculty",
+  phd_student: "PhD Student",
+  cro_staff: "CRO Staff",
+  other: "Other",
+};
+
+const RESEARCH_AREA_LABELS: Record<string, string> = {
+  clinical_medicine: "Clinical Medicine",
+  surgery: "Surgery",
+  public_health: "Public Health",
+  epidemiology: "Epidemiology",
+  nursing: "Nursing",
+  pharmacy: "Pharmacy",
+  other: "Other",
+};
+
 export default function AccountClient() {
   const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [subscription, setSubscription] = useState<SubscriptionInfo | null>(null);
   const [usage, setUsage] = useState<UsageInfo | null>(null);
   const [loading, setLoading] = useState(true);
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [editForm, setEditForm] = useState({
+    full_name: "",
+    role: "",
+    institution: "",
+    research_area: "",
+  });
 
   useEffect(() => {
     async function load() {
@@ -62,7 +97,7 @@ export default function AccountClient() {
 
       setUser(data.user);
 
-      const [sub, usg] = await Promise.all([
+      const [sub, usg, prof] = await Promise.all([
         getSubscription().catch(() => ({ tier: "free" } as SubscriptionInfo)),
         getUsage().catch(
           () =>
@@ -73,15 +108,50 @@ export default function AccountClient() {
               is_allowed: true,
             }) as UsageInfo,
         ),
+        getProfile().catch(() => null),
       ]);
 
       setSubscription(sub);
       setUsage(usg);
+      if (prof) {
+        setProfile(prof);
+        setEditForm({
+          full_name: prof.full_name ?? "",
+          role: prof.role ?? "",
+          institution: prof.institution ?? "",
+          research_area: prof.research_area ?? "",
+        });
+      }
       setLoading(false);
     }
 
     load();
   }, []);
+
+  async function handleSaveProfile() {
+    setSaving(true);
+    try {
+      const data: Record<string, string> = {};
+      if (editForm.full_name.trim()) data.full_name = editForm.full_name.trim();
+      if (editForm.role) data.role = editForm.role;
+      if (editForm.institution.trim()) data.institution = editForm.institution.trim();
+      if (editForm.research_area) data.research_area = editForm.research_area;
+
+      if (Object.keys(data).length === 0) {
+        setEditing(false);
+        setSaving(false);
+        return;
+      }
+
+      const updated = await updateProfile(data);
+      setProfile(updated);
+      setEditing(false);
+    } catch {
+      // Keep editing open on error
+    } finally {
+      setSaving(false);
+    }
+  }
 
   if (loading) {
     return (
@@ -97,6 +167,9 @@ export default function AccountClient() {
     usage?.query_limit && usage.query_limit > 0
       ? Math.min(100, Math.round((usage.query_count / usage.query_limit) * 100))
       : null;
+
+  const inputClasses =
+    "w-full px-3 py-2 border border-parchment-200 rounded-xl bg-white text-ink-900 text-body-sm font-body focus:outline-none focus:border-gold-400 focus:shadow-[0_0_0_3px_oklch(0.85_0.12_85/0.15)] transition-all";
 
   return (
     <div className="min-h-screen bg-parchment-100 py-10 sm:py-16 px-4 sm:px-6">
@@ -115,21 +188,138 @@ export default function AccountClient() {
 
         {/* Profile */}
         <section className="bg-parchment-50/80 border border-parchment-200 rounded-xl p-5 sm:p-6">
-          <h2 className="font-display text-lg font-semibold text-ink-800 mb-3">
-            Profile
-          </h2>
-          <dl className="space-y-2 text-sm">
-            <div className="flex justify-between">
-              <dt className="text-ink-400 font-body">Email</dt>
-              <dd className="text-ink-800 font-medium">{user?.email}</dd>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="font-display text-lg font-semibold text-ink-800">
+              Profile
+            </h2>
+            {!editing && (
+              <button
+                onClick={() => setEditing(true)}
+                className="text-xs text-ink-500 hover:text-ink-700 font-body hover:underline"
+              >
+                Edit
+              </button>
+            )}
+          </div>
+
+          {editing ? (
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs text-ink-400 font-body mb-1">Full Name</label>
+                <input
+                  type="text"
+                  maxLength={200}
+                  value={editForm.full_name}
+                  onChange={(e) => setEditForm({ ...editForm, full_name: e.target.value })}
+                  className={inputClasses}
+                  placeholder="Dr. Jane Smith"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-ink-400 font-body mb-1">Role</label>
+                <select
+                  value={editForm.role}
+                  onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}
+                  className={inputClasses}
+                >
+                  <option value="">Select role...</option>
+                  {Object.entries(ROLE_LABELS).map(([value, label]) => (
+                    <option key={value} value={value}>{label}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs text-ink-400 font-body mb-1">Institution</label>
+                <input
+                  type="text"
+                  maxLength={300}
+                  value={editForm.institution}
+                  onChange={(e) => setEditForm({ ...editForm, institution: e.target.value })}
+                  className={inputClasses}
+                  placeholder="Mahidol University"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-ink-400 font-body mb-1">Research Area</label>
+                <select
+                  value={editForm.research_area}
+                  onChange={(e) => setEditForm({ ...editForm, research_area: e.target.value })}
+                  className={inputClasses}
+                >
+                  <option value="">Select research area...</option>
+                  {Object.entries(RESEARCH_AREA_LABELS).map(([value, label]) => (
+                    <option key={value} value={value}>{label}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex gap-2 pt-1">
+                <button
+                  onClick={handleSaveProfile}
+                  disabled={saving}
+                  className="px-4 py-2 bg-ink-900 text-parchment-100 text-body-sm font-display rounded-xl hover:bg-ink-800 transition-colors disabled:opacity-50"
+                >
+                  {saving ? "Saving..." : "Save"}
+                </button>
+                <button
+                  onClick={() => {
+                    setEditing(false);
+                    if (profile) {
+                      setEditForm({
+                        full_name: profile.full_name ?? "",
+                        role: profile.role ?? "",
+                        institution: profile.institution ?? "",
+                        research_area: profile.research_area ?? "",
+                      });
+                    }
+                  }}
+                  className="px-4 py-2 border border-parchment-200 text-ink-500 text-body-sm font-body rounded-xl hover:bg-parchment-100 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
-            <div className="flex justify-between">
-              <dt className="text-ink-400 font-body">User ID</dt>
-              <dd className="text-ink-600 font-mono text-xs">
-                {user?.id.slice(0, 12)}...
-              </dd>
-            </div>
-          </dl>
+          ) : (
+            <dl className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <dt className="text-ink-400 font-body">Email</dt>
+                <dd className="text-ink-800 font-medium">{user?.email}</dd>
+              </div>
+              {profile?.full_name && (
+                <div className="flex justify-between">
+                  <dt className="text-ink-400 font-body">Name</dt>
+                  <dd className="text-ink-800 font-medium">{profile.full_name}</dd>
+                </div>
+              )}
+              {profile?.role && (
+                <div className="flex justify-between">
+                  <dt className="text-ink-400 font-body">Role</dt>
+                  <dd className="text-ink-800 font-medium">
+                    {ROLE_LABELS[profile.role] ?? profile.role}
+                  </dd>
+                </div>
+              )}
+              {profile?.institution && (
+                <div className="flex justify-between">
+                  <dt className="text-ink-400 font-body">Institution</dt>
+                  <dd className="text-ink-800 font-medium">{profile.institution}</dd>
+                </div>
+              )}
+              {profile?.research_area && (
+                <div className="flex justify-between">
+                  <dt className="text-ink-400 font-body">Research Area</dt>
+                  <dd className="text-ink-800 font-medium">
+                    {RESEARCH_AREA_LABELS[profile.research_area] ?? profile.research_area}
+                  </dd>
+                </div>
+              )}
+              <div className="flex justify-between">
+                <dt className="text-ink-400 font-body">User ID</dt>
+                <dd className="text-ink-600 font-mono text-xs">
+                  {user?.id.slice(0, 12)}...
+                </dd>
+              </div>
+            </dl>
+          )}
         </section>
 
         {/* Subscription */}

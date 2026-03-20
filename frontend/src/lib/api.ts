@@ -398,6 +398,70 @@ export async function createCheckout(
   return response.json();
 }
 
+// --- User Profile ---
+
+export interface UserProfile {
+  user_id: string;
+  full_name: string | null;
+  role: string | null;
+  institution: string | null;
+  research_area: string | null;
+  onboarding_completed: boolean;
+}
+
+export interface ProfileUpdate {
+  full_name?: string | null;
+  role?: string | null;
+  institution?: string | null;
+  research_area?: string | null;
+}
+
+/**
+ * Get the current user's profile.
+ */
+export async function getProfile(): Promise<UserProfile> {
+  const headers = await authHeaders();
+  const response = await fetchWithRetry(`${API_BASE}/profile`, { headers });
+  if (!response.ok) {
+    throw new Error("Failed to load profile");
+  }
+  return response.json();
+}
+
+/**
+ * Update the current user's profile fields.
+ */
+export async function updateProfile(data: ProfileUpdate): Promise<UserProfile> {
+  const headers = await authHeaders({ "Content-Type": "application/json" });
+  const response = await fetchWithRetry(`${API_BASE}/profile`, {
+    method: "PATCH",
+    headers,
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({ detail: "Failed to update profile" }));
+    throw new Error(err.detail || "Failed to update profile");
+  }
+  return response.json();
+}
+
+/**
+ * Complete onboarding with profile data.
+ */
+export async function completeOnboarding(data: ProfileUpdate): Promise<UserProfile> {
+  const headers = await authHeaders({ "Content-Type": "application/json" });
+  const response = await fetchWithRetry(`${API_BASE}/profile/complete-onboarding`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({ detail: "Failed to complete onboarding" }));
+    throw new Error(err.detail || "Failed to complete onboarding");
+  }
+  return response.json();
+}
+
 // --- Saved Projects ---
 
 export interface ProjectListItem {

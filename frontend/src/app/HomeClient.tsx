@@ -21,9 +21,11 @@ import {
   streamChat,
   uid,
   getSessionMessages,
+  getProfile,
   type ChatMessage,
   type FileUploadResult,
 } from "@/lib/api";
+import OnboardingModal from "@/components/OnboardingModal";
 import { useSearchParams } from "next/navigation";
 import {
   presenceVariants,
@@ -92,6 +94,22 @@ export default function HomeClient() {
 
   const [endDialogOpen, setEndDialogOpen] = useState(false);
   const [evalDialogOpen, setEvalDialogOpen] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
+  // Check if user needs onboarding (first login)
+  useEffect(() => {
+    let cancelled = false;
+    getProfile()
+      .then((profile) => {
+        if (!cancelled && !profile.onboarding_completed) {
+          setShowOnboarding(true);
+        }
+      })
+      .catch(() => {
+        // Not authenticated or profile endpoint unavailable -- skip onboarding
+      });
+    return () => { cancelled = true; };
+  }, []);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -398,6 +416,9 @@ export default function HomeClient() {
 
   return (
     <div className="flex flex-col h-dvh">
+      {showOnboarding && (
+        <OnboardingModal onComplete={() => setShowOnboarding(false)} />
+      )}
       {/* Header */}
       <header className="flex-none border-b border-parchment-200 bg-parchment-100/80 backdrop-blur-sm z-10">
         <div className="max-w-chat mx-auto px-4 sm:px-6 py-3 sm:py-4 flex flex-col gap-3 sm:gap-4 short-landscape:py-1.5 short-landscape:gap-1">
