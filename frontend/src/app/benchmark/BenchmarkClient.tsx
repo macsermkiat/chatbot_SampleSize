@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import Footer from "@/components/Footer";
 import {
   BarChart,
   Bar,
@@ -982,18 +983,7 @@ export default function BenchmarkClient() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-parchment-200 bg-parchment-100/80">
-        <div className="max-w-5xl mx-auto px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-caption text-ink-400 font-display">
-            ProtoCol -- Independent benchmark evaluation
-          </p>
-          <div className="flex items-center gap-4">
-            <Link href="/app" className="text-body-sm text-ink-600 hover:text-gold-700 transition-colors font-body">
-              Back to App
-            </Link>
-          </div>
-        </div>
-      </footer>
+      <Footer variant="minimal" />
     </div>
   );
 }

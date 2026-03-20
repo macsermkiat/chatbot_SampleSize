@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import type { BlogPost } from "../posts";
+import Footer from "@/components/Footer";
 
 const fadeUp = {
   initial: { opacity: 0, y: 24 },
@@ -225,33 +226,7 @@ export default function BlogPostClient({ post }: { readonly post: BlogPost }) {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-parchment-200 py-8 px-6">
-        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-caption text-ink-400 font-display">
-            ProtoCol -- AI-powered research methodology
-          </p>
-          <div className="flex items-center gap-6">
-            <Link
-              href="/pricing"
-              className="text-caption text-ink-400 hover:text-ink-600 transition-colors font-display"
-            >
-              Pricing
-            </Link>
-            <Link
-              href="/blog"
-              className="text-caption text-ink-400 hover:text-ink-600 transition-colors font-display"
-            >
-              Blog
-            </Link>
-            <Link
-              href="/app"
-              className="text-caption text-ink-400 hover:text-ink-600 transition-colors font-display"
-            >
-              App
-            </Link>
-          </div>
-        </div>
-      </footer>
+      <Footer variant="minimal" />
     </div>
   );
 }

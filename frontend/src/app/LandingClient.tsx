@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
+import Footer from "@/components/Footer";
 
 const fadeUp = {
   initial: { opacity: 0, y: 24 },
@@ -604,62 +605,7 @@ export default function LandingClient() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-parchment-200 py-10 px-6">
-        <div className="max-w-5xl mx-auto">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-            <div>
-              <p className="font-display text-body-md font-semibold text-ink-800 mb-1">
-                ProtoCol
-              </p>
-              <p className="text-body-sm text-ink-400 font-body">
-                AI-powered research methodology assistant
-              </p>
-            </div>
-
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
-              <Link href="/pricing" className="text-body-sm text-ink-500 hover:text-ink-700 transition-colors font-body">
-                Pricing
-              </Link>
-              <Link href="/benchmark" className="text-body-sm text-ink-500 hover:text-ink-700 transition-colors font-body">
-                Benchmark
-              </Link>
-              <Link href="/blog" className="text-body-sm text-ink-500 hover:text-ink-700 transition-colors font-body">
-                Blog
-              </Link>
-              <Link href={isLoggedIn ? "/app" : "/login"} className="text-body-sm text-ink-500 hover:text-ink-700 transition-colors font-body">
-                {isLoggedIn ? "Go to App" : "Sign In"}
-              </Link>
-            </div>
-
-            <div className="flex items-center gap-4 sm:gap-6">
-              <Link href="/privacy" className="text-caption text-ink-400 hover:text-ink-600 transition-colors font-body">
-                Privacy
-              </Link>
-              <Link href="/terms" className="text-caption text-ink-400 hover:text-ink-600 transition-colors font-body">
-                Terms
-              </Link>
-              <Link href="/refund" className="text-caption text-ink-400 hover:text-ink-600 transition-colors font-body">
-                Refund Policy
-              </Link>
-            </div>
-          </div>
-
-          <div className="mt-8 pt-6 border-t border-parchment-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <p className="text-caption text-ink-400 font-body">
-              Questions? Contact us at{" "}
-              <a
-                href="mailto:contact@protocol.med"
-                className="text-ink-600 hover:text-ink-800 underline underline-offset-2 transition-colors"
-              >
-                contact@protocol.med
-              </a>
-            </p>
-            <p className="text-caption text-ink-400 font-body">
-              Not for clinical decision-making. All protocols require expert review.
-            </p>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }
