@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
@@ -131,8 +132,9 @@ export default function LandingClient() {
       {/* Navigation */}
       <nav className="border-b border-parchment-200 bg-parchment-100/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link href="/" className="font-display text-display-md font-semibold text-ink-900 tracking-tight">
-            ProtoCol
+          <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+            <Image src="/logo_protocol.png" alt="Protocol" width={28} height={28} className="h-7 w-auto" />
+            <span className="font-display text-body-md font-semibold text-ink-900 tracking-tight">Protocol</span>
           </Link>
 
           {/* Desktop nav */}

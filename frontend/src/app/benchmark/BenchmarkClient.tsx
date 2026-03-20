@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
@@ -443,11 +444,9 @@ export default function BenchmarkClient() {
       {/* Navigation */}
       <nav className="sticky top-0 z-50 border-b border-parchment-200 bg-parchment-100/90 backdrop-blur-md">
         <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link
-            href="/"
-            className="font-display text-display-md font-semibold text-ink-900 hover:text-gold-700 transition-colors"
-          >
-            ProtoCol
+          <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+            <Image src="/logo_protocol.png" alt="Protocol" width={28} height={28} className="h-7 w-auto" />
+            <span className="font-display text-body-md font-semibold text-ink-900 tracking-tight">Protocol</span>
           </Link>
           <div className="flex items-center gap-4">
             <span className="text-caption font-display text-ink-500 uppercase tracking-wider hidden sm:block">

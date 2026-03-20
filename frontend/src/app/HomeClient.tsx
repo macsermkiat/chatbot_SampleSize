@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import CodeBlock from "@/components/CodeBlock";
@@ -34,7 +35,6 @@ import {
 
 type Phase = "orchestrator" | "research_gap" | "methodology" | "biostatistics";
 
-const WELCOME_HEADING = "ProtoCol";
 const WELCOME_QUOTE =
   "\u201CThe goal of research is not to confirm what we already know, but to discover what we do not.\u201D";
 
@@ -402,12 +402,11 @@ export default function HomeClient() {
       <header className="flex-none border-b border-parchment-200 bg-parchment-100/80 backdrop-blur-sm z-10">
         <div className="max-w-chat mx-auto px-4 sm:px-6 py-3 sm:py-4 flex flex-col gap-3 sm:gap-4 short-landscape:py-1.5 short-landscape:gap-1">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <h1 className="font-display text-display-md font-semibold text-ink-900 tracking-tight">
-                {WELCOME_HEADING}
-              </h1>
+            <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+              <Image src="/logo_protocol.png" alt="Protocol" width={28} height={28} className="h-7 w-auto" />
+              <span className="font-display text-body-md font-semibold text-ink-900 tracking-tight">Protocol</span>
               <span className="block w-2 h-2 rounded-full bg-gold-500 animate-pulse-warm flex-none" />
-            </div>
+            </Link>
             <div className="flex items-center gap-2 sm:gap-3">
               <QueryBadge />
               <Link

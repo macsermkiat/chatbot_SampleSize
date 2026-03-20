@@ -2,6 +2,7 @@
 
 import { useSearchParams } from "next/navigation";
 import { useState, useEffect, Suspense } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { login, signup } from "./actions";
@@ -66,8 +67,9 @@ function LoginForm() {
       <div className="w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8">
-          <Link href="/" className="font-display text-display-lg font-semibold text-ink-900 mb-2 inline-block hover:text-gold-700 transition-colors">
-            ProtoCol
+          <Link href="/" className="inline-flex items-center gap-2.5 hover:opacity-80 transition-opacity mb-2">
+            <Image src="/logo_protocol.png" alt="Protocol" width={36} height={36} className="h-9 w-auto" />
+            <span className="font-display text-display-lg font-semibold text-ink-900">Protocol</span>
           </Link>
           <p className="text-body-sm text-ink-500 font-body">
             AI-powered medical research methodology assistant

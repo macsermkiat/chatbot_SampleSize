@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
@@ -136,11 +137,9 @@ export default function ProjectsClient() {
       <header className="border-b border-parchment-200 bg-parchment-100/80 backdrop-blur-sm">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Link
-              href="/"
-              className="font-display text-display-md font-semibold text-ink-900 tracking-tight hover:text-ink-700 transition-colors"
-            >
-              ProtoCol
+            <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+              <Image src="/logo_protocol.png" alt="Protocol" width={28} height={28} className="h-7 w-auto" />
+              <span className="font-display text-body-md font-semibold text-ink-900 tracking-tight">Protocol</span>
             </Link>
             <span className="text-ink-300">/</span>
             <h1 className="font-display text-body-lg font-medium text-ink-700">
