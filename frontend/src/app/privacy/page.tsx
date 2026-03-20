@@ -30,7 +30,7 @@ export default function PrivacyPolicy() {
           <section>
             <h2 className="font-display text-body-lg font-semibold text-ink-800 mb-3">1. Introduction</h2>
             <p>
-              ProtoCol (&quot;we&quot;, &quot;us&quot;, &quot;our&quot;) is operated by DAB Research.
+              ProtoCol (&quot;we&quot;, &quot;us&quot;, &quot;our&quot;) is operated by Royyak Co., Ltd.
               This Privacy Policy explains how we collect, use, and protect your information
               when you use our AI-powered research methodology assistant at www.protocol.med (the &quot;Service&quot;).
             </p>

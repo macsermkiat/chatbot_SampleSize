@@ -31,7 +31,7 @@ export default function TermsOfService() {
             <h2 className="font-display text-body-lg font-semibold text-ink-800 mb-3">1. Acceptance of Terms</h2>
             <p>
               By accessing or using ProtoCol at www.protocol.med (the &quot;Service&quot;), operated by
-              DAB Research, you agree to be bound by these Terms of Service. If you do not agree,
+              Royyak Co., Ltd., you agree to be bound by these Terms of Service. If you do not agree,
               do not use the Service.
             </p>
           </section>
@@ -84,7 +84,7 @@ export default function TermsOfService() {
               You retain ownership of your research content and uploaded documents.
               AI-generated outputs (methodology suggestions, statistical analyses, protocol drafts)
               are provided for your use but come with no guarantee of originality or accuracy.
-              The ProtoCol name, logo, and platform design are the property of DAB Research.
+              The ProtoCol name, logo, and platform design are the property of Royyak Co., Ltd.
             </p>
           </section>
 
@@ -101,7 +101,7 @@ export default function TermsOfService() {
           <section>
             <h2 className="font-display text-body-lg font-semibold text-ink-800 mb-3">8. Limitation of Liability</h2>
             <p>
-              The Service is provided &quot;as is&quot; without warranties of any kind. DAB Research
+              The Service is provided &quot;as is&quot; without warranties of any kind. Royyak Co., Ltd.
               is not liable for any damages arising from your use of the Service, including but
               not limited to inaccurate AI outputs, data loss, or service interruptions.
               Our total liability shall not exceed the amount you paid for the Service in the

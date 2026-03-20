@@ -1,8 +1,8 @@
-# DAB Research: Market Analysis Implementation Plan
+# ProtoCol: Market Analysis Implementation Plan
 
-**Goal:** Implement product recommendations from the market analysis to prepare DAB Research for monetization.
+**Goal:** Implement product recommendations from the market analysis to prepare ProtoCol for monetization.
 
-**Source:** `DAB-Research_Market-Analysis_v1 copy.md`
+**Source:** Market analysis document
 
 **Current State:** Working chatbot with 3 phases, auth (Supabase JWT), billing (LemonSqueezy), protocol export (DOCX/PDF), account page, 189 backend tests passing, 0 TS errors. Remaining: dashboard/infra config (non-code).
 
@@ -201,7 +201,7 @@
 
 ### Tasks
 - [x] 9.1 Compile 50+ common sample size scenarios with published results (V01-V50)
-- [ ] 9.2 Build automated test runner against DAB's biostatistics agent
+- [ ] 9.2 Build automated test runner against ProtoCol's biostatistics agent
 - [x] 9.3 Score concordance (exact match, within 5%, within 10%) — already built in Phase 4
 - [ ] 9.4 Fix any calculation discrepancies found
 - [x] 9.5 Report generator — already built in Phase 4

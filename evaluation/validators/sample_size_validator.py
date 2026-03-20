@@ -1,4 +1,4 @@
-"""Sample size validation — compare DAB outputs against published benchmarks.
+"""Sample size validation — compare ProtoCol outputs against published benchmarks.
 
 Loads benchmark scenarios with known expected sample sizes and scores
 concordance as exact match, within 5%, or within 10%.
@@ -77,7 +77,7 @@ def score_result(
     """Score a single result against a benchmark.
 
     Args:
-        actual: The sample size computed by DAB.
+        actual: The sample size computed by ProtoCol.
         expected: The known correct sample size.
         tolerance_5pct: Acceptable range for 5% concordance (min, max).
         tolerance_10pct: Acceptable range for 10% concordance (min, max).
