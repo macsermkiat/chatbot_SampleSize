@@ -57,7 +57,37 @@ export default function TermsOfService() {
           </section>
 
           <section>
-            <h2 className="font-display text-body-lg font-semibold text-ink-800 mb-3">4. User Accounts</h2>
+            <h2 className="font-display text-body-lg font-semibold text-ink-800 mb-3">4. AI Output Disclaimer</h2>
+            <p className="font-semibold text-ink-900 mb-3">
+              Royyak Co., Ltd. does not guarantee the accuracy, completeness, or correctness of any
+              AI-generated content, including but not limited to research protocols, manuscripts,
+              statistical analyses, sample size calculations, study designs, and methodology recommendations.
+            </p>
+            <ul className="list-disc pl-6 space-y-2">
+              <li>
+                All AI-generated outputs are drafts intended as a starting point. It is the
+                user&apos;s sole responsibility to review, verify, and validate all content before
+                submission or use in any capacity.
+              </li>
+              <li>
+                Users should consult qualified subject-matter experts, biostatisticians, and
+                methodologists as appropriate for their research context.
+              </li>
+              <li>
+                The Service does not guarantee acceptance for publication in any journal, approval
+                by any Institutional Review Board (IRB) or Ethics Committee (EC), successful
+                registration with any trial registry (e.g., ClinicalTrials.gov, Thai Clinical
+                Trials Registry), or approval by any regulatory authority.
+              </li>
+              <li>
+                AI-generated citations and references may be inaccurate, incomplete, or fabricated.
+                Users must independently verify all cited sources.
+              </li>
+            </ul>
+          </section>
+
+          <section>
+            <h2 className="font-display text-body-lg font-semibold text-ink-800 mb-3">5. User Accounts</h2>
             <ul className="list-disc pl-6 space-y-2">
               <li>You must provide accurate information when creating an account.</li>
               <li>You are responsible for maintaining the security of your account credentials.</li>
@@ -67,7 +97,7 @@ export default function TermsOfService() {
           </section>
 
           <section>
-            <h2 className="font-display text-body-lg font-semibold text-ink-800 mb-3">5. Acceptable Use</h2>
+            <h2 className="font-display text-body-lg font-semibold text-ink-800 mb-3">6. Acceptable Use</h2>
             <p className="mb-3">You agree not to:</p>
             <ul className="list-disc pl-6 space-y-2">
               <li>Use the Service for any unlawful purpose.</li>
@@ -79,7 +109,7 @@ export default function TermsOfService() {
           </section>
 
           <section>
-            <h2 className="font-display text-body-lg font-semibold text-ink-800 mb-3">6. Intellectual Property</h2>
+            <h2 className="font-display text-body-lg font-semibold text-ink-800 mb-3">7. Intellectual Property</h2>
             <p>
               You retain ownership of your research content and uploaded documents.
               AI-generated outputs (methodology suggestions, statistical analyses, protocol drafts)
@@ -89,7 +119,7 @@ export default function TermsOfService() {
           </section>
 
           <section>
-            <h2 className="font-display text-body-lg font-semibold text-ink-800 mb-3">7. Subscriptions and Billing</h2>
+            <h2 className="font-display text-body-lg font-semibold text-ink-800 mb-3">8. Subscriptions and Billing</h2>
             <ul className="list-disc pl-6 space-y-2">
               <li>Paid subscriptions are billed through LemonSqueezy.</li>
               <li>Free tier usage is subject to the limits described on the pricing page.</li>
@@ -99,7 +129,7 @@ export default function TermsOfService() {
           </section>
 
           <section>
-            <h2 className="font-display text-body-lg font-semibold text-ink-800 mb-3">8. Limitation of Liability</h2>
+            <h2 className="font-display text-body-lg font-semibold text-ink-800 mb-3">9. Limitation of Liability</h2>
             <p>
               The Service is provided &quot;as is&quot; without warranties of any kind. Royyak Co., Ltd.
               is not liable for any damages arising from your use of the Service, including but
@@ -110,7 +140,7 @@ export default function TermsOfService() {
           </section>
 
           <section>
-            <h2 className="font-display text-body-lg font-semibold text-ink-800 mb-3">9. Changes to Terms</h2>
+            <h2 className="font-display text-body-lg font-semibold text-ink-800 mb-3">10. Changes to Terms</h2>
             <p>
               We may update these terms at any time. Continued use of the Service after changes
               constitutes acceptance. We will notify users of material changes via email or
@@ -119,7 +149,7 @@ export default function TermsOfService() {
           </section>
 
           <section>
-            <h2 className="font-display text-body-lg font-semibold text-ink-800 mb-3">10. Contact</h2>
+            <h2 className="font-display text-body-lg font-semibold text-ink-800 mb-3">11. Contact</h2>
             <p>
               For questions about these terms, contact us at{" "}
               <a href="mailto:contact@protocol.med" className="text-ink-600 hover:text-ink-800 underline underline-offset-2 transition-colors">
