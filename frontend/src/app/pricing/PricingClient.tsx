@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { createCheckout } from "@/lib/api";
+import { createCheckout, getSubscription } from "@/lib/api";
 import { createClient } from "@/lib/supabase/client";
+import SubscriptionActionModal from "@/components/SubscriptionActionModal";
 
 interface PricingTier {
   name: string;
@@ -78,10 +79,51 @@ const TIERS: PricingTier[] = [
   },
 ];
 
+// Mirrors backend TIER_RANKS in services/billing.py
+const TIER_RANKS: Record<string, number> = {
+  free: 0,
+  researcher: 1,
+  pro: 2,
+  institutional: 3,
+};
+
+interface SubscriptionInfo {
+  tier: string;
+  status?: string;
+  variant_id?: string;
+  renews_at?: string;
+  urls?: { customer_portal?: string; update_payment_method?: string };
+}
+
+type ModalInfo = {
+  mode: "upgrade" | "downgrade" | "cancel";
+  tier: PricingTier;
+};
+
 export default function PricingClient() {
   const [annual, setAnnual] = useState(false);
   const [loading, setLoading] = useState<string | null>(null);
+  const [subscription, setSubscription] = useState<SubscriptionInfo | null>(
+    null,
+  );
+  const [subLoading, setSubLoading] = useState(true);
+  const [modal, setModal] = useState<ModalInfo | null>(null);
   const router = useRouter();
+
+  // Fetch subscription for authenticated users
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getSession().then(({ data }) => {
+      if (!data.session) {
+        setSubLoading(false);
+        return;
+      }
+      getSubscription()
+        .then(setSubscription)
+        .catch(() => setSubscription(null))
+        .finally(() => setSubLoading(false));
+    });
+  }, []);
 
   async function handleSubscribe(tier: PricingTier) {
     if (!tier.variantId) {
@@ -109,6 +151,74 @@ export default function PricingClient() {
       alert(message);
       setLoading(null);
     }
+  }
+
+  function getButtonConfig(tier: PricingTier): {
+    label: string;
+    disabled: boolean;
+    style: "primary" | "secondary";
+    onClick: () => void;
+  } {
+    // Not logged in or still loading -- use original checkout flow
+    if (!subscription || subLoading) {
+      return {
+        label: tier.cta,
+        disabled: subLoading || loading === tier.name,
+        style: tier.highlighted ? "primary" : "secondary",
+        onClick: () => handleSubscribe(tier),
+      };
+    }
+
+    const currentRank = TIER_RANKS[subscription.tier] ?? 0;
+    const tierRank = TIER_RANKS[tier.name.toLowerCase()] ?? 0;
+
+    // Current plan -- disabled
+    if (tierRank === currentRank) {
+      return {
+        label: "Current Plan",
+        disabled: true,
+        style: "secondary",
+        onClick: () => {},
+      };
+    }
+
+    // Free tier = cancellation
+    if (tier.name === "Free") {
+      return {
+        label: "Cancel Plan",
+        disabled: false,
+        style: "secondary",
+        onClick: () => setModal({ mode: "cancel", tier }),
+      };
+    }
+
+    // Institutional -- no variant, keep original CTA
+    if (!tier.variantId) {
+      return {
+        label: tier.cta,
+        disabled: false,
+        style: "secondary",
+        onClick: () => handleSubscribe(tier),
+      };
+    }
+
+    // Higher tier = upgrade
+    if (tierRank > currentRank) {
+      return {
+        label: "Upgrade",
+        disabled: loading === tier.name,
+        style: "primary",
+        onClick: () => setModal({ mode: "upgrade", tier }),
+      };
+    }
+
+    // Lower paid tier = downgrade (via portal)
+    return {
+      label: "Downgrade",
+      disabled: false,
+      style: "secondary",
+      onClick: () => setModal({ mode: "downgrade", tier }),
+    };
   }
 
   return (
@@ -161,77 +271,82 @@ export default function PricingClient() {
 
         {/* Pricing cards -- highlighted card first on mobile */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-          {TIERS.map((tier) => (
-            <div
-              key={tier.name}
-              className={`
-                bg-parchment-50/80 border rounded-xl p-5 sm:p-6 flex flex-col
-                ${tier.highlighted
-                  ? "border-gold-500 ring-2 ring-gold-400/20 order-first md:order-none"
-                  : "border-parchment-200"
-                }
-              `}
-            >
-              {tier.highlighted && (
-                <span className="inline-block text-caption font-display font-medium bg-gold-500 text-parchment-50 px-2.5 py-0.5 rounded-full self-start mb-3 tracking-wide uppercase">
-                  Most Popular
-                </span>
-              )}
-              <h3 className="font-display text-display-md font-semibold text-ink-800">
-                {tier.name}
-              </h3>
-              <div className="mt-2 mb-1">
-                <span className="text-3xl font-semibold text-ink-900 font-display">
-                  {annual ? tier.annual : tier.price}
-                </span>
-                {tier.price !== "$0" && tier.name !== "Institutional" && (
-                  <span className="text-ink-400 text-body-sm font-body">/mo</span>
-                )}
-              </div>
-              <p className="text-ink-500 text-body-sm font-body mb-5 sm:mb-6">
-                {tier.description}
-              </p>
-
-              <ul className="space-y-2.5 flex-1 mb-5 sm:mb-6">
-                {tier.features.map((feature) => (
-                  <li
-                    key={feature}
-                    className="flex items-start gap-2 text-body-sm font-body text-ink-700"
-                  >
-                    <svg
-                      className="w-4 h-4 text-green-700 mt-0.5 shrink-0"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth={2}
-                      aria-hidden="true"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
-                    {feature}
-                  </li>
-                ))}
-              </ul>
-
-              <button
-                onClick={() => handleSubscribe(tier)}
-                disabled={loading === tier.name}
+          {TIERS.map((tier) => {
+            const btn = getButtonConfig(tier);
+            return (
+              <div
+                key={tier.name}
                 className={`
-                  w-full py-2.5 rounded-xl text-body-sm font-display font-medium transition-colors disabled:opacity-50
+                  bg-parchment-50/80 border rounded-xl p-5 sm:p-6 flex flex-col
                   ${tier.highlighted
-                    ? "bg-ink-900 text-parchment-100 hover:bg-ink-800"
-                    : "bg-parchment-100 text-ink-800 hover:bg-parchment-200 border border-parchment-300"
+                    ? "border-gold-500 ring-2 ring-gold-400/20 order-first md:order-none"
+                    : "border-parchment-200"
                   }
                 `}
               >
-                {loading === tier.name ? "Loading..." : tier.cta}
-              </button>
-            </div>
-          ))}
+                {tier.highlighted && (
+                  <span className="inline-block text-caption font-display font-medium bg-gold-500 text-parchment-50 px-2.5 py-0.5 rounded-full self-start mb-3 tracking-wide uppercase">
+                    Most Popular
+                  </span>
+                )}
+                <h3 className="font-display text-display-md font-semibold text-ink-800">
+                  {tier.name}
+                </h3>
+                <div className="mt-2 mb-1">
+                  <span className="text-3xl font-semibold text-ink-900 font-display">
+                    {annual ? tier.annual : tier.price}
+                  </span>
+                  {tier.price !== "$0" && tier.name !== "Institutional" && (
+                    <span className="text-ink-400 text-body-sm font-body">
+                      /mo
+                    </span>
+                  )}
+                </div>
+                <p className="text-ink-500 text-body-sm font-body mb-5 sm:mb-6">
+                  {tier.description}
+                </p>
+
+                <ul className="space-y-2.5 flex-1 mb-5 sm:mb-6">
+                  {tier.features.map((feature) => (
+                    <li
+                      key={feature}
+                      className="flex items-start gap-2 text-body-sm font-body text-ink-700"
+                    >
+                      <svg
+                        className="w-4 h-4 text-green-700 mt-0.5 shrink-0"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                        aria-hidden="true"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+
+                <button
+                  onClick={btn.onClick}
+                  disabled={btn.disabled}
+                  className={`
+                    w-full py-2.5 rounded-xl text-body-sm font-display font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed
+                    ${btn.style === "primary"
+                      ? "bg-ink-900 text-parchment-100 hover:bg-ink-800"
+                      : "bg-parchment-100 text-ink-800 hover:bg-parchment-200 border border-parchment-300"
+                    }
+                  `}
+                >
+                  {loading === tier.name ? "Loading..." : btn.label}
+                </button>
+              </div>
+            );
+          })}
         </div>
 
         {/* Comparison note */}
@@ -239,10 +354,37 @@ export default function PricingClient() {
           <p className="text-body-sm text-ink-400 font-body">
             Compare: nQuery costs $925-$7,495/year with no AI guidance.
             <br className="hidden sm:block" />
-            {" "}ProtoCol provides AI-guided methodology for a fraction of the cost.
+            {" "}ProtoCol provides AI-guided methodology for a fraction of the
+            cost.
           </p>
         </div>
       </div>
+
+      {/* Subscription action modal */}
+      {modal && (
+        <SubscriptionActionModal
+          open={true}
+          mode={modal.mode}
+          fromTier={subscription?.tier ?? "free"}
+          toTier={modal.tier.name.toLowerCase()}
+          targetVariantId={
+            modal.tier.variantId
+              ? annual
+                ? modal.tier.variantId.annual
+                : modal.tier.variantId.monthly
+              : ""
+          }
+          renewsAt={subscription?.renews_at ?? null}
+          customerPortalUrl={subscription?.urls?.customer_portal ?? ""}
+          onClose={() => setModal(null)}
+          onComplete={() => {
+            setModal(null);
+            getSubscription()
+              .then(setSubscription)
+              .catch(() => {});
+          }}
+        />
+      )}
     </div>
   );
 }

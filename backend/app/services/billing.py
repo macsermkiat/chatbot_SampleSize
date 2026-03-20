@@ -65,6 +65,14 @@ def _build_variant_map() -> dict[str, str]:
 
 VARIANT_TIER_MAP: dict[str, str] = _build_variant_map()
 
+# Tier rank for upgrade/downgrade comparison (mirrors frontend TIER_RANKS)
+TIER_RANKS: dict[str, int] = {
+    "free": 0,
+    "researcher": 1,
+    "pro": 2,
+    "institutional": 3,
+}
+
 TIER_LIMITS: dict[str, int | None] = {
     "free": 5,
     "researcher": 50,
@@ -158,7 +166,9 @@ async def get_user_subscription(user_id: str) -> dict[str, Any] | None:
             """
             SELECT ls_subscription_id, variant_id, status, renews_at, ends_at, is_paused
             FROM subscriptions
-            WHERE user_id = $1 AND status IN ('active', 'on_trial')
+            WHERE user_id = $1
+              AND (status IN ('active', 'on_trial')
+                   OR (status = 'cancelled' AND ends_at > now() AT TIME ZONE 'Asia/Bangkok'))
             ORDER BY created_at DESC LIMIT 1
             """,
             user_id,
@@ -329,3 +339,111 @@ async def increment_usage(user_id: str) -> bool:
                 period_end,
             )
             return True
+
+
+# ---------------------------------------------------------------------------
+# Subscription plan changes
+# ---------------------------------------------------------------------------
+
+
+def _parse_ls_datetime(value: str | None) -> datetime | None:
+    """Parse a LemonSqueezy ISO 8601 datetime string."""
+    if not value:
+        return None
+    try:
+        from datetime import timezone as _tz
+        cleaned = value.replace("Z", "+00:00")
+        return datetime.fromisoformat(cleaned).astimezone(_tz.utc).replace(tzinfo=None)
+    except (ValueError, TypeError):
+        _logger.warning("Could not parse datetime: %s", value)
+        return None
+
+
+async def upgrade_subscription(
+    ls_subscription_id: str,
+    target_variant_id: str,
+) -> dict[str, Any]:
+    """Change subscription variant via LemonSqueezy PATCH API (immediate with proration)."""
+    body: dict[str, Any] = {
+        "data": {
+            "type": "subscriptions",
+            "id": ls_subscription_id,
+            "attributes": {
+                "variant_id": int(target_variant_id),
+            },
+        },
+    }
+
+    async with httpx.AsyncClient(timeout=30) as client:
+        resp = await client.patch(
+            f"{_LS_API}/subscriptions/{ls_subscription_id}",
+            json=body,
+            headers=_ls_headers(),
+        )
+
+    if resp.status_code not in (200, 201):
+        _logger.error("LemonSqueezy upgrade failed: %s %s", resp.status_code, resp.text)
+        raise RuntimeError("Failed to upgrade subscription")
+
+    attrs = resp.json()["data"]["attributes"]
+
+    # Optimistic local DB update so the UI reflects the change immediately
+    # (webhook will also update, but may be delayed)
+    pool = await get_pool()
+    async with pool.acquire(timeout=5) as conn:
+        await conn.execute(
+            """
+            UPDATE subscriptions SET
+                variant_id = $1,
+                updated_at = now() AT TIME ZONE 'Asia/Bangkok'
+            WHERE ls_subscription_id = $2
+            """,
+            str(attrs["variant_id"]),
+            ls_subscription_id,
+        )
+
+    return {"variant_id": str(attrs["variant_id"]), "status": attrs["status"]}
+
+
+async def cancel_subscription(ls_subscription_id: str) -> dict[str, Any]:
+    """Cancel subscription at period end via LemonSqueezy PATCH API."""
+    body: dict[str, Any] = {
+        "data": {
+            "type": "subscriptions",
+            "id": ls_subscription_id,
+            "attributes": {
+                "cancelled": True,
+            },
+        },
+    }
+
+    async with httpx.AsyncClient(timeout=30) as client:
+        resp = await client.patch(
+            f"{_LS_API}/subscriptions/{ls_subscription_id}",
+            json=body,
+            headers=_ls_headers(),
+        )
+
+    if resp.status_code not in (200, 201):
+        _logger.error("LemonSqueezy cancel failed: %s %s", resp.status_code, resp.text)
+        raise RuntimeError("Failed to cancel subscription")
+
+    attrs = resp.json()["data"]["attributes"]
+    ends_at = _parse_ls_datetime(attrs.get("ends_at"))
+
+    # Optimistic local DB update so the UI reflects cancellation immediately
+    pool = await get_pool()
+    async with pool.acquire(timeout=5) as conn:
+        await conn.execute(
+            """
+            UPDATE subscriptions SET
+                status = 'cancelled',
+                ends_at = $1,
+                updated_at = now() AT TIME ZONE 'Asia/Bangkok'
+            WHERE ls_subscription_id = $2
+            """,
+            ends_at,
+            ls_subscription_id,
+        )
+
+    return {"ends_at": ends_at.isoformat() if ends_at else None}

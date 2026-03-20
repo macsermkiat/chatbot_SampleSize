@@ -398,6 +398,50 @@ export async function createCheckout(
   return response.json();
 }
 
+/**
+ * Upgrade subscription to a higher tier variant (immediate with proration).
+ */
+export async function upgradeSubscription(
+  targetVariantId: string,
+): Promise<{ tier: string; variant_id: string }> {
+  const headers = await authHeaders({ "Content-Type": "application/json" });
+  const response = await fetchWithRetry(
+    `${API_BASE}/billing/subscription/upgrade`,
+    {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ target_variant_id: targetVariantId }),
+    },
+  );
+  if (!response.ok) {
+    const err = await response
+      .json()
+      .catch(() => ({ detail: "Upgrade failed" }));
+    throw new Error(err.detail || "Upgrade failed");
+  }
+  return response.json();
+}
+
+/**
+ * Cancel subscription at end of current billing period.
+ */
+export async function cancelSubscription(): Promise<{
+  ends_at: string | null;
+}> {
+  const headers = await authHeaders();
+  const response = await fetchWithRetry(
+    `${API_BASE}/billing/subscription/cancel`,
+    { method: "POST", headers },
+  );
+  if (!response.ok) {
+    const err = await response
+      .json()
+      .catch(() => ({ detail: "Cancellation failed" }));
+    throw new Error(err.detail || "Cancellation failed");
+  }
+  return response.json();
+}
+
 // --- User Profile ---
 
 export interface UserProfile {

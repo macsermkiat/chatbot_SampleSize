@@ -15,6 +15,9 @@ from app.auth import AuthUser, get_current_user, get_optional_user
 from app.config import settings
 from app.db import get_pool
 from app.services.billing import (
+    TIER_RANKS,
+    VARIANT_TIER_MAP,
+    cancel_subscription,
     create_checkout,
     get_billing_cycle,
     get_current_usage,
@@ -22,6 +25,7 @@ from app.services.billing import (
     get_subscription_portal_urls,
     get_tier_for_variant,
     get_user_subscription,
+    upgrade_subscription,
 )
 
 _logger = logging.getLogger(__name__)
@@ -50,6 +54,19 @@ class SubscriptionResponse(BaseModel):
     renews_at: str | None = None
     ends_at: str | None = None
     urls: dict[str, str] = Field(default_factory=dict)
+
+
+class UpgradeRequest(BaseModel):
+    target_variant_id: str = Field(..., min_length=1)
+
+
+class UpgradeResponse(BaseModel):
+    tier: str
+    variant_id: str
+
+
+class CancelResponse(BaseModel):
+    ends_at: str | None = None
 
 
 class UsageResponse(BaseModel):
@@ -111,6 +128,58 @@ async def api_get_subscription(user: AuthUser = Depends(get_current_user)):
 
 
 # ---------------------------------------------------------------------------
+# Subscription plan changes
+# ---------------------------------------------------------------------------
+
+
+@router.post("/billing/subscription/upgrade", response_model=UpgradeResponse)
+async def api_upgrade_subscription(
+    body: UpgradeRequest,
+    user: AuthUser = Depends(get_current_user),
+):
+    """Upgrade the user's subscription to a higher tier (immediate with proration)."""
+    if body.target_variant_id not in VARIANT_TIER_MAP:
+        raise HTTPException(status_code=400, detail="Invalid variant ID")
+
+    sub = await get_user_subscription(user.id)
+    if sub is None:
+        raise HTTPException(status_code=400, detail="No active subscription to upgrade")
+
+    current_tier = get_tier_for_variant(str(sub["variant_id"]))
+    target_tier = get_tier_for_variant(body.target_variant_id)
+
+    if TIER_RANKS.get(target_tier, 0) <= TIER_RANKS.get(current_tier, 0):
+        raise HTTPException(status_code=400, detail="Target tier must be higher than current tier")
+
+    try:
+        result = await upgrade_subscription(sub["ls_subscription_id"], body.target_variant_id)
+    except RuntimeError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+    return UpgradeResponse(
+        tier=get_tier_for_variant(result["variant_id"]),
+        variant_id=result["variant_id"],
+    )
+
+
+@router.post("/billing/subscription/cancel", response_model=CancelResponse)
+async def api_cancel_subscription(
+    user: AuthUser = Depends(get_current_user),
+):
+    """Cancel the user's subscription at end of current billing period."""
+    sub = await get_user_subscription(user.id)
+    if sub is None:
+        raise HTTPException(status_code=400, detail="No active subscription to cancel")
+
+    try:
+        result = await cancel_subscription(sub["ls_subscription_id"])
+    except RuntimeError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+    return CancelResponse(ends_at=result["ends_at"])
+
+
+# ---------------------------------------------------------------------------
 # Usage
 # ---------------------------------------------------------------------------
 
@@ -143,8 +212,6 @@ async def api_billing_debug(
     Works without auth for quick diagnostics. Pass ?user_id=xxx to check a
     specific user, or call while authenticated to auto-detect.
     """
-    from app.services.billing import VARIANT_TIER_MAP
-
     target_user_id = user_id or (current_user.id if current_user else None)
 
     pool = await get_pool()
