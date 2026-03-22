@@ -364,7 +364,11 @@
     "error_title": "Something went wrong",
     "try_again": "Try Again",
     "cancel_btn": "Cancel",
-    "end_of_billing": "end of billing period"
+    "end_of_billing": "end of billing period",
+    "tier_free": "Free",
+    "tier_researcher": "Researcher",
+    "tier_pro": "Pro",
+    "tier_institutional": "Institutional"
   },
   "message_bubble": {
     "orchestrator": "Research Orchestrator",

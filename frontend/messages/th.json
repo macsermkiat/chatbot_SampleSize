@@ -364,7 +364,11 @@
     "error_title": "เกิดข้อผิดพลาด",
     "try_again": "ลองอีกครั้ง",
     "cancel_btn": "ยกเลิก",
-    "end_of_billing": "สิ้นสุดรอบบิล"
+    "end_of_billing": "สิ้นสุดรอบบิล",
+    "tier_free": "Free",
+    "tier_researcher": "Researcher",
+    "tier_pro": "Pro",
+    "tier_institutional": "Institutional"
   },
   "message_bubble": {
     "orchestrator": "ผู้ประสานงานวิจัย",

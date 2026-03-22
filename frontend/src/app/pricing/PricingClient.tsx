@@ -9,6 +9,7 @@ import SubscriptionActionModal from "@/components/SubscriptionActionModal";
 import { useTranslation } from "@/lib/i18n";
 
 interface TierConfig {
+  id: string;
   nameKey: string;
   descKey: string;
   featureKeys: string[];
@@ -21,6 +22,7 @@ interface TierConfig {
 
 const TIERS: TierConfig[] = [
   {
+    id: "free",
     nameKey: "free_name",
     price: "$0",
     annual: "$0",
@@ -29,6 +31,7 @@ const TIERS: TierConfig[] = [
     ctaKey: "get_started",
   },
   {
+    id: "researcher",
     nameKey: "researcher_name",
     price: "$15",
     annual: "$12",
@@ -39,6 +42,7 @@ const TIERS: TierConfig[] = [
     variantId: { monthly: "1417266", annual: "1417333" },
   },
   {
+    id: "pro",
     nameKey: "pro_name",
     price: "$29",
     annual: "$23",
@@ -48,6 +52,7 @@ const TIERS: TierConfig[] = [
     variantId: { monthly: "1417323", annual: "1417270" },
   },
   {
+    id: "institutional",
     nameKey: "institutional_name",
     price: "$49-99",
     annual: "Contact us",
@@ -104,7 +109,7 @@ export default function PricingClient() {
 
   async function handleSubscribe(tier: TierConfig) {
     if (!tier.variantId) {
-      if (t(tier.nameKey) === t("free_name")) {
+      if (tier.id === "free") {
         router.push("/app");
       }
       return;
@@ -119,7 +124,7 @@ export default function PricingClient() {
     }
 
     const variantId = annual ? tier.variantId.annual : tier.variantId.monthly;
-    setLoading(t(tier.nameKey));
+    setLoading(tier.id);
     try {
       const { checkout_url } = await createCheckout(variantId);
       window.location.href = checkout_url;
@@ -136,20 +141,18 @@ export default function PricingClient() {
     style: "primary" | "secondary";
     onClick: () => void;
   } {
-    const tierName = t(tier.nameKey);
-
     // Not logged in or still loading -- use original checkout flow
     if (!subscription || subLoading) {
       return {
         label: t(tier.ctaKey),
-        disabled: subLoading || loading === tierName,
+        disabled: subLoading || loading === tier.id,
         style: tier.highlighted ? "primary" : "secondary",
         onClick: () => handleSubscribe(tier),
       };
     }
 
     const currentRank = TIER_RANKS[subscription.tier] ?? 0;
-    const tierRank = TIER_RANKS[tierName.toLowerCase()] ?? 0;
+    const tierRank = TIER_RANKS[tier.id] ?? 0;
 
     // Current plan -- disabled
     if (tierRank === currentRank) {
@@ -162,7 +165,7 @@ export default function PricingClient() {
     }
 
     // Free tier = cancellation
-    if (tierName === t("free_name")) {
+    if (tier.id === "free") {
       return {
         label: t("cancel_plan"),
         disabled: false,
@@ -185,7 +188,7 @@ export default function PricingClient() {
     if (subscription.tier === "free") {
       return {
         label: t("upgrade"),
-        disabled: loading === tierName,
+        disabled: loading === tier.id,
         style: "primary",
         onClick: () => handleSubscribe(tier),
       };
@@ -195,7 +198,7 @@ export default function PricingClient() {
     if (tierRank > currentRank) {
       return {
         label: t("upgrade"),
-        disabled: loading === tierName,
+        disabled: loading === tier.id,
         style: "primary",
         onClick: () => setModal({ mode: "upgrade", tier }),
       };
@@ -285,7 +288,7 @@ export default function PricingClient() {
                   <span className="text-3xl font-semibold text-ink-900 font-display">
                     {annual ? tier.annual : tier.price}
                   </span>
-                  {tier.price !== "$0" && tierName !== t("institutional_name") && (
+                  {tier.price !== "$0" && tier.id !== "institutional" && (
                     <span className="text-ink-400 text-body-sm font-body">
                       {t("per_month")}
                     </span>
@@ -331,7 +334,7 @@ export default function PricingClient() {
                     }
                   `}
                 >
-                  {loading === tierName ? t("loading") : btn.label}
+                  {loading === tier.id ? t("loading") : btn.label}
                 </button>
               </div>
             );
@@ -352,7 +355,7 @@ export default function PricingClient() {
           open={true}
           mode={modal.mode}
           fromTier={subscription?.tier ?? "free"}
-          toTier={t(modal.tier.nameKey).toLowerCase()}
+          toTier={modal.tier.id}
           targetVariantId={
             modal.tier.variantId
               ? annual

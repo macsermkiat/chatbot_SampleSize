@@ -107,13 +107,17 @@ export default function SubscriptionActionModal({
   const endOfBilling = t("end_of_billing");
   const dateStr = formatDate(resultRenewsAt ?? renewsAt, endOfBilling);
 
+  const tierDisplayName = t(`tier_${toTier}`) !== `subscription_modal.tier_${toTier}`
+    ? t(`tier_${toTier}`)
+    : capitalize(toTier);
+
   // Mode-specific content
   const title =
     mode === "cancel"
       ? t("cancel_title")
       : mode === "upgrade"
-        ? `${t("upgrade_title")} ${capitalize(toTier)}`
-        : `${t("downgrade_title")} ${capitalize(toTier)}`;
+        ? `${t("upgrade_title")} ${tierDisplayName}`
+        : `${t("downgrade_title")} ${tierDisplayName}`;
 
   const description =
     mode === "cancel"

@@ -196,6 +196,9 @@ export default function LandingClient() {
                     {link.label}
                   </Link>
                 ))}
+                <div className="py-2">
+                  <LanguageSwitcher />
+                </div>
               </div>
             </motion.div>
           )}
