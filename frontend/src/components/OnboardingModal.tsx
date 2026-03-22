@@ -2,25 +2,26 @@
 
 import { useState } from "react";
 import { completeOnboarding, type ProfileUpdate } from "@/lib/api";
+import { useTranslation } from "@/lib/i18n";
 
-const ROLE_OPTIONS = [
-  { value: "medical_student", label: "Medical Student" },
-  { value: "resident_fellow", label: "Resident / Fellow" },
-  { value: "junior_faculty", label: "Junior Faculty" },
-  { value: "senior_faculty", label: "Senior Faculty" },
-  { value: "phd_student", label: "PhD Student" },
-  { value: "cro_staff", label: "CRO Staff" },
-  { value: "other", label: "Other" },
+const ROLE_KEYS = [
+  { value: "medical_student", key: "role_medical_student" },
+  { value: "resident_fellow", key: "role_resident_fellow" },
+  { value: "junior_faculty", key: "role_junior_faculty" },
+  { value: "senior_faculty", key: "role_senior_faculty" },
+  { value: "phd_student", key: "role_phd_student" },
+  { value: "cro_staff", key: "role_cro_staff" },
+  { value: "other", key: "role_other" },
 ] as const;
 
-const RESEARCH_AREA_OPTIONS = [
-  { value: "clinical_medicine", label: "Clinical Medicine" },
-  { value: "surgery", label: "Surgery" },
-  { value: "public_health", label: "Public Health" },
-  { value: "epidemiology", label: "Epidemiology" },
-  { value: "nursing", label: "Nursing" },
-  { value: "pharmacy", label: "Pharmacy" },
-  { value: "other", label: "Other" },
+const AREA_KEYS = [
+  { value: "clinical_medicine", key: "area_clinical_medicine" },
+  { value: "surgery", key: "area_surgery" },
+  { value: "public_health", key: "area_public_health" },
+  { value: "epidemiology", key: "area_epidemiology" },
+  { value: "nursing", key: "area_nursing" },
+  { value: "pharmacy", key: "area_pharmacy" },
+  { value: "other", key: "area_other" },
 ] as const;
 
 interface OnboardingModalProps {
@@ -28,6 +29,7 @@ interface OnboardingModalProps {
 }
 
 export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
+  const { t } = useTranslation("onboarding");
   const [fullName, setFullName] = useState("");
   const [role, setRole] = useState("");
   const [institution, setInstitution] = useState("");
@@ -72,10 +74,10 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
       <div className="w-full max-w-lg bg-parchment-50 border border-parchment-200 rounded-2xl shadow-xl p-6 sm:p-8">
         <div className="text-center mb-6">
           <h2 className="font-display text-display-md font-semibold text-ink-900">
-            Welcome to Protocol
+            {t("title")}
           </h2>
           <p className="text-body-sm text-ink-500 font-body mt-1">
-            Tell us a bit about yourself to personalize your experience.
+            {t("subtitle")}
           </p>
         </div>
 
@@ -91,7 +93,7 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
               htmlFor="onb-name"
               className="block text-body-sm font-body font-medium text-ink-700 mb-1"
             >
-              Full Name
+              {t("full_name")}
             </label>
             <input
               id="onb-name"
@@ -100,10 +102,10 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               className={inputClasses}
-              placeholder="Dr. Jane Smith"
+              placeholder={t("name_placeholder")}
             />
             <p className="mt-0.5 text-xs text-ink-400 font-body">
-              Used on exported protocol documents
+              {t("name_hint")}
             </p>
           </div>
 
@@ -112,7 +114,7 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
               htmlFor="onb-role"
               className="block text-body-sm font-body font-medium text-ink-700 mb-1"
             >
-              Role
+              {t("role")}
             </label>
             <select
               id="onb-role"
@@ -120,10 +122,10 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
               onChange={(e) => setRole(e.target.value)}
               className={selectClasses}
             >
-              <option value="">Select your role...</option>
-              {ROLE_OPTIONS.map((opt) => (
+              <option value="">{t("role_placeholder")}</option>
+              {ROLE_KEYS.map((opt) => (
                 <option key={opt.value} value={opt.value}>
-                  {opt.label}
+                  {t(opt.key)}
                 </option>
               ))}
             </select>
@@ -134,7 +136,7 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
               htmlFor="onb-institution"
               className="block text-body-sm font-body font-medium text-ink-700 mb-1"
             >
-              Institution
+              {t("institution")}
             </label>
             <input
               id="onb-institution"
@@ -143,7 +145,7 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
               value={institution}
               onChange={(e) => setInstitution(e.target.value)}
               className={inputClasses}
-              placeholder="Mahidol University"
+              placeholder={t("institution_placeholder")}
             />
           </div>
 
@@ -152,7 +154,7 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
               htmlFor="onb-area"
               className="block text-body-sm font-body font-medium text-ink-700 mb-1"
             >
-              Research Area
+              {t("research_area")}
             </label>
             <select
               id="onb-area"
@@ -160,10 +162,10 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
               onChange={(e) => setResearchArea(e.target.value)}
               className={selectClasses}
             >
-              <option value="">Select your research area...</option>
-              {RESEARCH_AREA_OPTIONS.map((opt) => (
+              <option value="">{t("area_placeholder")}</option>
+              {AREA_KEYS.map((opt) => (
                 <option key={opt.value} value={opt.value}>
-                  {opt.label}
+                  {t(opt.key)}
                 </option>
               ))}
             </select>
@@ -175,7 +177,7 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
               disabled={saving}
               className="flex-1 py-2.5 rounded-xl bg-ink-900 text-parchment-100 text-body-sm font-display font-medium hover:bg-ink-800 transition-colors disabled:opacity-50"
             >
-              {saving ? "Saving..." : "Continue"}
+              {saving ? t("saving") : t("continue")}
             </button>
             <button
               type="button"
@@ -183,7 +185,7 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
               disabled={saving}
               className="px-4 py-2.5 rounded-xl border border-parchment-200 text-ink-500 text-body-sm font-body hover:bg-parchment-100 transition-colors disabled:opacity-50"
             >
-              Skip for now
+              {t("skip")}
             </button>
           </div>
         </form>

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { endSession } from "@/lib/api";
+import { useTranslation } from "@/lib/i18n";
 import ExportButton from "./ExportButton";
 
 interface EndSessionDialogProps {
@@ -20,6 +21,7 @@ export default function EndSessionDialog({
   onClose,
   onSessionEnded,
 }: EndSessionDialogProps) {
+  const { t } = useTranslation("end_session");
   const [state, setState] = useState<DialogState>("confirm");
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -82,11 +84,10 @@ export default function EndSessionDialog({
             {state === "confirm" && (
               <>
                 <h2 className="font-display text-display-sm font-semibold text-ink-900 mb-2">
-                  End Session
+                  {t("title")}
                 </h2>
                 <p className="text-body-md text-ink-600 font-body mb-4">
-                  Download your consultation protocol before ending.
-                  You can export as DOCX or PDF.
+                  {t("body")}
                 </p>
 
                 {/* Protocol export (DOCX/PDF) */}
@@ -106,7 +107,7 @@ export default function EndSessionDialog({
                       cursor-pointer
                     "
                   >
-                    End Session
+                    {t("confirm")}
                   </button>
                   <button
                     onClick={handleClose}
@@ -118,7 +119,7 @@ export default function EndSessionDialog({
                       cursor-pointer
                     "
                   >
-                    Cancel
+                    {t("cancel")}
                   </button>
                 </div>
               </>
@@ -128,7 +129,7 @@ export default function EndSessionDialog({
               <div className="flex flex-col items-center py-4">
                 <div className="w-6 h-6 border-2 border-ink-300 border-t-ink-800 rounded-full animate-spin mb-4" />
                 <p className="text-body-md text-ink-600 font-body">
-                  Ending session...
+                  {t("ending")}
                 </p>
               </div>
             )}
@@ -136,7 +137,7 @@ export default function EndSessionDialog({
             {state === "error" && (
               <>
                 <h2 className="font-display text-display-sm font-semibold text-ink-900 mb-2">
-                  Error
+                  {t("error")}
                 </h2>
                 <p className="text-body-md text-ink-600 font-body mb-4">
                   {errorMessage}
@@ -153,7 +154,7 @@ export default function EndSessionDialog({
                       cursor-pointer
                     "
                   >
-                    Try Again
+                    {t("try_again")}
                   </button>
                   <button
                     onClick={handleClose}
@@ -165,7 +166,7 @@ export default function EndSessionDialog({
                       cursor-pointer
                     "
                   >
-                    Cancel
+                    {t("cancel")}
                   </button>
                 </div>
               </>

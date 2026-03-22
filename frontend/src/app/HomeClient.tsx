@@ -26,6 +26,8 @@ import {
   type FileUploadResult,
 } from "@/lib/api";
 import OnboardingModal from "@/components/OnboardingModal";
+import { useTranslation } from "@/lib/i18n";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useSearchParams } from "next/navigation";
 import {
   presenceVariants,
@@ -40,11 +42,6 @@ type Phase = "orchestrator" | "research_gap" | "methodology" | "biostatistics";
 const WELCOME_QUOTE =
   "\u201CThe goal of research is not to confirm what we already know, but to discover what we do not.\u201D";
 
-const STARTER_PROMPTS = [
-  "Find research gaps in AI-assisted colonoscopy screening",
-  "Design a cohort study for statin use and dementia risk",
-  "Calculate sample size for a two-arm RCT",
-];
 
 function isNetworkError(err: unknown): boolean {
   if (err instanceof TypeError && /fetch|network/i.test(err.message)) {
@@ -95,6 +92,10 @@ export default function HomeClient() {
   const [endDialogOpen, setEndDialogOpen] = useState(false);
   const [evalDialogOpen, setEvalDialogOpen] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
+
+  const { t } = useTranslation("home");
+
+  const STARTER_PROMPTS = [t("starter_1"), t("starter_2"), t("starter_3")];
 
   // Check if user needs onboarding (first login)
   useEffect(() => {
@@ -446,15 +447,15 @@ export default function HomeClient() {
                     transition-all duration-200
                     cursor-pointer
                   "
-                  title="Click to switch expertise level"
+                  title={t("expertise_toggle_title")}
                 >
-                  {expertiseLevel === "simple" ? "Simple" : "Advanced"}
+                  {expertiseLevel === "simple" ? t("expertise_simple") : t("expertise_advanced")}
                 </button>
               )}
               {!isEmpty && !streaming && (
                 <button
                   onClick={() => setEndDialogOpen(true)}
-                  aria-label="End session"
+                  aria-label={t("end_session_label")}
                   className="
                     text-caption font-display font-medium rounded-full
                     border border-red-200 bg-red-50
@@ -464,12 +465,13 @@ export default function HomeClient() {
                     px-2 py-1 sm:px-3 sm:py-1.5
                   "
                 >
-                  <span className="hidden sm:inline">End Session</span>
+                  <span className="hidden sm:inline">{t("end_session")}</span>
                   <svg className="w-4 h-4 sm:hidden" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                     <path d="M4 4l8 8M12 4l-8 8" />
                   </svg>
                 </button>
               )}
+              <LanguageSwitcher />
               <UserMenu />
             </div>
           </div>
@@ -556,8 +558,7 @@ export default function HomeClient() {
                   className="text-body-lg text-ink-600 text-center max-w-md leading-relaxed mb-2 font-body"
                   variants={welcomeVariants.text}
                 >
-                  I guide medical researchers through gap analysis, study
-                  methodology design, and biostatistical analysis.
+                  {t("welcome_desc")}
                 </motion.p>
 
                 <motion.p
@@ -578,7 +579,7 @@ export default function HomeClient() {
                     animate="animate"
                   >
                     <span className="text-caption text-ink-400 font-display text-center tracking-wider uppercase mb-1">
-                      Try asking
+                      {t("starter_label")}
                     </span>
                     {STARTER_PROMPTS.map((prompt) => (
                       <motion.button

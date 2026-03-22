@@ -6,6 +6,8 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
 import Footer from "@/components/Footer";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { useTranslation } from "@/lib/i18n";
 
 const fadeUp = {
   initial: { opacity: 0, y: 24 },
@@ -16,74 +18,27 @@ const stagger = {
   animate: { transition: { staggerChildren: 0.12 } },
 };
 
-const FEATURES = [
-  {
-    title: "Research Gap Analysis",
-    description:
-      "Systematically identify knowledge gaps across your field with AI-powered literature search and evidence appraisal.",
-    icon: (
-      <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-        <circle cx="11" cy="11" r="8" />
-        <path d="M21 21l-4.35-4.35" />
-        <path d="M8 11h6M11 8v6" />
-      </svg>
-    ),
-  },
-  {
-    title: "Study Methodology Design",
-    description:
-      "Get expert guidance on study design, including Target Trial Emulation, DAG confounding analysis, and EQUATOR reporting.",
-    icon: (
-      <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-        <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2" />
-        <rect x="9" y="3" width="6" height="4" rx="1" />
-        <path d="M9 14l2 2 4-4" />
-      </svg>
-    ),
-  },
-  {
-    title: "Biostatistical Analysis",
-    description:
-      "Power analysis, sample size calculation, and statistical test selection with generated R/Python/STATA code.",
-    icon: (
-      <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-        <path d="M3 3v18h18" />
-        <path d="M7 16l4-8 4 4 5-10" />
-      </svg>
-    ),
-  },
-  {
-    title: "Protocol Export",
-    description:
-      "Export your complete research protocol as a formatted DOCX or PDF document with citations, ready for IRB submission.",
-    icon: (
-      <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
-        <polyline points="14 2 14 8 20 8" />
-        <line x1="16" y1="13" x2="8" y2="13" />
-        <line x1="16" y1="17" x2="8" y2="17" />
-      </svg>
-    ),
-  },
-];
-
-const PAIN_POINTS = [
-  {
-    problem: "Waiting weeks for a biostatistician consultation",
-    solution: "Get sample size calculations in minutes, not weeks",
-  },
-  {
-    problem: "Guessing which statistical test fits your design",
-    solution: "AI recommends the right test based on your study parameters",
-  },
-  {
-    problem: "Reviewer comments that your methodology is weak",
-    solution: "Structured methodology with EQUATOR checklist compliance",
-  },
-  {
-    problem: "Underpowered studies that waste months of work",
-    solution: "Validated power analysis with generated code you can verify",
-  },
+const FEATURE_ICONS = [
+  <svg key="1" className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+    <circle cx="11" cy="11" r="8" />
+    <path d="M21 21l-4.35-4.35" />
+    <path d="M8 11h6M11 8v6" />
+  </svg>,
+  <svg key="2" className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+    <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2" />
+    <rect x="9" y="3" width="6" height="4" rx="1" />
+    <path d="M9 14l2 2 4-4" />
+  </svg>,
+  <svg key="3" className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+    <path d="M3 3v18h18" />
+    <path d="M7 16l4-8 4 4 5-10" />
+  </svg>,
+  <svg key="4" className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+    <polyline points="14 2 14 8 20 8" />
+    <line x1="16" y1="13" x2="8" y2="13" />
+    <line x1="16" y1="17" x2="8" y2="17" />
+  </svg>,
 ];
 
 const COMPARISONS = [
@@ -93,33 +48,34 @@ const COMPARISONS = [
   { name: "ProtoCol", price: "From $0/mo", guided: true, codeGen: true, litSearch: true, highlight: true },
 ];
 
-const FAQS = [
-  {
-    q: "Can I trust AI for sample size calculations?",
-    a: "ProtoCol uses deterministic statistical formulas \u2014 the same math behind G*Power and PASS. The AI guides you through selecting the right parameters (effect size, alpha, power), then runs validated calculations. Every result includes the formula used and generated R/Python code so you can verify independently.",
-  },
-  {
-    q: "Will this be accepted by my IRB or ethics committee?",
-    a: "ProtoCol generates documentation following EQUATOR reporting guidelines (CONSORT, STROBE, PRISMA). The output is a starting point for your protocol \u2014 you review and refine it with your team before submission, just as you would with any statistical consultation.",
-  },
-  {
-    q: "How is this different from just using ChatGPT?",
-    a: "General-purpose chatbots hallucinate statistical methods and fabricate references. ProtoCol uses a structured multi-agent pipeline: separate specialized agents for literature search, methodology design, and biostatistics \u2014 each with domain-specific validation. In blinded evaluation against GPT-5, ProtoCol scored significantly higher on statistical accuracy, ethical awareness, and code generation.",
-  },
-  {
-    q: "What study designs are supported?",
-    a: "RCTs (parallel, crossover, cluster, non-inferiority, equivalence), cohort studies, case-control, cross-sectional, diagnostic accuracy, survival analysis, and more. The methodology agent handles Target Trial Emulation for observational studies and DAG-based confounding analysis.",
-  },
-  {
-    q: "Do I need to know statistics to use this?",
-    a: "No. ProtoCol adapts to your expertise level. In \"simple\" mode, it explains concepts in plain language and walks you through each decision. In \"advanced\" mode, it assumes familiarity with statistical frameworks and focuses on technical details.",
-  },
-];
-
 export default function LandingClient() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { t: tNav } = useTranslation("nav");
+  const { t } = useTranslation("landing");
+
+  const FEATURES = [
+    { title: t("feature_1_title"), description: t("feature_1_desc"), icon: FEATURE_ICONS[0] },
+    { title: t("feature_2_title"), description: t("feature_2_desc"), icon: FEATURE_ICONS[1] },
+    { title: t("feature_3_title"), description: t("feature_3_desc"), icon: FEATURE_ICONS[2] },
+    { title: t("feature_4_title"), description: t("feature_4_desc"), icon: FEATURE_ICONS[3] },
+  ];
+
+  const PAIN_POINTS = [
+    { problem: t("pain_1_problem"), solution: t("pain_1_solution") },
+    { problem: t("pain_2_problem"), solution: t("pain_2_solution") },
+    { problem: t("pain_3_problem"), solution: t("pain_3_solution") },
+    { problem: t("pain_4_problem"), solution: t("pain_4_solution") },
+  ];
+
+  const FAQS = [
+    { q: t("faq_1_q"), a: t("faq_1_a") },
+    { q: t("faq_2_q"), a: t("faq_2_a") },
+    { q: t("faq_3_q"), a: t("faq_3_a") },
+    { q: t("faq_4_q"), a: t("faq_4_a") },
+    { q: t("faq_5_q"), a: t("faq_5_a") },
+  ];
 
   useEffect(() => {
     const supabase = createClient();
@@ -141,14 +97,15 @@ export default function LandingClient() {
           {/* Desktop nav */}
           <div className="hidden sm:flex items-center gap-6">
             <Link href="/pricing" className="text-body-sm text-ink-600 hover:text-ink-900 transition-colors font-body">
-              Pricing
+              {tNav("pricing")}
             </Link>
             <Link href="/benchmark" className="text-body-sm text-ink-600 hover:text-ink-900 transition-colors font-body">
-              Benchmark
+              {tNav("benchmark")}
             </Link>
             <Link href="/blog" className="text-body-sm text-ink-600 hover:text-ink-900 transition-colors font-body">
-              Blog
+              {tNav("blog")}
             </Link>
+            <LanguageSwitcher />
             {isLoggedIn ? (
               <Link
                 href="/app"
@@ -158,7 +115,7 @@ export default function LandingClient() {
                   hover:bg-ink-800 transition-colors
                 "
               >
-                Go to App
+                {tNav("go_to_app")}
               </Link>
             ) : (
               <>
@@ -166,7 +123,7 @@ export default function LandingClient() {
                   href="/login"
                   className="text-body-sm text-ink-600 hover:text-ink-900 transition-colors font-body"
                 >
-                  Sign In
+                  {tNav("sign_in")}
                 </Link>
                 <Link
                   href="/app"
@@ -176,7 +133,7 @@ export default function LandingClient() {
                     hover:bg-ink-800 transition-colors
                   "
                 >
-                  Try Free
+                  {tNav("try_free")}
                 </Link>
               </>
             )}
@@ -192,11 +149,11 @@ export default function LandingClient() {
                 hover:bg-ink-800 transition-colors
               "
             >
-              {isLoggedIn ? "Go to App" : "Try Free"}
+              {isLoggedIn ? tNav("go_to_app") : tNav("try_free")}
             </Link>
             <button
               onClick={() => setMenuOpen(!menuOpen)}
-              aria-label={menuOpen ? "Close menu" : "Open menu"}
+              aria-label={menuOpen ? tNav("close_menu") : tNav("open_menu")}
               aria-expanded={menuOpen}
               className="w-10 h-10 flex items-center justify-center rounded-lg text-ink-700 hover:bg-parchment-200 transition-colors"
             >
@@ -223,12 +180,12 @@ export default function LandingClient() {
             >
               <div className="px-6 py-3 flex flex-col gap-1">
                 {[
-                  { href: "/pricing", label: "Pricing" },
-                  { href: "/benchmark", label: "Benchmark" },
-                  { href: "/blog", label: "Blog" },
+                  { href: "/pricing", label: tNav("pricing") },
+                  { href: "/benchmark", label: tNav("benchmark") },
+                  { href: "/blog", label: tNav("blog") },
                   ...(isLoggedIn
-                    ? [{ href: "/app", label: "Go to App" }]
-                    : [{ href: "/login", label: "Sign In" }]),
+                    ? [{ href: "/app", label: tNav("go_to_app") }]
+                    : [{ href: "/login", label: tNav("sign_in") }]),
                 ].map((link) => (
                   <Link
                     key={link.href}
@@ -270,7 +227,7 @@ export default function LandingClient() {
             transition={{ duration: 0.5 }}
             className="font-display text-display-xl font-semibold text-ink-900 mb-6 text-balance"
           >
-            Design your study methodology and calculate sample size — powered by AI
+            {t("hero_title")}
           </motion.h1>
 
           <motion.p
@@ -278,9 +235,7 @@ export default function LandingClient() {
             transition={{ duration: 0.5 }}
             className="text-body-lg text-ink-600 font-body max-w-2xl mx-auto mb-10 leading-relaxed"
           >
-            From research question to IRB-ready protocol in one session.
-            Gap analysis, methodology design, power analysis, and code generation
-            — without waiting weeks for a biostatistician.
+            {t("hero_subtitle")}
           </motion.p>
 
           <motion.div
@@ -297,7 +252,7 @@ export default function LandingClient() {
                 shadow-sm w-full sm:w-auto text-center
               "
             >
-              Start Your Research Plan — Free
+              {t("hero_cta")}
             </Link>
           </motion.div>
 
@@ -306,7 +261,7 @@ export default function LandingClient() {
             transition={{ duration: 0.5 }}
             className="mt-4 text-body-sm text-ink-400 font-body"
           >
-            5 free queries per month. No credit card required.
+            {t("hero_footnote")}
           </motion.p>
 
           {/* Decorative glow */}
@@ -335,14 +290,14 @@ export default function LandingClient() {
             transition={{ duration: 0.4 }}
             className="font-display text-display-lg font-semibold text-ink-900 text-center mb-4"
           >
-            Sound familiar?
+            {t("pain_heading")}
           </motion.h2>
           <motion.p
             variants={fadeUp}
             transition={{ duration: 0.4 }}
             className="text-body-md text-ink-500 font-body text-center mb-12 max-w-2xl mx-auto"
           >
-            These problems cost researchers months of work and thousands in wasted funding.
+            {t("pain_subheading")}
           </motion.p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -373,7 +328,7 @@ export default function LandingClient() {
 
       {/* Divider */}
       <div className="max-w-xs mx-auto py-4">
-        <div className="divider">How It Works</div>
+        <div className="divider">{t("how_it_works")}</div>
       </div>
 
       {/* How It Works -- numbered vertical steps */}
@@ -426,7 +381,7 @@ export default function LandingClient() {
                 hover:bg-ink-800 transition-colors shadow-sm
               "
             >
-              Try Free
+              {t("mid_cta")}
             </Link>
           </div>
         </div>
@@ -436,10 +391,9 @@ export default function LandingClient() {
       <section className="py-10 px-6">
         <div className="max-w-2xl mx-auto text-center">
           <p className="text-body-sm text-ink-500 font-body leading-relaxed">
-            In blinded evaluation against GPT-5, ProtoCol scored significantly higher
-            on statistical accuracy, ethical awareness, and code generation.{" "}
+            {t("benchmark_text")}{" "}
             <Link href="/benchmark" className="text-gold-600 hover:text-gold-700 underline underline-offset-2 transition-colors">
-              See benchmark results
+              {t("benchmark_link")}
             </Link>
           </p>
         </div>
@@ -449,10 +403,10 @@ export default function LandingClient() {
       <section className="py-20 px-6 bg-parchment-50/50">
         <div className="max-w-3xl mx-auto">
           <h2 className="font-display text-display-lg font-semibold text-ink-900 text-center mb-3">
-            95% cheaper than legacy tools
+            {t("comparison_heading")}
           </h2>
           <p className="text-body-md text-ink-500 font-body text-center mb-10">
-            Traditional statistical software charges thousands per year with no AI guidance.
+            {t("comparison_subheading")}
           </p>
 
           <div className="bg-white/80 border border-parchment-200 rounded-xl overflow-x-auto">
@@ -460,19 +414,19 @@ export default function LandingClient() {
               <thead>
                 <tr className="border-b border-parchment-200">
                   <th className="text-left px-4 sm:px-5 py-3 text-caption text-ink-500 font-display uppercase tracking-wider">
-                    Tool
+                    {t("col_tool")}
                   </th>
                   <th className="text-left px-4 sm:px-5 py-3 text-caption text-ink-500 font-display uppercase tracking-wider">
-                    Price
+                    {t("col_price")}
                   </th>
                   <th className="text-center px-3 sm:px-4 py-3 text-caption text-ink-500 font-display uppercase tracking-wider">
-                    AI Guidance
+                    {t("col_ai")}
                   </th>
                   <th className="text-center px-3 sm:px-4 py-3 text-caption text-ink-500 font-display uppercase tracking-wider">
-                    Code Gen
+                    {t("col_code")}
                   </th>
                   <th className="text-center px-3 sm:px-4 py-3 text-caption text-ink-500 font-display uppercase tracking-wider">
-                    Lit Search
+                    {t("col_lit")}
                   </th>
                 </tr>
               </thead>
@@ -524,14 +478,14 @@ export default function LandingClient() {
             transition={{ duration: 0.4 }}
             className="font-display text-display-lg font-semibold text-ink-900 text-center mb-4"
           >
-            Common questions
+            {t("faq_heading")}
           </motion.h2>
           <motion.p
             variants={fadeUp}
             transition={{ duration: 0.4 }}
             className="text-body-md text-ink-500 font-body text-center mb-12"
           >
-            The short answer: yes, the calculations are real math — not AI guessing.
+            {t("faq_subheading")}
           </motion.p>
 
           <div className="space-y-3">
@@ -585,10 +539,10 @@ export default function LandingClient() {
       <section className="py-24 px-6 bg-parchment-50/50">
         <div className="max-w-2xl mx-auto text-center">
           <h2 className="font-display text-display-lg font-semibold text-ink-900 mb-4">
-            Stop guessing. Start designing.
+            {t("final_heading")}
           </h2>
           <p className="text-body-md text-ink-500 font-body mb-8">
-            5 free queries per month. No credit card. No biostatistician waitlist.
+            {t("final_subheading")}
           </p>
           <Link
             href="/app"

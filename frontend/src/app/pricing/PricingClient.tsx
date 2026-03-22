@@ -6,76 +6,54 @@ import Link from "next/link";
 import { createCheckout, getSubscription } from "@/lib/api";
 import { createClient } from "@/lib/supabase/client";
 import SubscriptionActionModal from "@/components/SubscriptionActionModal";
+import { useTranslation } from "@/lib/i18n";
 
-interface PricingTier {
-  name: string;
+interface TierConfig {
+  nameKey: string;
+  descKey: string;
+  featureKeys: string[];
   price: string;
   annual: string;
-  description: string;
-  features: string[];
-  cta: string;
+  ctaKey: string;
   highlighted?: boolean;
   variantId?: { monthly: string; annual: string };
 }
 
-const TIERS: PricingTier[] = [
+const TIERS: TierConfig[] = [
   {
-    name: "Free",
+    nameKey: "free_name",
     price: "$0",
     annual: "$0",
-    description: "Explore the basics",
-    features: [
-      "5 queries per month",
-      "Basic study design guidance",
-      "Simple & Advanced modes",
-    ],
-    cta: "Get Started",
+    descKey: "free_desc",
+    featureKeys: ["free_f1", "free_f2", "free_f3"],
+    ctaKey: "get_started",
   },
   {
-    name: "Researcher",
+    nameKey: "researcher_name",
     price: "$15",
     annual: "$12",
-    description: "For individual researchers",
-    features: [
-      "50 queries per month",
-      "Full methodology + sample size",
-      "File upload (PDF, DOCX, images)",
-      "Session history",
-      "Protocol export (DOCX & PDF)",
-    ],
-    cta: "Subscribe",
+    descKey: "researcher_desc",
+    featureKeys: ["researcher_f1", "researcher_f2", "researcher_f3", "researcher_f4", "researcher_f5"],
+    ctaKey: "subscribe",
     highlighted: true,
     variantId: { monthly: "1417266", annual: "1417333" },
   },
   {
-    name: "Pro",
+    nameKey: "pro_name",
     price: "$29",
     annual: "$23",
-    description: "For active researchers",
-    features: [
-      "Unlimited queries",
-      "Everything in Researcher",
-      "Priority AI models",
-      "Advanced statistical scenarios",
-      "Citation generation",
-    ],
-    cta: "Subscribe",
+    descKey: "pro_desc",
+    featureKeys: ["pro_f1", "pro_f2", "pro_f3", "pro_f4", "pro_f5"],
+    ctaKey: "subscribe",
     variantId: { monthly: "1417323", annual: "1417270" },
   },
   {
-    name: "Institutional",
+    nameKey: "institutional_name",
     price: "$49-99",
     annual: "Contact us",
-    description: "Per user/month for teams",
-    features: [
-      "Unlimited queries",
-      "Everything in Pro",
-      "Admin dashboard",
-      "Usage analytics",
-      "SSO & invoice billing",
-      "Priority support",
-    ],
-    cta: "Contact Sales",
+    descKey: "institutional_desc",
+    featureKeys: ["institutional_f1", "institutional_f2", "institutional_f3", "institutional_f4", "institutional_f5", "institutional_f6"],
+    ctaKey: "contact_sales",
   },
 ];
 
@@ -97,15 +75,14 @@ interface SubscriptionInfo {
 
 type ModalInfo = {
   mode: "upgrade" | "downgrade" | "cancel";
-  tier: PricingTier;
+  tier: TierConfig;
 };
 
 export default function PricingClient() {
+  const { t } = useTranslation("pricing");
   const [annual, setAnnual] = useState(false);
   const [loading, setLoading] = useState<string | null>(null);
-  const [subscription, setSubscription] = useState<SubscriptionInfo | null>(
-    null,
-  );
+  const [subscription, setSubscription] = useState<SubscriptionInfo | null>(null);
   const [subLoading, setSubLoading] = useState(true);
   const [modal, setModal] = useState<ModalInfo | null>(null);
   const router = useRouter();
@@ -125,9 +102,9 @@ export default function PricingClient() {
     });
   }, []);
 
-  async function handleSubscribe(tier: PricingTier) {
+  async function handleSubscribe(tier: TierConfig) {
     if (!tier.variantId) {
-      if (tier.name === "Free") {
+      if (t(tier.nameKey) === t("free_name")) {
         router.push("/app");
       }
       return;
@@ -142,7 +119,7 @@ export default function PricingClient() {
     }
 
     const variantId = annual ? tier.variantId.annual : tier.variantId.monthly;
-    setLoading(tier.name);
+    setLoading(t(tier.nameKey));
     try {
       const { checkout_url } = await createCheckout(variantId);
       window.location.href = checkout_url;
@@ -153,29 +130,31 @@ export default function PricingClient() {
     }
   }
 
-  function getButtonConfig(tier: PricingTier): {
+  function getButtonConfig(tier: TierConfig): {
     label: string;
     disabled: boolean;
     style: "primary" | "secondary";
     onClick: () => void;
   } {
+    const tierName = t(tier.nameKey);
+
     // Not logged in or still loading -- use original checkout flow
     if (!subscription || subLoading) {
       return {
-        label: tier.cta,
-        disabled: subLoading || loading === tier.name,
+        label: t(tier.ctaKey),
+        disabled: subLoading || loading === tierName,
         style: tier.highlighted ? "primary" : "secondary",
         onClick: () => handleSubscribe(tier),
       };
     }
 
     const currentRank = TIER_RANKS[subscription.tier] ?? 0;
-    const tierRank = TIER_RANKS[tier.name.toLowerCase()] ?? 0;
+    const tierRank = TIER_RANKS[tierName.toLowerCase()] ?? 0;
 
     // Current plan -- disabled
     if (tierRank === currentRank) {
       return {
-        label: "Current Plan",
+        label: t("current_plan"),
         disabled: true,
         style: "secondary",
         onClick: () => {},
@@ -183,9 +162,9 @@ export default function PricingClient() {
     }
 
     // Free tier = cancellation
-    if (tier.name === "Free") {
+    if (tierName === t("free_name")) {
       return {
-        label: "Cancel Plan",
+        label: t("cancel_plan"),
         disabled: false,
         style: "secondary",
         onClick: () => setModal({ mode: "cancel", tier }),
@@ -195,28 +174,28 @@ export default function PricingClient() {
     // Institutional -- no variant, keep original CTA
     if (!tier.variantId) {
       return {
-        label: tier.cta,
+        label: t(tier.ctaKey),
         disabled: false,
         style: "secondary",
         onClick: () => handleSubscribe(tier),
       };
     }
 
-    // Free → paid = checkout (no existing subscription to upgrade)
+    // Free -> paid = checkout (no existing subscription to upgrade)
     if (subscription.tier === "free") {
       return {
-        label: "Upgrade",
-        disabled: loading === tier.name,
+        label: t("upgrade"),
+        disabled: loading === tierName,
         style: "primary",
         onClick: () => handleSubscribe(tier),
       };
     }
 
-    // Paid → higher paid = upgrade (modify existing subscription)
+    // Paid -> higher paid = upgrade (modify existing subscription)
     if (tierRank > currentRank) {
       return {
-        label: "Upgrade",
-        disabled: loading === tier.name,
+        label: t("upgrade"),
+        disabled: loading === tierName,
         style: "primary",
         onClick: () => setModal({ mode: "upgrade", tier }),
       };
@@ -224,7 +203,7 @@ export default function PricingClient() {
 
     // Lower paid tier = downgrade (via portal)
     return {
-      label: "Downgrade",
+      label: t("downgrade"),
       disabled: false,
       style: "secondary",
       onClick: () => setModal({ mode: "downgrade", tier }),
@@ -240,14 +219,13 @@ export default function PricingClient() {
             href="/app"
             className="text-body-sm text-ink-500 hover:text-ink-800 font-body mb-4 inline-block transition-colors"
           >
-            &larr; Back to app
+            {t("back")}
           </Link>
           <h1 className="font-display text-display-lg font-semibold text-ink-900 mb-3">
-            Choose Your Plan
+            {t("title")}
           </h1>
           <p className="text-body-md text-ink-500 font-body max-w-xl mx-auto">
-            AI-guided research methodology, study design, and sample size
-            calculation. 95% cheaper than legacy statistical software.
+            {t("subtitle")}
           </p>
         </div>
 
@@ -256,7 +234,7 @@ export default function PricingClient() {
           <span
             className={`text-body-sm font-body transition-colors ${!annual ? "text-ink-900 font-medium" : "text-ink-400"}`}
           >
-            Monthly
+            {t("monthly")}
           </span>
           <button
             onClick={() => setAnnual(!annual)}
@@ -274,18 +252,19 @@ export default function PricingClient() {
           <span
             className={`text-body-sm font-body transition-colors ${annual ? "text-ink-900 font-medium" : "text-ink-400"}`}
           >
-            Annual{" "}
-            <span className="text-green-700 font-medium">(Save 20%)</span>
+            {t("annual")}{" "}
+            <span className="text-green-700 font-medium">{t("save_20")}</span>
           </span>
         </div>
 
-        {/* Pricing cards -- highlighted card first on mobile */}
+        {/* Pricing cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           {TIERS.map((tier) => {
             const btn = getButtonConfig(tier);
+            const tierName = t(tier.nameKey);
             return (
               <div
-                key={tier.name}
+                key={tier.nameKey}
                 className={`
                   bg-parchment-50/80 border rounded-xl p-5 sm:p-6 flex flex-col
                   ${tier.highlighted
@@ -296,30 +275,30 @@ export default function PricingClient() {
               >
                 {tier.highlighted && (
                   <span className="inline-block text-caption font-display font-medium bg-gold-500 text-parchment-50 px-2.5 py-0.5 rounded-full self-start mb-3 tracking-wide uppercase">
-                    Most Popular
+                    {t("most_popular")}
                   </span>
                 )}
                 <h3 className="font-display text-display-md font-semibold text-ink-800">
-                  {tier.name}
+                  {tierName}
                 </h3>
                 <div className="mt-2 mb-1">
                   <span className="text-3xl font-semibold text-ink-900 font-display">
                     {annual ? tier.annual : tier.price}
                   </span>
-                  {tier.price !== "$0" && tier.name !== "Institutional" && (
+                  {tier.price !== "$0" && tierName !== t("institutional_name") && (
                     <span className="text-ink-400 text-body-sm font-body">
-                      /mo
+                      {t("per_month")}
                     </span>
                   )}
                 </div>
                 <p className="text-ink-500 text-body-sm font-body mb-5 sm:mb-6">
-                  {tier.description}
+                  {t(tier.descKey)}
                 </p>
 
                 <ul className="space-y-2.5 flex-1 mb-5 sm:mb-6">
-                  {tier.features.map((feature) => (
+                  {tier.featureKeys.map((fKey) => (
                     <li
-                      key={feature}
+                      key={fKey}
                       className="flex items-start gap-2 text-body-sm font-body text-ink-700"
                     >
                       <svg
@@ -336,7 +315,7 @@ export default function PricingClient() {
                           d="M5 13l4 4L19 7"
                         />
                       </svg>
-                      {feature}
+                      {t(fKey)}
                     </li>
                   ))}
                 </ul>
@@ -352,7 +331,7 @@ export default function PricingClient() {
                     }
                   `}
                 >
-                  {loading === tier.name ? "Loading..." : btn.label}
+                  {loading === tierName ? t("loading") : btn.label}
                 </button>
               </div>
             );
@@ -362,10 +341,7 @@ export default function PricingClient() {
         {/* Comparison note */}
         <div className="mt-10 sm:mt-12 text-center">
           <p className="text-body-sm text-ink-400 font-body">
-            Compare: nQuery costs $925-$7,495/year with no AI guidance.
-            <br className="hidden sm:block" />
-            {" "}ProtoCol provides AI-guided methodology for a fraction of the
-            cost.
+            {t("comparison_note")}
           </p>
         </div>
       </div>
@@ -376,7 +352,7 @@ export default function PricingClient() {
           open={true}
           mode={modal.mode}
           fromTier={subscription?.tier ?? "free"}
-          toTier={modal.tier.name.toLowerCase()}
+          toTier={t(modal.tier.nameKey).toLowerCase()}
           targetVariantId={
             modal.tier.variantId
               ? annual

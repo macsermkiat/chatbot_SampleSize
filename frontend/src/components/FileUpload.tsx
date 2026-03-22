@@ -2,6 +2,7 @@
 
 import { useCallback, useRef, useState } from "react";
 import { uploadFile, type FileUploadResult } from "@/lib/api";
+import { useTranslation } from "@/lib/i18n";
 
 interface FileUploadProps {
   onFileProcessed: (result: FileUploadResult) => void;
@@ -18,6 +19,7 @@ export default function FileUpload({
   onError,
   disabled,
 }: FileUploadProps) {
+  const { t } = useTranslation("file_upload");
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
@@ -26,7 +28,7 @@ export default function FileUpload({
   const processFile = useCallback(
     async (file: File) => {
       if (file.size > MAX_FILE_SIZE_BYTES) {
-        onError?.(`File exceeds ${MAX_FILE_SIZE_MB} MB limit. Please choose a smaller file.`);
+        onError?.(t("size_error").replace("{size}", String(MAX_FILE_SIZE_MB)));
         return;
       }
 
@@ -48,7 +50,7 @@ export default function FileUpload({
         setUploading(false);
       }
     },
-    [onFileProcessed, onError],
+    [onFileProcessed, onError, t],
   );
 
   const handleChange = useCallback(
@@ -78,7 +80,7 @@ export default function FileUpload({
         accept={ACCEPTED}
         onChange={handleChange}
         className="sr-only"
-        aria-label="Upload research document"
+        aria-label={t("label")}
       />
 
       <button
@@ -103,7 +105,7 @@ export default function FileUpload({
           border
           disabled:opacity-40 disabled:cursor-not-allowed
         `}
-        title="Upload document (PDF, DOCX, image)"
+        title={t("title")}
       >
         {uploading ? (
           <svg

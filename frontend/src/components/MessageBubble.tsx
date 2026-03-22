@@ -6,18 +6,19 @@ import rehypeSanitize from "rehype-sanitize";
 import remarkGfm from "remark-gfm";
 import type { ChatMessage } from "@/lib/api";
 import ConfidenceBadge from "@/components/ConfidenceBadge";
+import { useTranslation } from "@/lib/i18n";
 
 interface MessageBubbleProps {
   message: ChatMessage;
 }
 
-const NODE_LABELS: Record<string, string> = {
-  orchestrator: "Research Orchestrator",
-  gap_search: "Literature Search",
-  gap_summarize: "Evidence Appraisal",
-  methodology: "Methodology Consultant",
-  biostatistics: "Biostatistics Advisor",
-  coding: "Code Generation",
+const NODE_KEYS: Record<string, string> = {
+  orchestrator: "orchestrator",
+  gap_search: "gap_search",
+  gap_summarize: "gap_summarize",
+  methodology: "methodology",
+  biostatistics: "biostatistics",
+  coding: "coding",
 };
 
 /**
@@ -63,6 +64,7 @@ function extractTextContent(node: React.ReactNode): string {
 }
 
 export default function MessageBubble({ message }: MessageBubbleProps) {
+  const { t } = useTranslation("message_bubble");
   const isUser = message.role === "user";
   const isSystem = message.role === "system";
 
@@ -96,7 +98,7 @@ export default function MessageBubble({ message }: MessageBubbleProps) {
           <div className="flex items-center gap-2 mb-1.5 ml-0.5">
             <span className="inline-block w-1.5 h-1.5 rounded-full bg-gold-500" />
             <span className="text-caption font-display text-ink-500 font-medium">
-              {NODE_LABELS[message.node] || message.node}
+              {NODE_KEYS[message.node] ? t(NODE_KEYS[message.node]) : message.node}
             </span>
             {message.confidence && (
               <ConfidenceBadge level={message.confidence} />

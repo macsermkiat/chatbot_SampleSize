@@ -1,25 +1,28 @@
 "use client";
 
+import { useTranslation } from "@/lib/i18n";
+
 type Phase = "orchestrator" | "research_gap" | "methodology" | "biostatistics";
 
 interface PhaseIndicatorProps {
   currentPhase: Phase;
 }
 
-const PHASES: { key: Phase; label: string; numeral: string }[] = [
-  { key: "orchestrator", label: "Triage", numeral: "I" },
-  { key: "research_gap", label: "Gap Analysis", numeral: "II" },
-  { key: "methodology", label: "Methodology", numeral: "III" },
-  { key: "biostatistics", label: "Biostatistics", numeral: "IV" },
-];
-
 export default function PhaseIndicator({ currentPhase }: PhaseIndicatorProps) {
+  const { t } = useTranslation("phase_indicator");
+
+  const PHASES: { key: Phase; label: string; numeral: string }[] = [
+    { key: "orchestrator", label: t("triage"), numeral: "I" },
+    { key: "research_gap", label: t("gap_analysis"), numeral: "II" },
+    { key: "methodology", label: t("methodology"), numeral: "III" },
+    { key: "biostatistics", label: t("biostatistics"), numeral: "IV" },
+  ];
   const activeIndex = PHASES.findIndex((p) => p.key === currentPhase);
   const activePhase = PHASES[activeIndex];
 
   return (
     <nav
-      aria-label="Research phase"
+      aria-label={t("aria_label")}
       className="flex flex-col items-center gap-2"
     >
       {/* Compact mobile label -- visible only below sm */}

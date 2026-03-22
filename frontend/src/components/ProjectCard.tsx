@@ -2,12 +2,13 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { updateProject, exportProtocol, type ProjectListItem } from "@/lib/api";
+import { useTranslation } from "@/lib/i18n";
 
-const PHASE_LABELS: Record<string, string> = {
-  orchestrator: "Started",
-  research_gap: "Research Gap",
-  methodology: "Methodology",
-  biostatistics: "Biostatistics",
+const PHASE_KEYS: Record<string, string> = {
+  orchestrator: "started",
+  research_gap: "research_gap",
+  methodology: "methodology",
+  biostatistics: "biostatistics",
 };
 
 interface ProjectCardProps {
@@ -23,6 +24,7 @@ export default function ProjectCard({
   onDelete,
   onUpdated,
 }: ProjectCardProps) {
+  const { t } = useTranslation("project_card");
   const [editing, setEditing] = useState(false);
   const [nameValue, setNameValue] = useState(project.name ?? "");
   const [saving, setSaving] = useState(false);
@@ -31,9 +33,10 @@ export default function ProjectCard({
   const inputRef = useRef<HTMLInputElement>(null);
   const exportMenuRef = useRef<HTMLDivElement>(null);
 
-  const displayName = project.name || "Untitled Research";
+  const displayName = project.name || t("untitled");
   const isCompleted = !!project.ended_at;
-  const phaseLabel = PHASE_LABELS[project.current_phase] ?? project.current_phase;
+  const phaseKey = PHASE_KEYS[project.current_phase];
+  const phaseLabel = phaseKey ? t(phaseKey) : project.current_phase;
   const createdDate = new Date(project.created_at).toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
@@ -136,7 +139,7 @@ export default function ProjectCard({
               hover:text-gold-700 transition-colors cursor-text
               truncate block w-full
             "
-            title="Click to rename"
+            title={t("click_rename")}
           >
             {displayName}
           </button>
@@ -149,7 +152,7 @@ export default function ProjectCard({
               text-caption font-display px-2 py-0.5 rounded-full
               bg-green-50 text-green-700 border border-green-200
             ">
-              Completed
+              {t("completed")}
             </span>
           )}
           <span className="
@@ -182,7 +185,7 @@ export default function ProjectCard({
             transition-colors duration-200
           "
         >
-          Resume
+          {t("resume")}
         </button>
         <div className="relative" ref={exportMenuRef}>
           <button
@@ -198,15 +201,15 @@ export default function ProjectCard({
               transition-colors duration-200
               disabled:opacity-50 disabled:cursor-wait
             "
-            title="Export protocol"
+            title={t("export_protocol")}
           >
             {exporting ? (
               <span className="flex items-center gap-1.5">
                 <span className="w-3 h-3 border-2 border-ink-300 border-t-ink-700 rounded-full animate-spin" />
-                Exporting...
+                {t("exporting")}
               </span>
             ) : (
-              "Export"
+              t("export")
             )}
           </button>
           {exportMenuOpen && (
@@ -253,7 +256,7 @@ export default function ProjectCard({
             text-red-400 hover:text-red-600 hover:bg-red-50
             transition-colors duration-200
           "
-          title="Delete project"
+          title={t("delete_project")}
         >
           <svg className="w-4 h-4" viewBox="0 0 16 16" fill="currentColor">
             <path d="M5.5 5.5A.5.5 0 016 6v6a.5.5 0 01-1 0V6a.5.5 0 01.5-.5zm2.5 0a.5.5 0 01.5.5v6a.5.5 0 01-1 0V6a.5.5 0 01.5-.5zm3 .5a.5.5 0 00-1 0v6a.5.5 0 001 0V6z" />

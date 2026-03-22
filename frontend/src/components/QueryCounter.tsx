@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { getUsage } from "@/lib/api";
+import { useTranslation } from "@/lib/i18n";
 
 interface UsageData {
   tier: string;
@@ -12,24 +13,10 @@ interface UsageData {
   period_end?: string;
 }
 
-const TIER_UPGRADE: Record<string, { next: string; label: string }> = {
-  free: { next: "Researcher", label: "50 queries/month" },
-  researcher: { next: "Pro", label: "unlimited queries" },
-};
-
-const TIER_BADGE: Record<string, { label: string; className: string }> = {
-  researcher: {
-    label: "Researcher",
-    className: "bg-gold-100 text-gold-700 border-gold-300",
-  },
-  pro: {
-    label: "Pro",
-    className: "bg-ink-900 text-parchment-100 border-ink-800",
-  },
-  institutional: {
-    label: "Institutional",
-    className: "bg-ink-900 text-parchment-100 border-ink-800",
-  },
+const TIER_BADGE_STYLES: Record<string, string> = {
+  researcher: "bg-gold-100 text-gold-700 border-gold-300",
+  pro: "bg-ink-900 text-parchment-100 border-ink-800",
+  institutional: "bg-ink-900 text-parchment-100 border-ink-800",
 };
 
 /**
@@ -87,31 +74,37 @@ function useQueryUsage() {
  * Shows tier badge for paid plans. Shows remaining count for capped plans.
  */
 export function QueryBadge() {
+  const { t } = useTranslation("query");
   const { usage } = useQueryUsage();
 
   if (!usage) return null;
 
-  const badge = TIER_BADGE[usage.tier];
+  const badgeStyle = TIER_BADGE_STYLES[usage.tier];
   const remaining =
     usage.query_limit !== null
       ? Math.max(0, usage.query_limit - usage.query_count)
       : null;
 
+  // Capitalize tier name for display
+  const tierLabel = usage.tier.charAt(0).toUpperCase() + usage.tier.slice(1);
+
   return (
     <span className="flex items-center gap-1.5">
-      {badge && (
+      {badgeStyle && (
         <span
-          className={`text-caption font-display px-2 py-0.5 rounded-full border ${badge.className}`}
+          className={`text-caption font-display px-2 py-0.5 rounded-full border ${badgeStyle}`}
         >
-          {badge.label}
+          {tierLabel}
         </span>
       )}
       {remaining !== null && (
         <span
           className="text-caption text-ink-400 font-display tabular-nums"
-          title={`${remaining} of ${usage.query_limit} queries remaining this month`}
+          title={t("remaining_title")
+            .replace("{remaining}", String(remaining))
+            .replace("{limit}", String(usage.query_limit))}
         >
-          {remaining} remaining
+          {remaining} {t("remaining")}
         </span>
       )}
     </span>
@@ -124,6 +117,7 @@ export function QueryBadge() {
  * Dismissible for soft/last-query warnings; always visible when exhausted.
  */
 export function QueryWarningBanner() {
+  const { t } = useTranslation("query");
   const { usage } = useQueryUsage();
   const [dismissed, setDismissed] = useState(false);
 
@@ -134,7 +128,14 @@ export function QueryWarningBanner() {
   const isWarning = percent >= 80 && remaining > 1;
   const isLastQuery = remaining === 1;
   const isExhausted = remaining === 0;
-  const upgradeInfo = TIER_UPGRADE[usage.tier];
+
+  // Determine next upgrade tier
+  const upgradeNext =
+    usage.tier === "free"
+      ? "Researcher"
+      : usage.tier === "researcher"
+        ? "Pro"
+        : null;
 
   const resetDate = usage.period_end
     ? new Date(usage.period_end).toLocaleDateString("en-US", {
@@ -149,12 +150,12 @@ export function QueryWarningBanner() {
       <div className="flex-none border-b border-parchment-200 bg-parchment-50/80 px-4 sm:px-6 py-2.5">
         <div className="max-w-chat mx-auto flex items-center justify-between gap-3">
           <p className="text-body-sm text-ink-600 font-body">
-            <span className="font-medium text-ink-800">0 queries remaining</span>
+            <span className="font-medium text-ink-800">{t("exhausted")}</span>
             {resetDate && (
-              <span className="text-ink-400"> -- resets {resetDate}</span>
+              <span className="text-ink-400"> -- {t("resets")} {resetDate}</span>
             )}
           </p>
-          {upgradeInfo ? (
+          {upgradeNext ? (
             <Link
               href="/pricing"
               className="
@@ -163,12 +164,12 @@ export function QueryWarningBanner() {
                 hover:bg-ink-800 transition-colors whitespace-nowrap
               "
             >
-              Upgrade to {upgradeInfo.next}
+              {t("upgrade_to")} {upgradeNext}
             </Link>
           ) : (
             resetDate && (
               <span className="text-caption text-ink-400 font-display whitespace-nowrap">
-                Resets {resetDate}
+                {t("resets")} {resetDate}
               </span>
             )
           )}
@@ -184,16 +185,16 @@ export function QueryWarningBanner() {
         <div className="max-w-chat mx-auto flex items-center justify-between gap-3">
           <p className="text-body-sm text-ink-600 font-body">
             <span className="font-medium text-ink-800">
-              This is your last query for the month.
+              {t("last_query")}
             </span>
             {resetDate && (
-              <span className="text-ink-400"> Resets {resetDate}.</span>
+              <span className="text-ink-400"> {t("resets")} {resetDate}.</span>
             )}
           </p>
           <button
             onClick={() => setDismissed(true)}
             className="text-ink-400 hover:text-ink-600 transition-colors flex-none"
-            aria-label="Dismiss"
+            aria-label={t("dismiss")}
           >
             <svg className="w-3.5 h-3.5" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M3 3l8 8M11 3l-8 8" />
@@ -210,12 +211,12 @@ export function QueryWarningBanner() {
       <div className="flex-none border-b border-parchment-200 bg-parchment-50/60 px-4 sm:px-6 py-1.5">
         <div className="max-w-chat mx-auto flex items-center justify-between gap-3">
           <p className="text-caption text-ink-500 font-body">
-            {remaining} queries remaining this month
+            {remaining} {t("queries_remaining")}
           </p>
           <button
             onClick={() => setDismissed(true)}
             className="text-ink-300 hover:text-ink-500 transition-colors flex-none"
-            aria-label="Dismiss"
+            aria-label={t("dismiss")}
           >
             <svg className="w-3 h-3" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M3 3l8 8M11 3l-8 8" />

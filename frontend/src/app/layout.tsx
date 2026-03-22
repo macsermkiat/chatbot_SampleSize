@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Cormorant_Garamond, Inter, JetBrains_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
 import { GoogleAnalytics } from "@next/third-parties/google";
+import { LocaleProvider } from "@/lib/i18n";
 import "./globals.css";
 
 const cormorant = Cormorant_Garamond({
@@ -64,7 +65,9 @@ export default function RootLayout({
       className={`${cormorant.variable} ${inter.variable} ${jetbrains.variable}`}
     >
       <body className="min-h-screen bg-parchment-100">
-        {children}
+        <LocaleProvider>
+          {children}
+        </LocaleProvider>
         <Analytics />
         <GoogleAnalytics gaId="G-6H4BMG51H3" />
       </body>
