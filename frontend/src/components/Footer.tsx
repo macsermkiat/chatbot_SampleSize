@@ -1,11 +1,16 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { useTranslation } from "@/lib/i18n";
 
 interface FooterProps {
   variant?: "full" | "minimal";
 }
 
 export default function Footer({ variant = "full" }: FooterProps) {
+  const { t } = useTranslation("footer");
+
   if (variant === "minimal") {
     return (
       <footer className="border-t border-parchment-200 bg-parchment-100/80">
@@ -27,13 +32,13 @@ export default function Footer({ variant = "full" }: FooterProps) {
               href="/privacy"
               className="text-caption text-ink-400 hover:text-ink-600 transition-colors font-body"
             >
-              Privacy
+              {t("privacy")}
             </Link>
             <Link
               href="/terms"
               className="text-caption text-ink-400 hover:text-ink-600 transition-colors font-body"
             >
-              Terms
+              {t("terms")}
             </Link>
           </div>
         </div>
@@ -58,7 +63,7 @@ export default function Footer({ variant = "full" }: FooterProps) {
                 ProtoCol
               </p>
               <p className="text-caption text-ink-400 font-body">
-                AI-powered research methodology
+                {t("tagline")}
               </p>
             </div>
           </Link>
@@ -68,19 +73,19 @@ export default function Footer({ variant = "full" }: FooterProps) {
               href="/privacy"
               className="text-caption text-ink-400 hover:text-ink-600 transition-colors font-body"
             >
-              Privacy
+              {t("privacy")}
             </Link>
             <Link
               href="/terms"
               className="text-caption text-ink-400 hover:text-ink-600 transition-colors font-body"
             >
-              Terms
+              {t("terms")}
             </Link>
             <Link
               href="/refund"
               className="text-caption text-ink-400 hover:text-ink-600 transition-colors font-body"
             >
-              Refund Policy
+              {t("refund")}
             </Link>
             <span className="text-parchment-300">|</span>
             <a
@@ -93,7 +98,7 @@ export default function Footer({ variant = "full" }: FooterProps) {
         </div>
 
         <p className="mt-5 pt-4 border-t border-parchment-200 text-caption text-ink-400 font-body">
-          Not for clinical decision-making. All protocols require expert review.
+          {t("disclaimer")}
         </p>
       </div>
     </footer>

@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 import ProjectCard from "@/components/ProjectCard";
 import UserMenu from "@/components/UserMenu";
+import { useTranslation } from "@/lib/i18n";
 import {
   getProjects,
   getUsage,
@@ -25,6 +26,7 @@ function useDebounce(value: string, delay: number): string {
 }
 
 export default function ProjectsClient() {
+  const { t } = useTranslation("projects");
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
@@ -106,9 +108,7 @@ export default function ProjectsClient() {
 
   const handleDelete = useCallback(
     async (sessionId: string) => {
-      const confirmed = window.confirm(
-        "Are you sure you want to delete this project? This cannot be undone.",
-      );
+      const confirmed = window.confirm(t("delete_confirm"));
       if (!confirmed) return;
       try {
         await deleteProject(sessionId);
@@ -118,13 +118,13 @@ export default function ProjectsClient() {
         setError(err instanceof Error ? err.message : "Failed to delete project");
       }
     },
-    [],
+    [t],
   );
 
   if (!authChecked) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <p className="text-ink-500 font-display">Loading...</p>
+        <p className="text-ink-500 font-display">{t("auth_loading")}</p>
       </div>
     );
   }
@@ -143,7 +143,7 @@ export default function ProjectsClient() {
             </Link>
             <span className="text-ink-300">/</span>
             <h1 className="font-display text-body-lg font-medium text-ink-700">
-              My Projects
+              {t("title")}
             </h1>
           </div>
           <div className="flex items-center gap-3">
@@ -157,18 +157,18 @@ export default function ProjectsClient() {
                   transition-all duration-200
                 "
               >
-                New Research
+                {t("new_research")}
               </Link>
             ) : (
               <span
-                title="Project limit reached. Upgrade your plan to create more."
+                title={t("limit_reached_title")}
                 className="
                   text-caption font-display px-3 py-1.5 rounded-full
                   border border-parchment-300 bg-parchment-100
                   text-ink-400 cursor-not-allowed
                 "
               >
-                New Research
+                {t("new_research")}
               </span>
             )}
             <UserMenu />
@@ -184,7 +184,7 @@ export default function ProjectsClient() {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search projects..."
+            placeholder={t("search_placeholder")}
             className="
               w-full px-4 py-2.5 rounded-xl
               bg-white border border-parchment-200
@@ -203,15 +203,15 @@ export default function ProjectsClient() {
           <div className="mb-4 flex items-center justify-between">
             <p className="text-caption text-ink-500 font-display">
               {projectLimit === null
-                ? `${projectCount} projects`
-                : `${projectCount} / ${projectLimit} projects`}
+                ? `${projectCount} ${t("projects_count")}`
+                : `${projectCount} / ${projectLimit} ${t("projects_count")}`}
             </p>
             {!canCreateProject && (
               <Link
                 href="/account"
                 className="text-caption text-gold-700 hover:text-gold-800 font-display underline"
               >
-                Upgrade plan
+                {t("upgrade_plan")}
               </Link>
             )}
           </div>
@@ -227,7 +227,7 @@ export default function ProjectsClient() {
         {/* Loading state */}
         {loading && (
           <div className="flex items-center justify-center py-16">
-            <p className="text-ink-500 font-display">Loading projects...</p>
+            <p className="text-ink-500 font-display">{t("loading")}</p>
           </div>
         )}
 
@@ -246,10 +246,10 @@ export default function ProjectsClient() {
               <line x1="14" y1="10" x2="14" y2="18" />
             </svg>
             <p className="text-body-lg text-ink-600 font-display mb-2">
-              No research projects yet
+              {t("empty_title")}
             </p>
             <p className="text-body-sm text-ink-400 font-body mb-6">
-              Start a new conversation to begin your research.
+              {t("empty_subtitle")}
             </p>
             {canCreateProject ? (
               <Link
@@ -262,7 +262,7 @@ export default function ProjectsClient() {
                   font-display text-body-sm
                 "
               >
-                Start New Research
+                {t("start_new")}
               </Link>
             ) : (
               <Link
@@ -275,7 +275,7 @@ export default function ProjectsClient() {
                   font-display text-body-sm
                 "
               >
-                Upgrade to Create More Projects
+                {t("upgrade_create")}
               </Link>
             )}
           </div>
@@ -296,7 +296,7 @@ export default function ProjectsClient() {
 
             {total > projects.length && (
               <p className="text-center text-caption text-ink-400 font-display pt-4">
-                Showing {projects.length} of {total} projects
+                {t("showing")} {projects.length} {t("of")} {total} {t("projects_count")}
               </p>
             )}
           </div>

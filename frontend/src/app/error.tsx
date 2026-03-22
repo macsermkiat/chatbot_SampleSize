@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { useTranslation } from "@/lib/i18n";
 
 export default function Error({
   error,
@@ -9,6 +10,8 @@ export default function Error({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const { t } = useTranslation("error_page");
+
   useEffect(() => {
     // eslint-disable-next-line no-console
     console.error("App error boundary caught:", error);
@@ -30,11 +33,10 @@ export default function Error({
             <circle cx="32" cy="44" r="2" fill="currentColor" stroke="none" />
           </svg>
           <h1 className="font-display text-display-lg font-bold text-ink-900 mb-3">
-            Something went wrong
+            {t("title")}
           </h1>
           <p className="text-body-md text-ink-600 font-body leading-relaxed">
-            An unexpected error occurred. Please try again, or refresh the page
-            if the problem persists.
+            {t("body")}
           </p>
         </div>
         <button
@@ -46,7 +48,7 @@ export default function Error({
             cursor-pointer
           "
         >
-          Try again
+          {t("try_again")}
         </button>
       </div>
     </div>

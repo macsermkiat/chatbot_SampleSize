@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { upgradeSubscription, cancelSubscription } from "@/lib/api";
+import { useTranslation } from "@/lib/i18n";
 
 type SubscriptionAction = "upgrade" | "downgrade" | "cancel";
 type ModalState = "confirm" | "submitting" | "done" | "error";
@@ -23,8 +24,8 @@ function capitalize(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
-function formatDate(iso: string | null): string {
-  if (!iso) return "end of billing period";
+function formatDate(iso: string | null, fallback: string): string {
+  if (!iso) return fallback;
   try {
     return new Date(iso).toLocaleDateString("en-US", {
       year: "numeric",
@@ -35,47 +36,6 @@ function formatDate(iso: string | null): string {
     return iso;
   }
 }
-
-const MODAL_CONFIG: Record<
-  SubscriptionAction,
-  {
-    title: (toTier: string) => string;
-    description: (fromTier: string, toTier: string, renewsAt: string | null) => string;
-    confirmLabel: string;
-    confirmStyle: string;
-    doneMessage: (toTier: string, renewsAt: string | null) => string;
-  }
-> = {
-  upgrade: {
-    title: (toTier) => `Upgrade to ${capitalize(toTier)}`,
-    description: () =>
-      "Your plan will change immediately. You'll be charged the prorated difference for the remaining days in your current billing period.",
-    confirmLabel: "Confirm Upgrade",
-    confirmStyle:
-      "bg-ink-900 text-parchment-100 hover:bg-ink-800",
-    doneMessage: (toTier) =>
-      `Successfully upgraded to ${capitalize(toTier)}! Your new plan is active now.`,
-  },
-  downgrade: {
-    title: (toTier) => `Downgrade to ${capitalize(toTier)}`,
-    description: () =>
-      "You'll be redirected to the customer portal to complete the downgrade. The change takes effect at your next billing date.",
-    confirmLabel: "Go to Customer Portal",
-    confirmStyle:
-      "bg-parchment-100 text-ink-800 hover:bg-parchment-200 border border-parchment-300",
-    doneMessage: () => "",
-  },
-  cancel: {
-    title: () => "Cancel Subscription",
-    description: (fromTier, _toTier, renewsAt) =>
-      `Your ${capitalize(fromTier)} plan will remain active until ${formatDate(renewsAt)}. After that, you'll revert to the Free plan.`,
-    confirmLabel: "Cancel Subscription",
-    confirmStyle:
-      "bg-red-600 text-parchment-100 hover:bg-red-700",
-    doneMessage: (_toTier, renewsAt) =>
-      `Subscription cancelled. You'll keep your current plan until ${formatDate(renewsAt)}.`,
-  },
-};
 
 export default function SubscriptionActionModal({
   open,
@@ -88,11 +48,10 @@ export default function SubscriptionActionModal({
   onClose,
   onComplete,
 }: SubscriptionActionModalProps) {
+  const { t } = useTranslation("subscription_modal");
   const [state, setState] = useState<ModalState>("confirm");
   const [errorMessage, setErrorMessage] = useState("");
   const [resultRenewsAt, setResultRenewsAt] = useState<string | null>(null);
-
-  const config = MODAL_CONFIG[mode];
 
   const handleClose = useCallback(() => {
     setState("confirm");
@@ -145,6 +104,48 @@ export default function SubscriptionActionModal({
 
   if (!open) return null;
 
+  const endOfBilling = t("end_of_billing");
+  const dateStr = formatDate(resultRenewsAt ?? renewsAt, endOfBilling);
+
+  // Mode-specific content
+  const title =
+    mode === "cancel"
+      ? t("cancel_title")
+      : mode === "upgrade"
+        ? `${t("upgrade_title")} ${capitalize(toTier)}`
+        : `${t("downgrade_title")} ${capitalize(toTier)}`;
+
+  const description =
+    mode === "cancel"
+      ? `${t("cancel_desc_prefix")} ${formatDate(renewsAt, endOfBilling)}. ${t("cancel_desc_suffix")}`
+      : mode === "upgrade"
+        ? t("upgrade_desc")
+        : t("downgrade_desc");
+
+  const confirmLabel =
+    mode === "cancel"
+      ? t("cancel_confirm")
+      : mode === "upgrade"
+        ? t("upgrade_confirm")
+        : t("downgrade_confirm");
+
+  const confirmStyle =
+    mode === "cancel"
+      ? "bg-red-600 text-parchment-100 hover:bg-red-700"
+      : mode === "upgrade"
+        ? "bg-ink-900 text-parchment-100 hover:bg-ink-800"
+        : "bg-parchment-100 text-ink-800 hover:bg-parchment-200 border border-parchment-300";
+
+  const submittingText =
+    mode === "upgrade" ? t("upgrading") : t("cancelling");
+
+  const doneMessage =
+    mode === "upgrade"
+      ? t("upgrade_done")
+      : mode === "cancel"
+        ? `${t("cancel_done")} ${dateStr}.`
+        : "";
+
   return (
     <AnimatePresence>
       {open && (
@@ -171,10 +172,10 @@ export default function SubscriptionActionModal({
             {state === "confirm" && (
               <>
                 <h2 className="font-display text-display-sm font-semibold text-ink-900 mb-2">
-                  {config.title(toTier)}
+                  {title}
                 </h2>
                 <p className="text-body-md text-ink-600 font-body mb-6">
-                  {config.description(fromTier, toTier, renewsAt)}
+                  {description}
                 </p>
                 <div className="flex flex-col gap-2.5">
                   <button
@@ -184,10 +185,10 @@ export default function SubscriptionActionModal({
                       font-display text-body-sm font-medium
                       transition-colors duration-200
                       cursor-pointer
-                      ${config.confirmStyle}
+                      ${confirmStyle}
                     `}
                   >
-                    {config.confirmLabel}
+                    {confirmLabel}
                   </button>
                   <button
                     onClick={handleClose}
@@ -199,7 +200,7 @@ export default function SubscriptionActionModal({
                       cursor-pointer
                     "
                   >
-                    Keep Current Plan
+                    {t("keep_current")}
                   </button>
                 </div>
               </>
@@ -209,9 +210,7 @@ export default function SubscriptionActionModal({
               <div className="flex flex-col items-center py-4">
                 <div className="w-6 h-6 border-2 border-ink-300 border-t-ink-800 rounded-full animate-spin mb-4" />
                 <p className="text-body-md text-ink-600 font-body">
-                  {mode === "upgrade"
-                    ? "Upgrading your plan..."
-                    : "Cancelling subscription..."}
+                  {submittingText}
                 </p>
               </div>
             )}
@@ -233,11 +232,11 @@ export default function SubscriptionActionModal({
                     />
                   </svg>
                   <h2 className="font-display text-display-sm font-semibold text-ink-900">
-                    Done
+                    {t("done")}
                   </h2>
                 </div>
                 <p className="text-body-md text-ink-600 font-body mb-6">
-                  {config.doneMessage(toTier, resultRenewsAt ?? renewsAt)}
+                  {doneMessage}
                 </p>
                 <button
                   onClick={handleDone}
@@ -250,7 +249,7 @@ export default function SubscriptionActionModal({
                     cursor-pointer
                   "
                 >
-                  Close
+                  {t("close")}
                 </button>
               </>
             )}
@@ -258,7 +257,7 @@ export default function SubscriptionActionModal({
             {state === "error" && (
               <>
                 <h2 className="font-display text-display-sm font-semibold text-ink-900 mb-2">
-                  Something went wrong
+                  {t("error_title")}
                 </h2>
                 <p className="text-body-md text-ink-600 font-body mb-4">
                   {errorMessage}
@@ -275,7 +274,7 @@ export default function SubscriptionActionModal({
                       cursor-pointer
                     "
                   >
-                    Try Again
+                    {t("try_again")}
                   </button>
                   <button
                     onClick={handleClose}
@@ -287,7 +286,7 @@ export default function SubscriptionActionModal({
                       cursor-pointer
                     "
                   >
-                    Cancel
+                    {t("cancel_btn")}
                   </button>
                 </div>
               </>

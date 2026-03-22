@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { springs, easings } from "@/lib/motion.config";
+import { useTranslation } from "@/lib/i18n";
 
 export type ExpertiseLevel = "simple" | "advanced";
 
@@ -39,6 +40,8 @@ const labelVariants = {
 };
 
 export default function ExpertisePicker({ onSelect }: ExpertisePickerProps) {
+  const { t } = useTranslation("expertise_picker");
+
   return (
     <motion.div
       className="flex flex-col items-center w-full max-w-lg mx-auto"
@@ -50,7 +53,7 @@ export default function ExpertisePicker({ onSelect }: ExpertisePickerProps) {
         className="text-caption text-ink-400 font-display text-center tracking-wider uppercase mb-4"
         variants={labelVariants}
       >
-        How should I explain things?
+        {t("label")}
       </motion.span>
 
       <div className="flex flex-col sm:flex-row gap-4 w-full">
@@ -85,11 +88,10 @@ export default function ExpertisePicker({ onSelect }: ExpertisePickerProps) {
             <path d="M27 7c-3-2-6-2-11 0v19c5-2 8-2 11 0V7z" />
           </svg>
           <span className="block font-display text-body-md font-semibold text-ink-800 mb-1">
-            Getting Started
+            {t("simple_title")}
           </span>
           <span className="block text-caption text-ink-500 font-body leading-snug">
-            Plain language explanations, step-by-step guidance. Best for
-            residents, fellows, and students new to research.
+            {t("simple_desc")}
           </span>
         </motion.button>
 
@@ -124,11 +126,10 @@ export default function ExpertisePicker({ onSelect }: ExpertisePickerProps) {
             <path d="M10 22h12" strokeDasharray="2 2" />
           </svg>
           <span className="block font-display text-body-md font-semibold text-ink-800 mb-1">
-            Advanced
+            {t("advanced_title")}
           </span>
           <span className="block text-caption text-ink-500 font-body leading-snug">
-            Full technical detail with frameworks and terminology. For
-            researchers familiar with epidemiology and biostatistics.
+            {t("advanced_desc")}
           </span>
         </motion.button>
       </div>

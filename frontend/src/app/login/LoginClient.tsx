@@ -6,6 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { PASSWORD_CHECKS } from "@/lib/password-validation";
+import { useTranslation } from "@/lib/i18n";
 import { login, signup, resetPassword } from "./actions";
 
 type Mode = "signin" | "signup" | "forgot";
@@ -18,22 +19,31 @@ function safeDecode(value: string): string {
   }
 }
 
+const PW_CHECK_KEYS = [
+  "pw_8_chars",
+  "pw_uppercase",
+  "pw_lowercase",
+  "pw_number",
+  "pw_special",
+] as const;
+
 function PasswordStrength({ password }: { password: string }) {
+  const { t } = useTranslation("login");
   if (!password) return null;
 
   return (
     <ul className="mt-2 space-y-1">
-      {PASSWORD_CHECKS.map((check) => {
+      {PASSWORD_CHECKS.map((check, i) => {
         const passed = check.test(password);
         return (
           <li
-            key={check.label}
+            key={PW_CHECK_KEYS[i]}
             className={`text-xs font-body flex items-center gap-1.5 ${
               passed ? "text-green-600" : "text-ink-400"
             }`}
           >
             <span className="w-3.5 text-center">{passed ? "\u2713" : "\u2022"}</span>
-            {check.label}
+            {t(PW_CHECK_KEYS[i])}
           </li>
         );
       })}
@@ -42,6 +52,7 @@ function PasswordStrength({ password }: { password: string }) {
 }
 
 function LoginForm() {
+  const { t } = useTranslation("login");
   const searchParams = useSearchParams();
   const router = useRouter();
   const error = searchParams.get("error");
@@ -121,11 +132,11 @@ function LoginForm() {
 
     if (mode === "signup") {
       if (!allChecksPassed) {
-        setValidationError("Password does not meet all requirements.");
+        setValidationError(t("password_weak"));
         return;
       }
       if (!passwordsMatch) {
-        setValidationError("Passwords do not match.");
+        setValidationError(t("passwords_no_match_submit"));
         return;
       }
     }
@@ -140,17 +151,17 @@ function LoginForm() {
 
   const heading =
     mode === "forgot"
-      ? "Reset Password"
+      ? t("reset_password")
       : mode === "signup"
-        ? "Create Account"
-        : "Welcome Back";
+        ? t("create_account")
+        : t("welcome_back");
 
   const subtitle =
     mode === "forgot"
-      ? "Enter your email and we'll send you a reset link"
+      ? t("forgot_subtitle")
       : mode === "signup"
-        ? "Get started for free"
-        : "Sign in to continue your research";
+        ? t("signup_subtitle")
+        : t("sign_in_subtitle");
 
   const cardBorderClass =
     mode === "signup"
@@ -167,7 +178,7 @@ function LoginForm() {
             <span className="font-display text-display-lg font-semibold text-ink-900">Protocol</span>
           </Link>
           <p className="text-body-sm text-ink-500 font-body">
-            AI-powered medical research methodology assistant
+            {t("tagline")}
           </p>
         </div>
 
@@ -206,7 +217,7 @@ function LoginForm() {
             </div>
           )}
 
-          {/* Google OAuth — only on signin/signup */}
+          {/* Google OAuth -- only on signin/signup */}
           {mode !== "forgot" && (
             <>
               <button
@@ -232,13 +243,13 @@ function LoginForm() {
                     fill="#EA4335"
                   />
                 </svg>
-                Continue with Google
+                {t("continue_google")}
               </button>
 
               <div className="flex items-center my-6">
                 <div className="flex-1 border-t border-parchment-200" />
                 <span className="px-4 text-xs text-parchment-500 uppercase tracking-wider">
-                  or
+                  {t("or")}
                 </span>
                 <div className="flex-1 border-t border-parchment-200" />
               </div>
@@ -252,7 +263,7 @@ function LoginForm() {
                 htmlFor="email"
                 className="block text-body-sm font-body font-medium text-ink-700 mb-1"
               >
-                Email
+                {t("email")}
               </label>
               <input
                 id="email"
@@ -260,11 +271,11 @@ function LoginForm() {
                 type="email"
                 required
                 className="w-full px-3 py-2.5 border border-parchment-200 rounded-xl bg-white text-ink-900 text-body-sm font-body focus:outline-none focus:border-gold-400 focus:shadow-[0_0_0_3px_oklch(0.85_0.12_85/0.15)] transition-all"
-                placeholder="you@institution.edu"
+                placeholder={t("email_placeholder")}
               />
             </div>
 
-            {/* Password field — signin and signup only */}
+            {/* Password field -- signin and signup only */}
             {mode !== "forgot" && (
               <div>
                 <div className="flex items-center justify-between mb-1">
@@ -272,7 +283,7 @@ function LoginForm() {
                     htmlFor="password"
                     className="block text-body-sm font-body font-medium text-ink-700"
                   >
-                    Password
+                    {t("password")}
                   </label>
                   {mode === "signin" && (
                     <button
@@ -280,7 +291,7 @@ function LoginForm() {
                       onClick={() => switchMode("forgot")}
                       className="text-xs text-ink-500 hover:text-ink-700 font-body hover:underline"
                     >
-                      Forgot password?
+                      {t("forgot_link")}
                     </button>
                   )}
                 </div>
@@ -293,20 +304,20 @@ function LoginForm() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full px-3 py-2.5 border border-parchment-200 rounded-xl bg-white text-ink-900 text-body-sm font-body focus:outline-none focus:border-gold-400 focus:shadow-[0_0_0_3px_oklch(0.85_0.12_85/0.15)] transition-all"
-                  placeholder={mode === "signup" ? "Min 8 characters" : ""}
+                  placeholder={mode === "signup" ? t("password_placeholder") : ""}
                 />
                 {mode === "signup" && <PasswordStrength password={password} />}
               </div>
             )}
 
-            {/* Confirm password — signup only */}
+            {/* Confirm password -- signup only */}
             {mode === "signup" && (
               <div>
                 <label
                   htmlFor="confirmPassword"
                   className="block text-body-sm font-body font-medium text-ink-700 mb-1"
                 >
-                  Confirm Password
+                  {t("confirm_password")}
                 </label>
                 <input
                   id="confirmPassword"
@@ -323,11 +334,11 @@ function LoginForm() {
                       ? "border-red-300"
                       : "border-parchment-200"
                   }`}
-                  placeholder="Re-enter your password"
+                  placeholder={t("confirm_placeholder")}
                 />
                 {confirmTouched && !passwordsMatch && (
                   <p className="mt-1 text-xs text-red-500 font-body">
-                    Passwords do not match
+                    {t("password_no_match")}
                   </p>
                 )}
               </div>
@@ -343,12 +354,12 @@ function LoginForm() {
               }`}
             >
               {loading
-                ? "Please wait..."
+                ? t("loading")
                 : mode === "forgot"
-                  ? "Send Reset Link"
+                  ? t("reset_btn")
                   : mode === "signup"
-                    ? "Create Account"
-                    : "Sign In"}
+                    ? t("create_btn")
+                    : t("sign_in_btn")}
             </button>
           </form>
 
@@ -356,22 +367,22 @@ function LoginForm() {
           <div className="mt-6 text-center space-y-2">
             {mode === "forgot" ? (
               <p className="text-body-sm text-ink-500 font-body">
-                Remember your password?{" "}
+                {t("remember_password")}{" "}
                 <button
                   onClick={() => switchMode("signin")}
                   className="text-ink-800 font-medium hover:underline"
                 >
-                  Sign in
+                  {t("sign_in_link")}
                 </button>
               </p>
             ) : (
               <p className="text-body-sm text-ink-500 font-body">
-                {mode === "signup" ? "Already have an account?" : "Don't have an account?"}{" "}
+                {mode === "signup" ? t("already_have_account") : t("no_account")}{" "}
                 <button
                   onClick={() => switchMode(mode === "signup" ? "signin" : "signup")}
                   className="text-ink-800 font-medium hover:underline"
                 >
-                  {mode === "signup" ? "Sign in" : "Create one"}
+                  {mode === "signup" ? t("sign_in_link") : t("create_one")}
                 </button>
               </p>
             )}
@@ -380,10 +391,10 @@ function LoginForm() {
 
         {/* Footer */}
         <p className="mt-6 text-center text-caption text-ink-400 font-display">
-          By continuing, you agree to our{" "}
-          <a href="/terms" className="underline underline-offset-2 hover:text-ink-600 transition-colors">Terms of Service</a>
-          {" "}and{" "}
-          <a href="/privacy" className="underline underline-offset-2 hover:text-ink-600 transition-colors">Privacy Policy</a>.
+          {t("agree_text")}{" "}
+          <a href="/terms" className="underline underline-offset-2 hover:text-ink-600 transition-colors">{t("terms_link")}</a>
+          {" "}{t("and")}{" "}
+          <a href="/privacy" className="underline underline-offset-2 hover:text-ink-600 transition-colors">{t("privacy_link")}</a>.
         </p>
       </div>
     </div>
@@ -391,11 +402,12 @@ function LoginForm() {
 }
 
 export default function LoginClient() {
+  const { t } = useTranslation("login");
   return (
     <Suspense
       fallback={
         <div className="min-h-screen bg-parchment-100 flex items-center justify-center">
-          <p className="text-parchment-600">Loading...</p>
+          <p className="text-parchment-600">{t("page_loading")}</p>
         </div>
       }
     >

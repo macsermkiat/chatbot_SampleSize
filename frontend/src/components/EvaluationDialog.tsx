@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { submitEvaluation } from "@/lib/api";
+import { useTranslation } from "@/lib/i18n";
 
 interface EvaluationDialogProps {
   sessionId: string;
@@ -12,11 +13,14 @@ interface EvaluationDialogProps {
 
 type DialogState = "rating" | "submitting" | "done";
 
+const RATING_KEYS = ["", "poor", "fair", "good", "very_good", "excellent"] as const;
+
 export default function EvaluationDialog({
   sessionId,
   open,
   onComplete,
 }: EvaluationDialogProps) {
+  const { t } = useTranslation("evaluation");
   const [state, setState] = useState<DialogState>("rating");
   const [hoveredStar, setHoveredStar] = useState(0);
   const [selectedRating, setSelectedRating] = useState(0);
@@ -53,8 +57,6 @@ export default function EvaluationDialog({
 
   const displayRating = hoveredStar || selectedRating;
 
-  const ratingLabels = ["", "Poor", "Fair", "Good", "Very Good", "Excellent"];
-
   return (
     <AnimatePresence>
       {open && (
@@ -85,16 +87,16 @@ export default function EvaluationDialog({
               >
                 <div className="text-3xl mb-3">&#10003;</div>
                 <p className="text-body-md text-ink-700 font-display font-medium">
-                  Thank you for your feedback!
+                  {t("thanks")}
                 </p>
               </motion.div>
             ) : (
               <>
                 <h2 className="font-display text-display-sm font-semibold text-ink-900 mb-1">
-                  How was your experience?
+                  {t("title")}
                 </h2>
                 <p className="text-body-sm text-ink-500 font-body mb-5">
-                  Your feedback helps us improve the research assistant.
+                  {t("subtitle")}
                 </p>
 
                 {/* Star rating */}
@@ -131,7 +133,7 @@ export default function EvaluationDialog({
                     ))}
                   </div>
                   <p className="text-caption text-ink-500 font-body h-4">
-                    {displayRating > 0 ? ratingLabels[displayRating] : ""}
+                    {displayRating > 0 ? t(RATING_KEYS[displayRating]) : ""}
                   </p>
                 </div>
 
@@ -139,7 +141,7 @@ export default function EvaluationDialog({
                 <textarea
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
-                  placeholder="Any additional feedback? (optional)"
+                  placeholder={t("comment_placeholder")}
                   disabled={state === "submitting"}
                   maxLength={2000}
                   rows={3}
@@ -169,7 +171,7 @@ export default function EvaluationDialog({
                       disabled:opacity-40 disabled:cursor-not-allowed
                     "
                   >
-                    {state === "submitting" ? "Submitting..." : "Submit Feedback"}
+                    {state === "submitting" ? t("submitting") : t("submit")}
                   </button>
                   <button
                     onClick={handleSkip}
@@ -183,7 +185,7 @@ export default function EvaluationDialog({
                       disabled:cursor-not-allowed
                     "
                   >
-                    Skip
+                    {t("skip")}
                   </button>
                 </div>
               </>

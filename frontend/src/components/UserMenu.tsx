@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { getSubscription } from "@/lib/api";
+import { useTranslation } from "@/lib/i18n";
 import type { User } from "@supabase/supabase-js";
 
 const TIER_LABELS: Record<string, string> = {
@@ -12,6 +13,7 @@ const TIER_LABELS: Record<string, string> = {
 };
 
 export default function UserMenu() {
+  const { t } = useTranslation("user_menu");
   const [user, setUser] = useState<User | null>(null);
   const [tier, setTier] = useState<string>("free");
   const [open, setOpen] = useState(false);

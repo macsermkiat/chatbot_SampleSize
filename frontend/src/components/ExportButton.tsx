@@ -2,12 +2,14 @@
 
 import { useState } from "react";
 import { exportProtocol } from "@/lib/api";
+import { useTranslation } from "@/lib/i18n";
 
 interface ExportButtonProps {
   sessionId: string;
 }
 
 export default function ExportButton({ sessionId }: ExportButtonProps) {
+  const { t } = useTranslation("export");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -26,7 +28,7 @@ export default function ExportButton({ sessionId }: ExportButtonProps) {
   return (
     <div className="space-y-2">
       <p className="text-sm font-medium text-parchment-700">
-        Export Research Protocol
+        {t("title")}
       </p>
       <div className="flex gap-2">
         <button
@@ -34,14 +36,14 @@ export default function ExportButton({ sessionId }: ExportButtonProps) {
           disabled={loading}
           className="flex-1 px-3 py-2 text-sm bg-parchment-100 border border-parchment-300 rounded-lg hover:bg-parchment-200 transition-colors disabled:opacity-50"
         >
-          {loading ? "Generating..." : "Download DOCX"}
+          {loading ? t("generating") : t("docx")}
         </button>
         <button
           onClick={() => handleExport("pdf")}
           disabled={loading}
           className="flex-1 px-3 py-2 text-sm bg-parchment-100 border border-parchment-300 rounded-lg hover:bg-parchment-200 transition-colors disabled:opacity-50"
         >
-          {loading ? "Generating..." : "Download PDF"}
+          {loading ? t("generating") : t("pdf")}
         </button>
       </div>
       {error && <p className="text-xs text-red-600">{error}</p>}

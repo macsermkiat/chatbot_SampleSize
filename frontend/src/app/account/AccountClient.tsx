@@ -11,6 +11,7 @@ import {
   type UserProfile,
 } from "@/lib/api";
 import type { User } from "@supabase/supabase-js";
+import { useTranslation } from "@/lib/i18n";
 
 interface SubscriptionInfo {
   tier: string;
@@ -33,44 +34,45 @@ interface UsageInfo {
   can_create_project?: boolean;
 }
 
-const TIER_LABELS: Record<string, string> = {
-  free: "Free",
-  researcher: "Researcher",
-  researcher_annual: "Researcher",
-  pro: "Pro",
-  pro_monthly: "Pro",
-  pro_annual: "Pro",
-  institutional: "Institutional",
+const TIER_KEYS: Record<string, string> = {
+  free: "tier_free",
+  researcher: "tier_researcher",
+  researcher_annual: "tier_researcher",
+  pro: "tier_pro",
+  pro_monthly: "tier_pro",
+  pro_annual: "tier_pro",
+  institutional: "tier_institutional",
 };
 
-const STATUS_LABELS: Record<string, { label: string; className: string }> = {
-  active: { label: "Active", className: "bg-green-100 text-green-700" },
-  past_due: { label: "Past Due", className: "bg-yellow-100 text-yellow-700" },
-  cancelled: { label: "Cancelled", className: "bg-red-100 text-red-700" },
-  paused: { label: "Paused", className: "bg-parchment-200 text-parchment-700" },
+const STATUS_KEYS: Record<string, { key: string; className: string }> = {
+  active: { key: "active", className: "bg-green-100 text-green-700" },
+  past_due: { key: "past_due", className: "bg-yellow-100 text-yellow-700" },
+  cancelled: { key: "cancelled", className: "bg-red-100 text-red-700" },
+  paused: { key: "paused", className: "bg-parchment-200 text-parchment-700" },
 };
 
-const ROLE_LABELS: Record<string, string> = {
-  medical_student: "Medical Student",
-  resident_fellow: "Resident / Fellow",
-  junior_faculty: "Junior Faculty",
-  senior_faculty: "Senior Faculty",
-  phd_student: "PhD Student",
-  cro_staff: "CRO Staff",
-  other: "Other",
-};
+const ROLE_KEYS = [
+  { value: "medical_student", key: "role_medical_student" },
+  { value: "resident_fellow", key: "role_resident_fellow" },
+  { value: "junior_faculty", key: "role_junior_faculty" },
+  { value: "senior_faculty", key: "role_senior_faculty" },
+  { value: "phd_student", key: "role_phd_student" },
+  { value: "cro_staff", key: "role_cro_staff" },
+  { value: "other", key: "role_other" },
+] as const;
 
-const RESEARCH_AREA_LABELS: Record<string, string> = {
-  clinical_medicine: "Clinical Medicine",
-  surgery: "Surgery",
-  public_health: "Public Health",
-  epidemiology: "Epidemiology",
-  nursing: "Nursing",
-  pharmacy: "Pharmacy",
-  other: "Other",
-};
+const AREA_KEYS = [
+  { value: "clinical_medicine", key: "area_clinical_medicine" },
+  { value: "surgery", key: "area_surgery" },
+  { value: "public_health", key: "area_public_health" },
+  { value: "epidemiology", key: "area_epidemiology" },
+  { value: "nursing", key: "area_nursing" },
+  { value: "pharmacy", key: "area_pharmacy" },
+  { value: "other", key: "area_other" },
+] as const;
 
 export default function AccountClient() {
+  const { t } = useTranslation("account");
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [subscription, setSubscription] = useState<SubscriptionInfo | null>(null);
@@ -156,13 +158,14 @@ export default function AccountClient() {
   if (loading) {
     return (
       <div className="min-h-screen bg-parchment-100 flex items-center justify-center">
-        <p className="text-parchment-500 font-display">Loading...</p>
+        <p className="text-parchment-500 font-display">{t("loading")}</p>
       </div>
     );
   }
 
-  const tierLabel = TIER_LABELS[subscription?.tier ?? "free"] ?? subscription?.tier ?? "Free";
-  const statusInfo = STATUS_LABELS[subscription?.status ?? ""] ?? null;
+  const tierKey = TIER_KEYS[subscription?.tier ?? "free"];
+  const tierLabel = tierKey ? t(tierKey) : (subscription?.tier ?? t("tier_free"));
+  const statusInfo = STATUS_KEYS[subscription?.status ?? ""];
   const usagePercent =
     usage?.query_limit && usage.query_limit > 0
       ? Math.min(100, Math.round((usage.query_count / usage.query_limit) * 100))
@@ -179,25 +182,25 @@ export default function AccountClient() {
           href="/app"
           className="text-body-sm text-ink-500 hover:text-ink-800 font-body inline-block transition-colors"
         >
-          &larr; Back to app
+          {t("back")}
         </Link>
 
         <h1 className="font-display text-display-lg font-semibold text-ink-900">
-          Account & Billing
+          {t("title")}
         </h1>
 
         {/* Profile */}
         <section className="bg-parchment-50/80 border border-parchment-200 rounded-xl p-5 sm:p-6">
           <div className="flex items-center justify-between mb-3">
             <h2 className="font-display text-lg font-semibold text-ink-800">
-              Profile
+              {t("profile")}
             </h2>
             {!editing && (
               <button
                 onClick={() => setEditing(true)}
                 className="text-xs text-ink-500 hover:text-ink-700 font-body hover:underline"
               >
-                Edit
+                {t("edit")}
               </button>
             )}
           </div>
@@ -205,50 +208,50 @@ export default function AccountClient() {
           {editing ? (
             <div className="space-y-3">
               <div>
-                <label className="block text-xs text-ink-400 font-body mb-1">Full Name</label>
+                <label className="block text-xs text-ink-400 font-body mb-1">{t("full_name")}</label>
                 <input
                   type="text"
                   maxLength={200}
                   value={editForm.full_name}
                   onChange={(e) => setEditForm({ ...editForm, full_name: e.target.value })}
                   className={inputClasses}
-                  placeholder="Dr. Jane Smith"
+                  placeholder={t("name_placeholder")}
                 />
               </div>
               <div>
-                <label className="block text-xs text-ink-400 font-body mb-1">Role</label>
+                <label className="block text-xs text-ink-400 font-body mb-1">{t("role")}</label>
                 <select
                   value={editForm.role}
                   onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}
                   className={inputClasses}
                 >
-                  <option value="">Select role...</option>
-                  {Object.entries(ROLE_LABELS).map(([value, label]) => (
-                    <option key={value} value={value}>{label}</option>
+                  <option value="">{t("role_placeholder")}</option>
+                  {ROLE_KEYS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>{t(opt.key)}</option>
                   ))}
                 </select>
               </div>
               <div>
-                <label className="block text-xs text-ink-400 font-body mb-1">Institution</label>
+                <label className="block text-xs text-ink-400 font-body mb-1">{t("institution")}</label>
                 <input
                   type="text"
                   maxLength={300}
                   value={editForm.institution}
                   onChange={(e) => setEditForm({ ...editForm, institution: e.target.value })}
                   className={inputClasses}
-                  placeholder="Mahidol University"
+                  placeholder={t("institution_placeholder")}
                 />
               </div>
               <div>
-                <label className="block text-xs text-ink-400 font-body mb-1">Research Area</label>
+                <label className="block text-xs text-ink-400 font-body mb-1">{t("research_area")}</label>
                 <select
                   value={editForm.research_area}
                   onChange={(e) => setEditForm({ ...editForm, research_area: e.target.value })}
                   className={inputClasses}
                 >
-                  <option value="">Select research area...</option>
-                  {Object.entries(RESEARCH_AREA_LABELS).map(([value, label]) => (
-                    <option key={value} value={value}>{label}</option>
+                  <option value="">{t("area_placeholder")}</option>
+                  {AREA_KEYS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>{t(opt.key)}</option>
                   ))}
                 </select>
               </div>
@@ -258,7 +261,7 @@ export default function AccountClient() {
                   disabled={saving}
                   className="px-4 py-2 bg-ink-900 text-parchment-100 text-body-sm font-display rounded-xl hover:bg-ink-800 transition-colors disabled:opacity-50"
                 >
-                  {saving ? "Saving..." : "Save"}
+                  {saving ? t("saving") : t("save")}
                 </button>
                 <button
                   onClick={() => {
@@ -274,46 +277,46 @@ export default function AccountClient() {
                   }}
                   className="px-4 py-2 border border-parchment-200 text-ink-500 text-body-sm font-body rounded-xl hover:bg-parchment-100 transition-colors"
                 >
-                  Cancel
+                  {t("cancel")}
                 </button>
               </div>
             </div>
           ) : (
             <dl className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <dt className="text-ink-400 font-body">Email</dt>
+                <dt className="text-ink-400 font-body">{t("email")}</dt>
                 <dd className="text-ink-800 font-medium">{user?.email}</dd>
               </div>
               {profile?.full_name && (
                 <div className="flex justify-between">
-                  <dt className="text-ink-400 font-body">Name</dt>
+                  <dt className="text-ink-400 font-body">{t("name")}</dt>
                   <dd className="text-ink-800 font-medium">{profile.full_name}</dd>
                 </div>
               )}
               {profile?.role && (
                 <div className="flex justify-between">
-                  <dt className="text-ink-400 font-body">Role</dt>
+                  <dt className="text-ink-400 font-body">{t("role")}</dt>
                   <dd className="text-ink-800 font-medium">
-                    {ROLE_LABELS[profile.role] ?? profile.role}
+                    {t(`role_${profile.role}`) !== `account.role_${profile.role}` ? t(`role_${profile.role}`) : profile.role}
                   </dd>
                 </div>
               )}
               {profile?.institution && (
                 <div className="flex justify-between">
-                  <dt className="text-ink-400 font-body">Institution</dt>
+                  <dt className="text-ink-400 font-body">{t("institution")}</dt>
                   <dd className="text-ink-800 font-medium">{profile.institution}</dd>
                 </div>
               )}
               {profile?.research_area && (
                 <div className="flex justify-between">
-                  <dt className="text-ink-400 font-body">Research Area</dt>
+                  <dt className="text-ink-400 font-body">{t("research_area")}</dt>
                   <dd className="text-ink-800 font-medium">
-                    {RESEARCH_AREA_LABELS[profile.research_area] ?? profile.research_area}
+                    {t(`area_${profile.research_area}`) !== `account.area_${profile.research_area}` ? t(`area_${profile.research_area}`) : profile.research_area}
                   </dd>
                 </div>
               )}
               <div className="flex justify-between">
-                <dt className="text-ink-400 font-body">User ID</dt>
+                <dt className="text-ink-400 font-body">{t("user_id")}</dt>
                 <dd className="text-ink-600 font-mono text-xs">
                   {user?.id.slice(0, 12)}...
                 </dd>
@@ -325,7 +328,7 @@ export default function AccountClient() {
         {/* Subscription */}
         <section className="bg-parchment-50/80 border border-parchment-200 rounded-xl p-5 sm:p-6">
           <h2 className="font-display text-lg font-semibold text-ink-800 mb-3">
-            Subscription
+            {t("subscription")}
           </h2>
           <div className="flex items-center gap-3 mb-4">
             <span className="text-xl font-semibold text-ink-900">
@@ -340,14 +343,14 @@ export default function AccountClient() {
               <span
                 className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusInfo.className}`}
               >
-                {statusInfo.label}
+                {t(statusInfo.key)}
               </span>
             )}
           </div>
 
           {subscription?.renews_at && (
             <p className="text-sm text-parchment-600 mb-2">
-              Renews:{" "}
+              {t("renews")}{" "}
               {new Date(subscription.renews_at).toLocaleDateString("en-US", {
                 year: "numeric",
                 month: "long",
@@ -358,7 +361,7 @@ export default function AccountClient() {
 
           {subscription?.ends_at && (
             <p className="text-sm text-red-600 mb-2">
-              Ends:{" "}
+              {t("ends")}{" "}
               {new Date(subscription.ends_at).toLocaleDateString("en-US", {
                 year: "numeric",
                 month: "long",
@@ -373,7 +376,7 @@ export default function AccountClient() {
                 href="/pricing"
                 className="px-4 py-2 bg-ink-900 text-parchment-100 text-body-sm font-display rounded-xl hover:bg-ink-800 transition-colors"
               >
-                Upgrade Plan
+                {t("upgrade_plan")}
               </Link>
             ) : (
               <>
@@ -384,7 +387,7 @@ export default function AccountClient() {
                     rel="noopener noreferrer"
                     className="px-4 py-2 bg-ink-900 text-parchment-100 text-body-sm font-display rounded-xl hover:bg-ink-800 transition-colors"
                   >
-                    Manage Subscription
+                    {t("manage_subscription")}
                   </a>
                 )}
                 {subscription?.urls?.update_payment_method && (
@@ -394,7 +397,7 @@ export default function AccountClient() {
                     rel="noopener noreferrer"
                     className="px-4 py-2 border border-parchment-200 text-ink-700 text-body-sm font-display rounded-xl hover:bg-parchment-100 transition-colors"
                   >
-                    Update Payment
+                    {t("update_payment")}
                   </a>
                 )}
               </>
@@ -405,14 +408,14 @@ export default function AccountClient() {
         {/* Usage */}
         <section className="bg-parchment-50/80 border border-parchment-200 rounded-xl p-5 sm:p-6">
           <h2 className="font-display text-lg font-semibold text-ink-800 mb-3">
-            Usage This Period
+            {t("usage_title")}
           </h2>
           <div className="flex items-baseline gap-2 mb-3">
             <span className="text-2xl font-semibold text-ink-900">
               {usage?.query_count ?? 0}
             </span>
             <span className="text-parchment-500 text-sm">
-              / {usage?.query_limit ?? "unlimited"} queries
+              / {usage?.query_limit ?? t("unlimited")} {t("queries")}
             </span>
           </div>
 
@@ -433,7 +436,7 @@ export default function AccountClient() {
 
           {usage?.period_end && (
             <p className="text-xs text-parchment-500">
-              Resets:{" "}
+              {t("resets")}{" "}
               {new Date(usage.period_end).toLocaleDateString("en-US", {
                 year: "numeric",
                 month: "long",
@@ -445,14 +448,14 @@ export default function AccountClient() {
           {!usage?.is_allowed && (
             <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
               <p className="text-sm text-red-700">
-                You have reached your query limit.{" "}
+                {t("limit_reached")}{" "}
                 <Link
                   href="/pricing"
                   className="font-medium underline hover:text-red-800"
                 >
-                  Upgrade your plan
+                  {t("upgrade_link")}
                 </Link>{" "}
-                for more queries.
+                {t("for_more")}
               </p>
             </div>
           )}
@@ -468,7 +471,7 @@ export default function AccountClient() {
             }}
             className="text-sm text-red-600 hover:text-red-700 font-medium"
           >
-            Sign Out
+            {t("sign_out")}
           </button>
         </section>
       </div>
