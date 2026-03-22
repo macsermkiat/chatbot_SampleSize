@@ -430,18 +430,6 @@ export default function HomeClient() {
             </Link>
             <div className="flex items-center gap-2 sm:gap-3">
               <QueryBadge />
-              <Link
-                href="/benchmark"
-                className="
-                  hidden sm:inline-block
-                  text-caption font-display px-2.5 py-1 rounded-full
-                  border border-gold-300 bg-gold-50
-                  text-gold-700 hover:bg-gold-100
-                  transition-all duration-200
-                "
-              >
-                vs GPT-5
-              </Link>
               {expertiseLevel && (
                 <button
                   onClick={() =>
