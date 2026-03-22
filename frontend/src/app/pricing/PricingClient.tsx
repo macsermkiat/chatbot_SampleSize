@@ -202,7 +202,17 @@ export default function PricingClient() {
       };
     }
 
-    // Higher tier = upgrade
+    // Free → paid = checkout (no existing subscription to upgrade)
+    if (subscription.tier === "free") {
+      return {
+        label: "Upgrade",
+        disabled: loading === tier.name,
+        style: "primary",
+        onClick: () => handleSubscribe(tier),
+      };
+    }
+
+    // Paid → higher paid = upgrade (modify existing subscription)
     if (tierRank > currentRank) {
       return {
         label: "Upgrade",
